@@ -38,12 +38,20 @@
   function structure(desc) {
     var p = desc.querySelector('p');
     if (!p) return;
-    var lines = p.innerHTML.split(/<br\s*\/?>|\n/i).map(function (s) { return s.trim(); });
+    var html = p.innerHTML;
+    var lines = (/<br/i.test(html) ? html.split(/<br\s*\/?>/i) : html.split(/\n/)).map(function (s) { return s.trim(); });
     var head = /^(?:＜|【|■|◆|&lt;)\s*(.+?)\s*(?:＞|】|&gt;)?$/;
+    var texts = lines.map(function (l) { return l.replace(/<[^>]+>/g, '').trim(); });
+    var marked = texts.some(function (t) { return t.length <= 40 && head.test(t); });
+    // without ＜＞ markers: a short line with no 。 that sits after a blank line and before text
+    function plainHead(i) {
+      var t = texts[i];
+      return t && t.length <= 26 && !/[。．！？!?]/.test(t) && i > 0 && texts[i - 1] === '' && !!texts[i + 1];
+    }
     var lead = [], secs = [], cur = null;
-    lines.forEach(function (line) {
-      var text = line.replace(/<[^>]+>/g, '');
-      var m = text.length <= 40 ? head.exec(text) : null;
+    lines.forEach(function (line, i) {
+      var text = texts[i];
+      var m = marked ? (text.length <= 40 ? head.exec(text) : null) : (plainHead(i) ? [text, text] : null);
       if (m) { cur = { title: m[1], body: [] }; secs.push(cur); return; }
       (cur ? cur.body : lead).push(line);
     });
@@ -59,10 +67,49 @@
     desc.classList.add('dcItem-desc');
   }
 
+  // bxSlider grabs every touch on the photo, so the page can't scroll from there.
+  // Keep touches away from it and do a simple horizontal swipe ourselves.
+  function freeSliderTouch() {
+    var ul = document.getElementById('slideImg');
+    if (!ul) return;
+    ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup',
+      'pointercancel', 'MSPointerDown', 'MSPointerMove', 'MSPointerUp'].forEach(function (t) {
+      ul.addEventListener(t, function (e) { e.stopPropagation(); }, { passive: true });
+    });
+    var sx = 0, sy = 0, st = 0, tracking = false, swiped = false;
+    function go(dir) {
+      if (!document.querySelector('.bx-wrapper')) return;
+      var links = Array.prototype.slice.call(document.querySelectorAll('#slideImgPager a[data-slide-index]'));
+      if (links.length < 2) return;
+      var cur = 0;
+      links.forEach(function (a, i) { if (a.classList.contains('active')) cur = i; });
+      links[(cur + dir + links.length) % links.length].click();
+    }
+    ul.addEventListener('touchstart', function (e) {
+      var t = e.touches[0];
+      sx = t.clientX; sy = t.clientY; st = Date.now(); tracking = e.touches.length === 1; swiped = false;
+    }, { passive: true });
+    ul.addEventListener('touchend', function (e) {
+      if (!tracking) return;
+      tracking = false;
+      var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - st < 800) {
+        swiped = true;
+        go(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+    // a swipe shouldn't also open the enlarged photo
+    ul.addEventListener('click', function (e) {
+      if (swiped) { swiped = false; e.preventDefault(); e.stopPropagation(); }
+    }, true);
+  }
+
   function run() {
     if (document.body.id !== 'shopDetailPage') return;
     var main = document.getElementById('mainContent');
     if (!main) return;
+
+    freeSliderTouch();
 
     var h1 = main.querySelector('h1.itemTitle');
     var title = h1 ? h1.textContent.trim() : '';
