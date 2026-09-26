@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "back": {
+    "image": "back/back.webp",
+    "silver": "back/silver.webp"
+  },
+  "cards": [
+    {
+      "slug": "f8-tributo",
+      "name": "Ferrari F8 Tributo"
+    }
+  ]
+}
