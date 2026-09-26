@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "orderUrl": "",
   "back": {
     "image": "back/back.webp",
     "silver": "back/silver.webp"
@@ -8,6 +9,42 @@
     {
       "slug": "f8-tributo",
       "name": "Ferrari F8 Tributo"
+    },
+    {
+      "slug": "aventador",
+      "name": "Lamborghini Aventador",
+      "gold": false,
+      "temp": true
+    },
+    {
+      "slug": "lexus-lfa",
+      "name": "Lexus LFA",
+      "gold": false,
+      "temp": true
+    },
+    {
+      "slug": "gallardo",
+      "name": "Lamborghini Gallardo",
+      "gold": false,
+      "temp": true
+    },
+    {
+      "slug": "mclaren-765lt",
+      "name": "McLaren 765LT",
+      "gold": false,
+      "temp": true
+    },
+    {
+      "slug": "sf90-stradale",
+      "name": "Ferrari SF90 Stradale",
+      "gold": false,
+      "temp": true
+    },
+    {
+      "slug": "gallardo-spyder",
+      "name": "Lamborghini Gallardo Spyder",
+      "gold": false,
+      "temp": true
     }
   ]
 }

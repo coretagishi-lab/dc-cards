@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>3D Gallery Demo</title>
+<style>
+  :root { color-scheme: dark; --ink: #08080a; --gold: #c9a24a; --gold-hi: #ebd28f; --text: #ede6d6; --muted: #8e8676; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ink); color: var(--text); }
+  body { font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.7; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
+  .top { padding: 28px 0 8px; text-align: center; }
+  .brand { margin: 0; font-size: 15px; letter-spacing: .18em; color: var(--gold-hi); }
+  .tag { display: inline-block; margin-top: 6px; font-size: 11px; letter-spacing: .12em; color: var(--muted); border: 1px solid #2b261d; border-radius: 999px; padding: 2px 10px; }
+  .filler { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0; }
+  h2 { margin: 36px 0 6px; text-align: center; font-size: 13px; letter-spacing: .32em; color: var(--gold); font-weight: 500; }
+  .lead { margin: 0 0 8px; text-align: center; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <p class="brand">Driver's Collection</p>
+      <span class="tag">3D Gallery Demo</span>
+    </header>
+    <p class="filler">（ここにLPの上の部分が入ります）<br>下にスクロールしてギャラリーへ</p>
+
+    <h2>GALLERY</h2>
+    <p class="lead">一点物のハンドメイドトレカ</p>
+    <div data-dc3d data-order-url="#"></div>
+
+    <p class="filler">（ここにLPの下の部分が入ります）</p>
+  </div>
+  <script src="dc3d.js" defer></script>
+</body>
+</html>
