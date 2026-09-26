@@ -73,16 +73,17 @@
     '.dc3d-modal.is-open .dc3d-backdrop{opacity:1}',
     '.dc3d-close{position:absolute;top:max(12px,env(safe-area-inset-top));right:12px;z-index:3;appearance:none;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid rgba(235,210,143,.35);background:rgba(10,9,8,.6);color:#ede6d6;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .3s ease}',
     '.dc3d-modal.is-open .dc3d-close{opacity:1}',
-    '.dc3d-mrow{position:relative;z-index:2;width:100%;display:grid;place-items:center}',
+    '.dc3d-mrow{position:absolute;inset:0;z-index:2;display:grid;place-items:center}',
     '.dc3d-mslot{display:grid;place-items:center}',
-    '.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100vh - 250px) * .716)));cursor:grab;touch-action:none;padding:10px 0 30px}',
-    '@supports (height:100svh){.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100svh - 250px) * .716)))}}',
-    '.dc3d-modal .dc3d-arrow{position:absolute;top:calc(50% - 10px);transform:translateY(-50%);width:40px;height:40px;opacity:0;transition:opacity .3s ease,background-color .2s ease}',
+    '.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100vh - 330px) * .716)));cursor:grab;touch-action:none;padding:28px 0}',
+    '@supports (height:100svh){.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100svh - 330px) * .716)))}}',
+    '.dc3d-mslot .dc3d-floor{bottom:6px}',
+    '.dc3d-modal .dc3d-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0;transition:opacity .3s ease,background-color .2s ease}',
     '.dc3d-modal .dc3d-arrow:active{transform:translateY(-50%) scale(.9)}',
     '.dc3d-modal.is-open .dc3d-arrow{opacity:1}',
     '.dc3d-modal .dc3d-prev{left:max(6px,calc(50% - var(--mw,400px) / 2 - 56px))}',
     '.dc3d-modal .dc3d-next{right:max(6px,calc(50% - var(--mw,400px) / 2 - 56px))}',
-    '.dc3d-mfoot{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 16px max(16px,env(safe-area-inset-bottom));opacity:0;transform:translateY(10px);transition:opacity .35s ease .1s,transform .35s ease .1s}',
+    '.dc3d-mfoot{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 16px max(16px,env(safe-area-inset-bottom));opacity:0;transform:translateY(10px);transition:opacity .35s ease .1s,transform .35s ease .1s}',
     '.dc3d-modal.is-open .dc3d-mfoot{opacity:1;transform:none}',
     '.dc3d-hint{margin:0;font-size:12px;color:#ede6d6;opacity:.7;transition:opacity .5s ease}',
     '.dc3d-hint.is-hidden{opacity:0}',
@@ -361,14 +362,26 @@
 
     // ---------- open / close ----------
     var lastFocus = null, rel = null, rotatedThisOpen = false;
+    var savedY = 0, savedBodyStyle = null;
     function lockScroll(on) {
       var de = document.documentElement, b = document.body;
       if (on) {
+        // pin the page in place instead of overflow:hidden, which jumps to the top on iOS
+        savedY = window.pageYOffset || de.scrollTop || 0;
+        savedBodyStyle = b.getAttribute('style');
         var sw = window.innerWidth - de.clientWidth;
-        de.style.overflow = 'hidden'; b.style.overflow = 'hidden';
+        b.style.position = 'fixed';
+        b.style.top = (-savedY) + 'px';
+        b.style.left = '0';
+        b.style.right = '0';
+        b.style.width = '100%';
         if (sw > 0) b.style.paddingRight = sw + 'px';
       } else {
-        de.style.overflow = ''; b.style.overflow = ''; b.style.paddingRight = '';
+        if (savedBodyStyle === null) b.removeAttribute('style'); else b.setAttribute('style', savedBodyStyle);
+        var sb = de.style.scrollBehavior;
+        de.style.scrollBehavior = 'auto';
+        window.scrollTo(0, savedY);
+        de.style.scrollBehavior = sb;
       }
     }
     function flip(fromRect) {
@@ -544,7 +557,7 @@
     var els = document.querySelectorAll('[data-dc3d]:not([data-dc3d-mounted])');
     for (var i = 0; i < els.length; i++) mount(els[i]);
   }
-  window.DC3D = { mount: mount, version: '1.0.0' };
+  window.DC3D = { mount: mount, version: '1.0.1' };
 
   function boot() {
     autoMount();
