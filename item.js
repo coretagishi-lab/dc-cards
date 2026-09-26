@@ -81,6 +81,10 @@
       structure(desc);
     }
 
+    // BASE's report link: keep it (required), but at the very bottom of the page
+    var report = document.getElementById('reportBtn');
+    if (report) main.appendChild(report);
+
     if (key && purchase) {
       var list = el('ul', 'dcItem-trust', TRUST.map(function (t) {
         return '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +

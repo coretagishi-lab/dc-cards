@@ -281,6 +281,7 @@ body#shopDetailPage #itemAttention .attention.free .free__text { color: var(--go
 
 body#shopDetailPage .shareButtons { display: none !important; }
 body#shopDetailPage #reportBtn { padding: 26px 0 0 !important; text-align: center; }
+body#shopDetailPage #mainContent > #reportBtn { padding: 64px 0 0 !important; }
 body#shopDetailPage .report a,
 body#shopDetailPage #reportBtn a { color: #5c5548 !important; text-align: center !important; font-size: 11px; }
 body#shopDetailPage #reportBtn button { background: none; border: none; color: #5c5548; font-size: 11px; }
@@ -402,6 +403,7 @@ body#shopDetailPage #baseMenu [class*=" icon-"]::before { color: #ebd28f; font-s
   }
   body#shopDetailPage #mainContent > .itemDescription { grid-column: 1; grid-row: 3; }
   body#shopDetailPage #mainContent > :not(header):not(.item):not(.purchase):not(.itemDescription) { grid-column: 1; }
+  body#shopDetailPage #mainContent > #reportBtn { grid-column: 1 / -1; }
   body#shopDetailPage .itemPrice h2 { text-align: left !important; }
   body#shopDetailPage header h1.itemTitle { font-size: 30px !important; }
 }
