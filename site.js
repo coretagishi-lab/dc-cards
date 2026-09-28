@@ -174,9 +174,9 @@
         '<li><b>02</b><span>Get a free rough design<small>Pick any design from the gallery — no obligation.</small></span></li>' +
         '<li><b>03</b><span>Place your order<small>Semi Order: a gallery design with your car. Full Order: designed from scratch.</small></span></li>' +
         '<li><b>04</b><span>Handmade in Japan<small>About one month, finished card by card.</small></span></li>' +
-        '<li><b>05</b><span>Shipped to your door<small>In a Driver\'s Collection gift box.</small></span></li>' +
+        '<li><b>05</b><span>Shipped to your door<small>In a Driver\'s Collection gift box. Tracked EMS outside Japan.</small></span></li>' +
       '</ol>' +
-      '<p class="dcEnFlow-note">Shipping outside Japan is charged separately — we\'ll quote it for your country by DM.</p>', 'dcEnFlow');
+      '<p class="dcEnFlow-note">Outside Japan, we ship by EMS. Shipping is charged by country and shown at checkout.</p>', 'dcEnFlow');
     return true;
   }
   function enProducts() {

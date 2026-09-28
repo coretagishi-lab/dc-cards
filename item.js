@@ -39,7 +39,7 @@
     ['The case', ['Your card arrives sealed in a grading-card case. The card can be taken out, so you can enjoy it however you like, even behind your phone case.']],
     ['Packaging', ['Delivered in a Driver\'s Collection gift box, ready to give as a special present.']],
     ['Delivery time', ['About one month (design: about 10 days / making: about 2 weeks / shipping prep: 1\u20133 days).', 'You will see the finished design before we make it, and changes are possible. We\'ll message you when it ships. In a hurry? Just ask.']],
-    ['Shipping outside Japan', ['We ship outside Japan too. International shipping is charged separately, depending on your country. Send us a DM and we\'ll tell you the cost before you order.', 'Import duties or taxes in your country, if any, are not included.']],
+    ['Shipping outside Japan', ['We ship outside Japan by EMS, with tracking. Shipping is charged separately depending on your country and is shown at checkout. Want to know before you order? Just DM us.', 'Import duties or taxes in your country, if any, are not included.']],
     ['Display (+\u00A510,000)', ['A wall-mounted display with built-in lighting is also available, to show your card in an even more special way.']]
   ];
   var EN_DESC = {
