@@ -106,6 +106,124 @@
     }, true);
   }
 
+
+  // ---------- semi order: choose the design ----------
+  // Writes the choice into BASE's option field whose label contains 「デザイン」 (text or pulldown),
+  // so the order shows which design was picked. ?design=<slug> (from the 3D gallery) pre-selects it.
+  var LINE_CHOICE = 'LINEで相談して決める';
+
+  function fieldFor(label) {
+    if (label.htmlFor) { var byId = document.getElementById(label.htmlFor); if (byId) return byId; }
+    var n = label.nextElementSibling, k = 0;
+    while (n && k < 5) {
+      if (/^(INPUT|SELECT|TEXTAREA)$/.test(n.tagName)) return n;
+      var inner = n.querySelector && n.querySelector('input:not([type="hidden"]),select,textarea');
+      if (inner) return inner;
+      if (n.tagName === 'LABEL') break;
+      n = n.nextElementSibling; k++;
+    }
+    return null;
+  }
+  function findDesignField(scope) {
+    var labels = scope.querySelectorAll('label');
+    for (var i = 0; i < labels.length; i++) {
+      if (/デザイン/.test(labels[i].textContent)) {
+        var f = fieldFor(labels[i]);
+        if (f) return f;
+      }
+    }
+    return null;
+  }
+  function setField(input, value) {
+    if (!input) return;
+    if (input.tagName === 'SELECT') {
+      var hit = null;
+      Array.prototype.forEach.call(input.options, function (o) {
+        if (!hit && value && (o.value === value || o.text.indexOf(value) >= 0)) hit = o;
+      });
+      if (!hit) return;
+      input.value = hit.value;
+    } else {
+      var proto = Object.getPrototypeOf(input);
+      var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (desc && desc.set) desc.set.call(input, value); else input.value = value;
+    }
+    ['input', 'change'].forEach(function (t) {
+      var ev;
+      try { ev = new Event(t, { bubbles: true }); } catch (_) { ev = document.createEvent('Event'); ev.initEvent(t, true, true); }
+      input.dispatchEvent(ev);
+    });
+  }
+  // show the chosen design as the first product photo
+  function showDesign(d) {
+    var first = document.querySelector('#slideImg > li');
+    if (!first) return;
+    var img = first.querySelector('img'), a = first.querySelector('a');
+    var pagerImg = document.querySelector('#slideImgPager a[data-slide-index="0"] img');
+    if (!first.__dcOrig) first.__dcOrig = { src: img && img.src, href: a && a.href, thumb: pagerImg && pagerImg.src };
+    var o = first.__dcOrig;
+    if (img) img.src = d ? d.front : o.src;
+    if (a) a.href = d ? d.front : o.href;
+    if (pagerImg) pagerImg.src = d ? d.thumb : o.thumb;
+    var p0 = document.querySelector('#slideImgPager a[data-slide-index="0"]');
+    if (p0 && document.querySelector('.bx-wrapper') && !p0.classList.contains('active')) p0.click();
+    if (img) img.addEventListener('load', function () {
+      try { window.dispatchEvent(new Event('resize')); } catch (_) {}
+    }, { once: true });
+  }
+
+  function designPicker(purchase) {
+    fetch(ROOT + 'cards.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (json) {
+      var list = (json.cards || []).filter(function (c) { return !c.hidden; }).map(function (c) {
+        return { slug: c.slug, label: c.design || c.name, car: c.design ? c.name : '',
+          front: ROOT + (c.front || 'cards/' + c.slug + '/front.webp'), thumb: ROOT + 'cards/' + c.slug + '/thumb.webp' };
+      });
+      if (!list.length) return;
+      var field = findDesignField(purchase);
+
+      var box = el('section', 'dcPick');
+      box.innerHTML = '<div class="dcPick-head"><p class="dcPick-h">デザインを選ぶ</p><p class="dcPick-sel">選択中：<b>未選択</b></p></div>' +
+        '<div class="dcPick-grid" role="radiogroup" aria-label="デザイン">' + list.map(function (d) {
+          return '<button type="button" class="dcPick-item" role="radio" aria-checked="false" data-slug="' + d.slug + '">' +
+            '<span class="dcPick-img"><img src="' + d.thumb + '" alt="" loading="lazy" decoding="async"></span>' +
+            '<span class="dcPick-name">' + d.label + '</span></button>';
+        }).join('') +
+        '<button type="button" class="dcPick-item dcPick-item--line" role="radio" aria-checked="false" data-slug="__line">' +
+        '<span class="dcPick-img"><span class="dcPick-q">?</span></span><span class="dcPick-name">' + LINE_CHOICE + '</span></button></div>' +
+        (field ? '' : '<p class="dcPick-note">ご注文後、公式LINEで選んだデザイン名をお知らせください。</p>');
+
+      var anchor = purchase.querySelector('#purchase_form');
+      if (anchor) anchor.parentNode.insertBefore(box, anchor);
+      else { var price = purchase.querySelector('.itemPrice'); if (!price) return; after(price, box); }
+
+      if (field && field.tagName !== 'SELECT' && !field.value) field.placeholder = '上のデザインから選ぶと自動で入ります';
+
+      var sel = box.querySelector('.dcPick-sel b');
+      function choose(slug, fromUser) {
+        var d = null;
+        list.forEach(function (x) { if (x.slug === slug) d = x; });
+        var isLine = slug === '__line';
+        if (!d && !isLine) return;
+        Array.prototype.forEach.call(box.querySelectorAll('.dcPick-item'), function (b) {
+          var on = b.getAttribute('data-slug') === slug;
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        var value = isLine ? LINE_CHOICE : d.label;
+        sel.textContent = value;
+        setField(field, value);
+        showDesign(isLine ? null : d);
+        if (fromUser) { try { if (typeof window.clarity === 'function') window.clarity('event', 'dc_pick_design'); } catch (_) {} }
+      }
+      box.addEventListener('click', function (e) {
+        var b = e.target.closest('.dcPick-item');
+        if (b) choose(b.getAttribute('data-slug'), true);
+      });
+      var m = /[?&]design=([^&#]+)/.exec(location.search);
+      if (m) choose(decodeURIComponent(m[1]), false);
+    }).catch(function () {});
+  }
+
   function run() {
     if (document.body.id !== 'shopDetailPage') return;
     var main = document.getElementById('mainContent');
@@ -135,6 +253,8 @@
     // BASE's report link: keep it (required), but at the very bottom of the page
     var report = document.getElementById('reportBtn');
     if (report) main.appendChild(report);
+
+    if (key === 'セミオーダー' && purchase) designPicker(purchase);
 
     if (key && purchase) {
       var list = el('ul', 'dcItem-trust', TRUST.map(function (t) {

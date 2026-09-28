@@ -5,7 +5,7 @@ usage: python3 make_card_assets.py <slug> <front.png> <silver_plate.png> <gold_p
   silver_plate.png : 銀ホロ版 (black = silver foil), exported with trim marks
   gold_plate.png   : 金フレーム版 (black = pure-gold foil), exported with trim marks
 The plates are centre-cropped to the front image size (trim marks / labels fall outside).
-Outputs <outdir>/<slug>/front.webp, silver.webp, gold.webp and prints a sanity report.
+Outputs <outdir>/<slug>/front.webp, thumb.webp, silver.webp, gold.webp and prints a sanity report.
 """
 import sys, os, io
 import numpy as np
@@ -61,6 +61,8 @@ def main():
 
     fw = front.resize((FRONT_W, round(front.height * FRONT_W / front.width)), Image.LANCZOS)
     fw.save(os.path.join(out, "front.webp"), "WEBP", quality=82, method=6)
+    tw = front.resize((240, round(front.height * 240 / front.width)), Image.LANCZOS)
+    tw.save(os.path.join(out, "thumb.webp"), "WEBP", quality=80, method=6)
     open(os.path.join(out, "silver.webp"), "wb").write(mask_webp(s, MASK_W))
     open(os.path.join(out, "gold.webp"), "wb").write(mask_webp(g, MASK_W))
 
@@ -68,7 +70,7 @@ def main():
     print(f"{slug}: crop {box}  silver {s.mean()*100:.1f}%  gold {g.mean()*100:.1f}%  overlap {overlap:.2f}%")
     if overlap > 1:
         print("  ! silver and gold overlap a lot - are the plates swapped or misaligned?")
-    for f in ("front.webp", "silver.webp", "gold.webp"):
+    for f in ("front.webp", "thumb.webp", "silver.webp", "gold.webp"):
         print(f"  {f}: {os.path.getsize(os.path.join(out, f)) // 1024} KB")
 
 

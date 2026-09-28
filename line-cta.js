@@ -29,7 +29,7 @@
   var CSS = [
     '.dcR{--gold:#c9a24a;--gold-hi:#ebd28f;--text:#ede6d6;--muted:#958c7a;box-sizing:border-box;max-width:560px;margin:30px auto;padding:0 16px;color:var(--text);text-align:center;font-family:inherit}',
     '.dcR *{box-sizing:border-box}',
-    '.dcR-box{position:relative;padding:28px 20px 22px;border:1px solid rgba(201,162,74,.42);border-radius:14px;background:radial-gradient(120% 90% at 50% 0%,rgba(201,162,74,.13),rgba(12,11,10,.94) 62%);box-shadow:0 18px 50px rgba(0,0,0,.5)}',
+    '.dcR-box{position:relative;padding:28px 20px 24px;border:1px solid rgba(201,162,74,.42);border-radius:14px;background:radial-gradient(120% 90% at 50% 0%,rgba(201,162,74,.13),rgba(12,11,10,.94) 62%);box-shadow:0 18px 50px rgba(0,0,0,.5)}',
     '.dcR-badge{display:inline-block;margin:0 0 12px;padding:3px 12px;border-radius:999px;border:1px solid rgba(235,210,143,.55);color:var(--gold-hi);font-size:11px;letter-spacing:.14em}',
     '.dcR-eyebrow{margin:0 0 8px;font-size:11px;letter-spacing:.34em;color:var(--gold)}',
     '.dcR-h{margin:0 0 10px;font-size:19px;line-height:1.55;font-weight:600;letter-spacing:.05em;color:#f3e7c4;word-break:keep-all;overflow-wrap:anywhere}',
@@ -44,6 +44,7 @@
     '.dcR-ico{flex:none;width:22px;height:22px;border-radius:6px;background:#06c755;display:grid;place-items:center}',
     '.dcR-ico svg{width:16px;height:16px;display:block}',
     '.dcR-note{margin:11px 0 0;font-size:11.5px;line-height:1.7;color:var(--muted);word-break:keep-all;overflow-wrap:anywhere}',
+    '.dcR[data-dc-rough="gallery"]{margin:10px auto 34px}',
     '.dcR--slim .dcR-box{padding:22px 18px 18px}',
     '.dcR--slim .dcR-h{font-size:17px}',
     '.dcR--item{max-width:none;margin:22px 0 0;padding:0;text-align:left}',
@@ -135,10 +136,6 @@
     wrap.innerHTML = '<div class="dcR-box">' + badge + html + '</div>';
     var box = wrap.firstChild;
     box.appendChild(link('dcR-btn', label, msg, kind));
-    var note = document.createElement('p');
-    note.className = 'dcR-note';
-    note.innerHTML = '写真1枚でOK・購入の義務はありません<br>送る文面はコピー済み。LINEに貼るだけ';
-    box.appendChild(note);
     return wrap;
   }
 

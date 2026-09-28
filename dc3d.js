@@ -60,6 +60,9 @@
     '.dc3d-arrow svg,.dc3d-close svg{width:18px;height:18px;display:block}',
     '.dc3d-meta{margin-top:2px;display:flex;flex-direction:column;align-items:center;gap:8px}',
     '.dc3d-name{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-hi);margin:0}',
+    '.dc3d-car{margin:-4px 0 0;font-size:11px;letter-spacing:.12em;color:var(--muted)}',
+    '.dc3d-car:empty{display:none}',
+    '.dcStory .dcShow[data-dc3d]{padding-bottom:4px}',
     '.dc3d-dots{display:flex;gap:6px;justify-content:center}',
     '.dc3d-dots i{width:6px;height:6px;border-radius:50%;background:rgba(201,162,74,.28);transition:background-color .25s,transform .25s}',
     '.dc3d-dots i.on{background:var(--gold);transform:scale(1.25)}',
@@ -174,7 +177,7 @@
           '<div class="dc3d-slot"><div class="dc3d-stage" tabindex="0" role="button" aria-label="カードを手に取って回す">' + cardHTML() + '</div></div>' +
           '<button class="dc3d-arrow dc3d-next" type="button" aria-label="次のカード">' + ICON.next + '</button>' +
         '</div>' +
-        '<div class="dc3d-meta"><p class="dc3d-name" aria-live="polite"></p><div class="dc3d-dots" aria-hidden="true"></div><span class="dc3d-count"></span></div>' +
+        '<div class="dc3d-meta"><p class="dc3d-name" aria-live="polite"></p><p class="dc3d-car"></p><div class="dc3d-dots" aria-hidden="true"></div><span class="dc3d-count"></span></div>' +
         '<button class="dc3d-cta" type="button">' + ICON.hand + 'タップして手に取る</button>' +
       '</div>';
 
@@ -191,7 +194,7 @@
         '<button class="dc3d-arrow dc3d-prev" type="button" aria-label="前のカード">' + ICON.prev + '</button>' +
         '<button class="dc3d-arrow dc3d-next" type="button" aria-label="次のカード">' + ICON.next + '</button>' +
       '</div>' +
-      '<div class="dc3d-mfoot"><p class="dc3d-name"></p><span class="dc3d-count"></span>' +
+      '<div class="dc3d-mfoot"><p class="dc3d-name"></p><p class="dc3d-car"></p><span class="dc3d-count"></span>' +
         '<p class="dc3d-hint">← ドラッグで回転・裏面も見られます →</p>' +
         '<button class="dc3d-rough" type="button" hidden><span class="dc3d-rough-ico">' + ICON.line + '</span><span>このデザインで愛車のラフを見る（無料）</span></button>' +
         '<a class="dc3d-order" href="#">このデザインでオーダーする</a></div>';
@@ -202,6 +205,7 @@
     var mslot = q('.dc3d-mslot', modal), mrow = q('.dc3d-mrow', modal), hint = q('.dc3d-hint', modal), order = q('.dc3d-order', modal);
     var frontImg = q('.dc3d-face--front img'), backImg = q('.dc3d-face--back img');
     var names = [q('.dc3d-name'), q('.dc3d-name', modal)];
+    var cars = [q('.dc3d-car'), q('.dc3d-car', modal)];
     var counts = [q('.dc3d-count'), q('.dc3d-count', modal)];
     var dots = q('.dc3d-dots');
 
@@ -324,15 +328,18 @@
     function paint(i) {
       var c = cards[i];
       frontImg.src = abs(c.front);
-      frontImg.alt = c.name + ' のカード表面';
+      frontImg.alt = c.label + ' のカード表面';
       card.style.setProperty('--m-silver', cssUrl(c.silver));
       card.style.setProperty('--m-gold', cssUrl(c.gold));
       card.classList.toggle('no-gold', !c.gold);
-      names.forEach(function (el) { el.textContent = c.name; });
+      names.forEach(function (el) { el.textContent = c.label; });
+      cars.forEach(function (el) { el.textContent = c.car; });
       var label = String(i + 1).padStart(2, '0') + ' / ' + String(cards.length).padStart(2, '0');
       counts.forEach(function (el) { el.textContent = label; });
       Array.prototype.forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === i); });
-      order.href = c.orderUrl || root.getAttribute('data-order-url') || data.orderUrl || '#';
+      var base = c.orderUrl || root.getAttribute('data-order-url') || data.orderUrl || '#';
+      // tell the semi-order page which design was chosen (it pre-selects it and shows it)
+      order.href = base === '#' ? base : base.replace(/#.*$/, '') + (base.indexOf('?') < 0 ? '?' : '&') + 'design=' + encodeURIComponent(c.slug);
       idx = i;
     }
     function preloadAround(i) {
@@ -517,7 +524,7 @@
     }
     rough.addEventListener('click', function () {
       var c = cards[idx];
-      if (window.DCRough) window.DCRough.open('「' + (c ? c.name : '') + '」のデザインで無料ラフをお願いします。愛車の写真を送ります。', 'modal');
+      if (window.DCRough) window.DCRough.open('「' + (c ? c.label : '') + '」のデザインで無料ラフをお願いします。愛車の写真を送ります。', 'modal');
     });
     document.addEventListener('keydown', function (e) {
       if (!isOpen) return;
@@ -541,7 +548,7 @@
         data = json;
         cards = (json.cards || []).filter(function (c) { return !c.hidden; }).map(function (c) {
           var base = 'cards/' + c.slug + '/';
-          return { slug: c.slug, name: c.name, orderUrl: c.orderUrl,
+          return { slug: c.slug, name: c.name, label: c.design || c.name, car: c.design ? c.name : '', orderUrl: c.orderUrl,
             front: c.front || base + 'front.webp',
             silver: c.silver === false ? null : (c.silver || base + 'silver.webp'),
             gold: c.gold === false ? null : (c.gold || base + 'gold.webp') };
@@ -578,7 +585,7 @@
     var els = document.querySelectorAll('[data-dc3d]:not([data-dc3d-mounted])');
     for (var i = 0; i < els.length; i++) mount(els[i]);
   }
-  window.DC3D = { mount: mount, version: '1.1.0' };
+  window.DC3D = { mount: mount, version: '1.2.0' };
 
   // free-rough buttons (LINE) live in line-cta.js next to this file
   function loadRoughCta() {
