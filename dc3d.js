@@ -618,8 +618,18 @@
     document.head.appendChild(s);
   }
 
+  // live-text LP sections (replaces the concept image) live in lp-copy.js
+  function loadLpCopy() {
+    if (window.__dcLpCopy || document.querySelector('script[src*="lp-copy.js"]')) return;
+    var s = document.createElement('script');
+    s.src = ROOT + 'lp-copy.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
   function boot() {
     loadRoughCta();
+    if (document.body && document.body.id === 'shopTopPage') loadLpCopy();
     autoMount();
     // the BASE page inserts the LP after load, so keep looking for a while
     if ('MutationObserver' in window) {

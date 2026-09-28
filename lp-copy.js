@@ -1,0 +1,69 @@
+/*! Driver's Collection — LP text sections (lp-copy.js)
+ * Replaces the concept image (text baked into a picture) with live text, so the copy can be
+ * changed here in seconds. Loaded by dc3d.js on the top page; no BASE edit needed.
+ */
+(function () {
+  'use strict';
+  if (window.__dcLpCopy) return;
+  window.__dcLpCopy = true;
+
+  var SCRIPT = document.currentScript;
+  var ROOT = (SCRIPT && SCRIPT.src) ? SCRIPT.src.replace(/[^/]*(\?.*)?$/, '') : 'https://coretagishi-lab.github.io/dc-cards/';
+
+  // ---- copy (edit here) ----
+  var CONCEPT = {
+    image: '6aabd5514cc23/',          // BASE file id of the old concept image this replaces
+    heading: '写真1枚から、<br>職人の手で。',
+    body: 'あなたの愛車の写真をもとにデザインし、<br>箔の輝きまで一枚ずつ手作業で仕上げます。<br>同じ一枚は、二つと存在しません。'
+  };
+
+  var SERIF = '"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif';
+  var CSS = [
+    '.dcConcept{position:relative;display:grid;place-items:center;min-height:clamp(320px,78vw,540px);padding:60px 20px;background:#040405 url("' + ROOT + 'lp/concept-bg.webp") center/cover no-repeat;text-align:center;overflow:hidden;box-sizing:border-box}',
+    '.dcConcept-h{margin:0;font-family:' + SERIF + ';font-weight:700;font-size:clamp(32px,9vw,48px);line-height:1.45;letter-spacing:.08em;background:linear-gradient(180deg,#fffaf0 0%,#f3e9d3 55%,#d8c190 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f3e9d3}',
+    '.dcConcept-rule{position:relative;width:min(78%,360px);height:1px;margin:24px auto 22px;background:linear-gradient(90deg,transparent,#c9a24a 22%,#ebd28f 50%,#c9a24a 78%,transparent)}',
+    '.dcConcept-rule i{position:absolute;left:50%;top:50%;width:7px;height:7px;background:#ebd28f;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 10px rgba(235,210,143,.7)}',
+    '.dcConcept-p{margin:0;font-family:' + SERIF + ';font-weight:500;font-size:clamp(13.5px,3.7vw,17px);line-height:2.05;letter-spacing:.06em;color:#e9e3d6;word-break:keep-all;overflow-wrap:anywhere}'
+  ].join('\n');
+
+  function injectCSS() {
+    if (document.getElementById('dcLpCopyCss')) return;
+    // a Japanese serif, downloaded only for the characters used here (tiny file)
+    var chars = (CONCEPT.heading + CONCEPT.body).replace(/<[^>]+>/g, '');
+    var uniq = Array.from(new Set(chars.split(''))).join('');
+    var f = document.createElement('link');
+    f.rel = 'stylesheet';
+    f.href = 'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap&text=' + encodeURIComponent(uniq);
+    document.head.appendChild(f);
+    var s = document.createElement('style');
+    s.id = 'dcLpCopyCss';
+    s.textContent = CSS;
+    document.head.appendChild(s);
+  }
+
+  function concept() {
+    if (document.querySelector('.dcConcept')) return true;
+    var img = document.querySelector('.dcStory img[src*="' + CONCEPT.image + '"]');
+    if (!img) return false;
+    injectCSS();
+    var sec = document.createElement('section');
+    sec.className = 'dcConcept';
+    sec.innerHTML = '<div><h2 class="dcConcept-h">' + CONCEPT.heading + '</h2>' +
+      '<div class="dcConcept-rule"><i></i></div>' +
+      '<p class="dcConcept-p">' + CONCEPT.body + '</p></div>';
+    img.parentNode.replaceChild(sec, img);
+    return true;
+  }
+
+  function boot() {
+    if (document.body.id !== 'shopTopPage') return;
+    if (concept()) return;
+    if ('MutationObserver' in window) {
+      var mo = new MutationObserver(function () { if (concept()) mo.disconnect(); });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(function () { mo.disconnect(); }, 15000);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
