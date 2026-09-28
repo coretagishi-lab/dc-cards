@@ -15,6 +15,8 @@ try{
   lang=q?q[1]:(s==='en'||s==='ja')?s:c?c[1]:(/^ja\b/i.test(navigator.language||'ja')?'ja':'en');
 }catch(e){}
 document.documentElement.setAttribute('data-dc-lang',lang);
+// English: the Japanese hero / gallery pictures stay invisible until site.js puts the English ones in
+if(lang==='en'){document.documentElement.setAttribute('data-dc-swap','');setTimeout(function(){document.documentElement.removeAttribute('data-dc-swap');},8000);}
 
 // reserve the height of every part before anything loads, so the page never jumps (CLS)
 var st=document.createElement('style');
@@ -27,7 +29,7 @@ st.textContent=
 '.dcStory [data-dc="concept"]{min-height:min(calc(130px + 51vw),460px);background:#040405}'+
 '.dcStory [data-dc="flow"]{min-height:680px;background:#040405}'+
 '.dcStory .dcShow[data-dc3d]{min-height:min(calc(186px + 75vw),566px);box-sizing:border-box}'+
-'html[data-dc-lang="en"] .dcStory img[data-dc="hero"],html[data-dc-lang="en"] .dcStory img[data-dc="gallery"]{visibility:hidden}';
+'html[data-dc-swap] .dcStory img[data-dc="hero"],html[data-dc-swap] .dcStory img[data-dc="gallery"]{visibility:hidden}';
 document.head.appendChild(st);
 
 var top=document.createElement('div');
