@@ -17,11 +17,13 @@
   // JP / EN (same rule as site.js)
   function dcLang() {
     try {
-      var q = /[?&]lang=(en|ja)\b/.exec(location.search);
+      var q = /[?&]lang=(en|ja)(&|$)/.exec(location.search);
       if (q) return q[1];
       var s = localStorage.getItem('dc_lang');
       if (s === 'en' || s === 'ja') return s;
     } catch (_) {}
+    var c = /(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie || '');
+    if (c) return c[1];
     return /^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en';
   }
   var EN = dcLang() === 'en';
@@ -148,7 +150,7 @@
     fullBtn: 'Talk to us by DM (free)',
     stickyMain: 'Get a free rough of your car', stickyFull: 'Talk to us by DM (free)', stickySub: 'Questions? DM us on Instagram',
     alt: 'Living in Japan? Chat with us on LINE',
-    ship: 'Outside Japan, we ship by EMS. Shipping is charged by country and shown at checkout.'
+    ship: 'Outside Japan, we ship by EMS \u2014 shipping is shown at checkout. In the US? DM us first for a total including import duties.'
   } : {
     galleryH: 'あなたの愛車だと、<br>どんな一枚になる？',
     galleryP: 'ギャラリーのデザインで、あなたの愛車のラフを<br>無料でお作りします。写真を1枚送るだけ。',

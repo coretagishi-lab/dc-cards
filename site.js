@@ -15,19 +15,40 @@
   var ROOT = (SCRIPT && SCRIPT.src) ? SCRIPT.src.replace(/[^/]*(\?.*)?$/, '') : 'https://coretagishi-lab.github.io/dc-cards/';
   var IG_DM = 'https://ig.me/m/drivers_collection_';
 
+  // The chosen language is kept in localStorage and a cookie (the cookie also works in private tabs).
+  // ?lang=en / ?lang=ja in a link sets it once and is then removed from the address, so an old
+  // address in the history can't switch the language back later.
+  function stored() {
+    try { var s = localStorage.getItem('dc_lang'); if (s === 'en' || s === 'ja') return s; } catch (_) {}
+    var c = /(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie || '');
+    return c ? c[1] : '';
+  }
+  function store(l) {
+    try { localStorage.setItem('dc_lang', l); } catch (_) {}
+    try { document.cookie = 'dc_lang=' + l + ';path=/;max-age=31536000;SameSite=Lax'; } catch (_) {}
+    return stored() === l;
+  }
+  function urlWithoutLang() {
+    var search = location.search.replace(/([?&])lang=(en|ja)(&|$)/, function (m, a, l, b) { return b ? a : ''; }).replace(/^&/, '?');
+    return location.pathname + (search === '?' ? '' : search) + location.hash;
+  }
   function dcLang() {
-    try {
-      var q = /[?&]lang=(en|ja)\b/.exec(location.search);
-      if (q) { localStorage.setItem('dc_lang', q[1]); return q[1]; }
-      var s = localStorage.getItem('dc_lang');
-      if (s === 'en' || s === 'ja') return s;
-    } catch (_) {}
-    return /^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en';
+    var q = /[?&]lang=(en|ja)(&|$)/.exec(location.search);
+    if (q) {
+      if (store(q[1])) { try { history.replaceState(history.state, '', urlWithoutLang()); } catch (_) {} }
+      return q[1];
+    }
+    return stored() || (/^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en');
   }
   var LANG = dcLang();
   window.DC_LANG = LANG;
   document.documentElement.setAttribute('data-dc-lang', LANG);
   if (LANG === 'en') document.documentElement.setAttribute('lang', 'en');
+  // coming back with the browser's back button can show a page kept in memory: fix its language
+  window.addEventListener('pageshow', function (e) {
+    var s = stored();
+    if (e.persisted && s && s !== LANG) location.reload();
+  });
 
   // BASE file ids of the LP pictures (see the theme's LP script)
   var IMG = { hero: '6aacdb5db5289/', gallery: '6aabd540edcf6/', flow: '6aacae74296a9/' };
@@ -35,12 +56,17 @@
 
   var CSS = [
     // language toggle + back arrow
-    '.dcTopbar{position:fixed;top:calc(var(--information-banner-height, 0px) + 12px);left:12px;z-index:2001;display:flex;gap:8px;align-items:center}',
+    '.dcTopbar{position:fixed;top:calc(var(--information-banner-height, 0px) + 12px);left:12px;z-index:2147480000;display:flex;gap:8px;align-items:center;-webkit-tap-highlight-color:transparent}',
     '.dcBack{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid rgba(201,162,74,.35);background:rgba(12,11,10,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#ebd28f!important;text-decoration:none!important}',
     '.dcBack svg{width:18px;height:18px}',
-    '.dcLang{display:flex;height:34px;padding:3px;border-radius:999px;border:1px solid rgba(201,162,74,.35);background:rgba(12,11,10,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}',
-    '.dcLang a{display:grid;place-items:center;min-width:34px;padding:0 8px;border-radius:999px;font:600 11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;color:#958c7a!important;text-decoration:none!important}',
-    '.dcLang a.is-on{background:linear-gradient(180deg,#e8ca7b,#b68d35);color:#15110a!important}',
+    // one switch with a gold knob that slides to the chosen side as soon as it is tapped
+    '.dcLang{position:relative;display:grid;grid-template-columns:1fr 1fr;width:92px;height:36px;padding:3px;border-radius:999px;border:1px solid rgba(201,162,74,.35);background:rgba(12,11,10,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}',
+    '.dcLang::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:999px;background:linear-gradient(180deg,#e8ca7b,#b68d35);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:transform .22s cubic-bezier(.3,.7,.2,1)}',
+    '.dcLang[data-on="en"]::before{transform:translateX(100%)}',
+    '.dcLang a{position:relative;z-index:1;display:grid;place-items:center;border-radius:999px;font:600 11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;padding-left:.12em;color:#958c7a!important;text-decoration:none!important;transition:color .22s ease}',
+    '.dcLang[data-on="ja"] a[data-l="ja"],.dcLang[data-on="en"] a[data-l="en"]{color:#15110a!important}',
+    '.dcLang-busy body{opacity:.55;transition:opacity .2s ease}',
+    '@media (prefers-reduced-motion:reduce){.dcLang::before{transition:none}}',
     '.dc3d-open .dcTopbar{display:none}',
     // EN sections (".dcEn …" prefixes outrank the theme's later ".dcStory img{width:100%}")
     '.dcEn{position:relative;box-sizing:border-box;text-align:center;word-break:normal;overflow-wrap:break-word;color:#ede6d6;background:#040405 url("' + ROOT + 'lp/concept-bg.webp") center/cover no-repeat;overflow:hidden}',
@@ -88,10 +114,16 @@
   }
 
   // ---------- top bar: back arrow (item pages) + JP/EN ----------
-  function switchTo(l) {
-    try { localStorage.setItem('dc_lang', l); } catch (_) {}
-    var u = location.href.replace(/([?&])lang=(en|ja)&?/, '$1').replace(/[?&]$/, '');
-    location.href = u + (u.indexOf('?') < 0 ? '?' : '&') + 'lang=' + l;
+  function switchTo(l, sw) {
+    sw.setAttribute('data-on', l);                       // show the change right away
+    document.documentElement.classList.add('dcLang-busy');
+    var base = urlWithoutLang();
+    // saved -> reload the same address; storage blocked -> carry the choice in the address instead
+    var next = store(l) ? base : base.replace(/(#|$)/, (base.indexOf('?') < 0 ? '?' : '&') + 'lang=' + l + '$1');
+    setTimeout(function () {
+      if (next === location.pathname + location.search + location.hash) location.reload();
+      else location.href = next;
+    }, 180);
   }
   function topbar(page) {
     if (document.querySelector('.dcTopbar')) return;
@@ -114,12 +146,15 @@
     }
     var sw = document.createElement('div');
     sw.className = 'dcLang';
-    sw.innerHTML = '<a href="#" data-l="ja"' + (LANG === 'ja' ? ' class="is-on"' : '') + '>JP</a><a href="#" data-l="en"' + (LANG === 'en' ? ' class="is-on"' : '') + '>EN</a>';
+    sw.setAttribute('data-on', LANG);
+    sw.setAttribute('role', 'group');
+    sw.setAttribute('aria-label', 'Language');
+    sw.innerHTML = '<a href="#" role="button" data-l="ja" lang="ja" aria-pressed="' + (LANG === 'ja') + '">JP</a>' +
+      '<a href="#" role="button" data-l="en" lang="en" aria-pressed="' + (LANG === 'en') + '">EN</a>';
     sw.addEventListener('click', function (e) {
-      var a = e.target.closest('a');
-      if (!a) return;
       e.preventDefault();
-      if (a.getAttribute('data-l') !== LANG) switchTo(a.getAttribute('data-l'));
+      if (document.documentElement.classList.contains('dcLang-busy')) return;
+      switchTo(LANG === 'ja' ? 'en' : 'ja', sw);   // two choices: any tap flips it
     });
     bar.appendChild(sw);
     document.body.appendChild(bar);
@@ -176,7 +211,7 @@
         '<li><b>04</b><span>Handmade in Japan<small>About one month, finished card by card.</small></span></li>' +
         '<li><b>05</b><span>Shipped to your door<small>In a Driver\'s Collection gift box. Tracked EMS outside Japan.</small></span></li>' +
       '</ol>' +
-      '<p class="dcEnFlow-note">Outside Japan, we ship by EMS. Shipping is charged by country and shown at checkout.</p>', 'dcEnFlow');
+      '<p class="dcEnFlow-note">Outside Japan, we ship by EMS \u2014 shipping is shown at checkout.<br>In the US? DM us first for a total including import duties.</p>', 'dcEnFlow');
     return true;
   }
   function enProducts() {

@@ -12,11 +12,13 @@
   // JP / EN (same rule as site.js)
   function dcLang() {
     try {
-      var q = /[?&]lang=(en|ja)\b/.exec(location.search);
+      var q = /[?&]lang=(en|ja)(&|$)/.exec(location.search);
       if (q) return q[1];
       var s = localStorage.getItem('dc_lang');
       if (s === 'en' || s === 'ja') return s;
     } catch (_) {}
+    var c = /(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie || '');
+    if (c) return c[1];
     return /^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en';
   }
   var EN = dcLang() === 'en';
@@ -39,8 +41,8 @@
     ['The case', ['Your card arrives sealed in a grading-card case. The card can be taken out, so you can enjoy it however you like, even behind your phone case.']],
     ['Packaging', ['Delivered in a Driver\'s Collection gift box, ready to give as a special present.']],
     ['Delivery time', ['About one month (design: about 10 days / making: about 2 weeks / shipping prep: 1\u20133 days).', 'You will see the finished design before we make it, and changes are possible. We\'ll message you when it ships. In a hurry? Just ask.']],
-    ['Shipping outside Japan', ['We ship outside Japan by EMS, with tracking. Shipping is charged separately depending on your country and is shown at checkout. Want to know before you order? Just DM us.', 'Import duties or taxes in your country, if any, are not included.']],
-    ['Display (+\u00A510,000)', ['A wall-mounted display with built-in lighting is also available, to show your card in an even more special way.']]
+    ['Shipping outside Japan', ['We ship outside Japan by EMS, with tracking. Shipping is charged by region and shown at checkout.', 'United States: US import duties have to be prepaid when we ship, so US orders go through DM. Message us and we\'ll send you a total including shipping and duties.', 'Adding the Display makes the parcel heavier, so extra shipping applies. We\'ll let you know the amount by DM after your order.', 'For other countries, import duties or taxes, if any, are not included.']],
+    ['Display (+\u00A510,000)', ['A wall-mounted display with built-in lighting is also available, to show your card in an even more special way.', 'Outside Japan, the display needs extra shipping. We\'ll let you know the amount by DM.']]
   ];
   var EN_DESC = {
     'フルオーダー': {

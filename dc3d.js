@@ -14,14 +14,28 @@
   // JP / EN (same rule as site.js)
   function dcLang() {
     try {
-      var q = /[?&]lang=(en|ja)\b/.exec(location.search);
+      var q = /[?&]lang=(en|ja)(&|$)/.exec(location.search);
       if (q) return q[1];
       var s = localStorage.getItem('dc_lang');
       if (s === 'en' || s === 'ja') return s;
     } catch (_) {}
+    var c = /(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie || '');
+    if (c) return c[1];
     return /^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en';
   }
   var EN = dcLang() === 'en';
+  // LP pictures that site.js / lp-copy.js swap for live text: keep them invisible until then,
+  // so the Japanese picture doesn't flash first (shown again after 8 s if a swap never happens)
+  (function hideSwapped() {
+    if (!document.body || document.body.id !== 'shopTopPage' || document.getElementById('dcSwapHide')) return;
+    var ids = ['6aabd5514cc23/'].concat(EN ? ['6aacdb5db5289/', '6aabd540edcf6/', '6aacae74296a9/'] : []);
+    var st = document.createElement('style');
+    st.id = 'dcSwapHide';
+    st.textContent = ids.map(function (id) { return '.dcStory img[src*="' + id + '"]'; }).join(',') + '{visibility:hidden}';
+    document.head.appendChild(st);
+    setTimeout(function () { if (st.parentNode) st.parentNode.removeChild(st); }, 8000);
+  })();
+
   var TX = EN ? {
     gallery: 'Card gallery', prev: 'Previous card', next: 'Next card', hold: 'Pick up the card and turn it',
     cta: 'Tap to hold it', view: 'Turn the card', close: 'Close', back: 'Back of a Driver\'s Collection card',
