@@ -27,6 +27,30 @@
     '.dcConcept-p{margin:0;font-family:' + SERIF + ';font-weight:500;font-size:clamp(13.5px,3.7vw,17px);line-height:1.95;letter-spacing:.06em;padding-left:.06em;color:#e9e3d6;word-break:keep-all;overflow-wrap:anywhere}'
   ].join('\n');
 
+  // top-page spacing: product cards, product list -> closing image -> footer
+  // ("html body#..." outranks the theme's own !important rules)
+  var LAYOUT = [
+    'html body#shopTopPage .itemList{padding:18px 16px 8px!important;gap:12px!important}',
+    'html body#shopTopPage .item .itemImg{aspect-ratio:auto!important}',
+    'html body#shopTopPage .item .itemImg a::before{padding-top:131%!important}',
+    'html body#shopTopPage .item .itemImg img{object-fit:cover!important}',
+    'html body#shopTopPage .item .itemTitle{margin:12px 10px 0!important}',
+    'html body#shopTopPage .item .itemTitle h2{margin:0 auto!important}',
+    'html body#shopTopPage .item .itemPrice{margin:2px 10px 14px!important;line-height:1.4}',
+    'html body#shopTopPage .item .itemDetail{margin:0!important}',
+    'html body#shopTopPage #loading{padding:0!important}',
+    // closing image: trim the empty sky above the words
+    'html body#shopTopPage .dcStory img[src*="6aabd5720060e"]{aspect-ratio:1/1;object-fit:cover;object-position:50% 75%}',
+    'html body#shopTopPage #mainFooter{margin:18px auto 24px!important}'
+  ].join('\n');
+  function injectLayout() {
+    if (document.getElementById('dcLpLayoutCss')) return;
+    var s = document.createElement('style');
+    s.id = 'dcLpLayoutCss';
+    s.textContent = LAYOUT;
+    document.head.appendChild(s);
+  }
+
   function injectCSS() {
     if (document.getElementById('dcLpCopyCss')) return;
     // a Japanese serif, downloaded only for the characters used here (tiny file)
@@ -58,6 +82,7 @@
 
   function boot() {
     if (document.body.id !== 'shopTopPage') return;
+    injectLayout();
     if (concept()) return;
     if ('MutationObserver' in window) {
       var mo = new MutationObserver(function () { if (concept()) mo.disconnect(); });

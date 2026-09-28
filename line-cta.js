@@ -45,6 +45,7 @@
     '.dcR-ico svg{width:16px;height:16px;display:block}',
     '.dcR-note{margin:11px 0 0;font-size:11.5px;line-height:1.7;color:var(--muted);word-break:keep-all;overflow-wrap:anywhere}',
     '.dcR[data-dc-rough="gallery"]{margin:10px auto 34px}',
+    '.dcR[data-dc-rough="products"]{margin:26px auto 0}',
     '.dcR--slim .dcR-box{padding:22px 18px 18px}',
     '.dcR--slim .dcR-h{font-size:17px}',
     '.dcR--item{max-width:none;margin:22px 0 0;padding:0;text-align:left}',
