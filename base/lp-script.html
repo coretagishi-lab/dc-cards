@@ -1,0 +1,60 @@
+<script>
+(function(){
+if(document.body.id!=='shopTopPage')return;
+var B='https://basefile.akamaized.net/driverscard-official-ec/';
+var R='https://coretagishi-lab.github.io/dc-cards/';
+var heroImg    = '6aacdb5db5289/E784A1E9A18C926_20260918144800.png';
+var galleryImg = '6aabd540edcf6/IMG_6893.jpg';
+var productImg = '6aacdb727d7a2/E784A1E9A18C928_20260918152133.png';
+var outroImg   = '6aabd5720060e/ChatGPTImage2026E5B9B49E69C8817E697A52128129.png';
+
+// language (JP / EN) - same rule as site.js
+var lang='ja';
+try{
+  var q=/[?&]lang=(en|ja)(&|$)/.exec(location.search), s=localStorage.getItem('dc_lang'), c=/(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie||'');
+  lang=q?q[1]:(s==='en'||s==='ja')?s:c?c[1]:(/^ja\b/i.test(navigator.language||'ja')?'ja':'en');
+}catch(e){}
+document.documentElement.setAttribute('data-dc-lang',lang);
+
+// reserve the height of every part before anything loads, so the page never jumps (CLS)
+var st=document.createElement('style');
+st.textContent=
+'.dcStory img{height:auto}'+
+'.dcStory img[data-dc="hero"]{aspect-ratio:auto 9/16}'+
+'.dcStory img[data-dc="gallery"]{aspect-ratio:auto 1640/472}'+
+'.dcStory img[data-dc="product"]{aspect-ratio:auto 1122/1402}'+
+'.dcStory img[data-dc="outro"]{aspect-ratio:1/1;object-fit:cover;object-position:50% 75%}'+
+'.dcStory [data-dc="concept"]{min-height:min(calc(130px + 51vw),460px);background:#040405}'+
+'.dcStory [data-dc="flow"]{min-height:680px;background:#040405}'+
+'.dcStory .dcShow[data-dc3d]{min-height:min(calc(186px + 75vw),566px);box-sizing:border-box}'+
+'html[data-dc-lang="en"] .dcStory img[data-dc="hero"],html[data-dc-lang="en"] .dcStory img[data-dc="gallery"]{visibility:hidden}';
+document.head.appendChild(st);
+
+var top=document.createElement('div');
+top.className='dcStory';
+top.innerHTML=
+'<img data-dc="hero" src="'+B+heroImg+'" alt="Driver\'s Collection" fetchpriority="high">'+
+'<section data-dc="concept"></section>'+
+'<img data-dc="gallery" src="'+B+galleryImg+'" alt="GALLERY">'+
+'<div class="dcShow" data-dc3d data-order-url="https://driverscard.official.ec/items/157040109"></div>'+
+'<img data-dc="product" src="'+B+productImg+'" alt="" loading="lazy" decoding="async">'+
+'<section id="dcFlow" data-dc="flow"></section>';
+
+var out=document.createElement('div');
+out.className='dcStory';
+out.innerHTML='<img data-dc="outro" src="'+B+outroImg+'" alt="" loading="lazy" decoding="async">';
+var m=document.getElementById('mainContent');
+var h=document.getElementById('mainHeader');
+if(m&&m.parentNode){m.parentNode.insertBefore(top,m);m.parentNode.insertBefore(out,m.nextSibling);}
+else if(h&&h.parentNode){h.parentNode.insertBefore(top,h.nextSibling);h.parentNode.insertBefore(out,h.nextSibling.nextSibling);}
+window.scrollTo(0,0);
+setTimeout(function(){window.scrollTo(0,0);},50);
+setTimeout(function(){window.scrollTo(0,0);},300);
+
+// 3D gallery + live text sections (managed in github.com/coretagishi-lab/dc-cards)
+var dc3d=document.createElement('script');
+dc3d.src=R+'dc3d.js';
+dc3d.async=true;
+document.body.appendChild(dc3d);
+})();
+</script>
