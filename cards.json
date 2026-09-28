@@ -8,43 +8,50 @@
   "cards": [
     {
       "slug": "f8-tributo",
-      "name": "Ferrari F8 Tributo"
+      "name": "Ferrari F8 Tributo",
+      "design": "No.01"
     },
     {
       "slug": "aventador",
       "name": "Lamborghini Aventador",
       "gold": false,
-      "temp": true
+      "temp": true,
+      "design": "No.02"
     },
     {
       "slug": "lexus-lfa",
       "name": "Lexus LFA",
       "gold": false,
-      "temp": true
+      "temp": true,
+      "design": "No.03"
     },
     {
       "slug": "gallardo",
       "name": "Lamborghini Gallardo",
       "gold": false,
-      "temp": true
+      "temp": true,
+      "design": "No.04"
     },
     {
       "slug": "mclaren-765lt",
       "name": "McLaren 765LT",
       "gold": false,
-      "temp": true
+      "temp": true,
+      "design": "No.05"
     },
     {
       "slug": "sf90-stradale",
       "name": "Ferrari SF90 Stradale",
       "gold": false,
-      "temp": true
+      "temp": true,
+      "design": "No.06"
     },
     {
       "slug": "gallardo-spyder",
       "name": "Lamborghini Gallardo Spyder",
       "gold": false,
-      "temp": true
+      "temp": true,
+      "design": "No.07"
     }
   ]
 }

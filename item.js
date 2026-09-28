@@ -186,7 +186,7 @@
         '<div class="dcPick-grid" role="radiogroup" aria-label="デザイン">' + list.map(function (d) {
           return '<button type="button" class="dcPick-item" role="radio" aria-checked="false" data-slug="' + d.slug + '">' +
             '<span class="dcPick-img"><img src="' + d.thumb + '" alt="" loading="lazy" decoding="async"></span>' +
-            '<span class="dcPick-name">' + d.label + '</span></button>';
+            '<span class="dcPick-name">' + d.label + (d.car ? '<small>' + d.car + '</small>' : '') + '</span></button>';
         }).join('') +
         '<button type="button" class="dcPick-item dcPick-item--line" role="radio" aria-checked="false" data-slug="__line">' +
         '<span class="dcPick-img"><span class="dcPick-q">?</span></span><span class="dcPick-name">' + LINE_CHOICE + '</span></button></div>' +

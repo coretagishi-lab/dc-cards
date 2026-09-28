@@ -52,8 +52,14 @@
     '.dcR--item .dcR-h{font-size:16px;margin-bottom:8px}',
     '.dcR--item .dcR-p{font-size:13px;margin-bottom:16px;word-break:normal;line-break:strict}',
     '.dcR--item .dcR-btn{max-width:none}',
-    '.dcR-sticky{position:fixed;left:12px;right:88px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2147482000;display:none}',
-    '.dcR-sticky a{display:flex;align-items:center;justify-content:center;gap:9px;height:52px;padding:0 16px;border-radius:999px;border:1px solid rgba(201,162,74,.65);background:rgba(12,11,10,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--gold-hi,#ebd28f)!important;font-size:14px;font-weight:600;letter-spacing:.06em;text-decoration:none!important;box-shadow:0 10px 30px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}',
+    '.dcR-sticky{position:fixed;left:12px;right:88px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2147482000;display:none;pointer-events:none}',
+    '.dcR-no-bubble .dcR-sticky{right:12px}',
+    '.dcR-sticky.is-on{pointer-events:auto}',
+    '.dcR-st{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}',
+    '.dcR-st-main{font-size:14px;font-weight:600;letter-spacing:.06em}',
+    '.dcR-st-sub{margin-top:3px;font-size:10.5px;font-weight:400;letter-spacing:.04em;color:#b9ad8c}',
+    '@media (max-width:768px){.dcR-has-sticky body{padding-bottom:86px}}',
+    '.dcR-sticky a{display:flex;align-items:center;justify-content:center;gap:11px;height:58px;padding:0 18px;border-radius:999px;border:1px solid rgba(201,162,74,.65);background:rgba(12,11,10,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--gold-hi,#ebd28f)!important;font-size:14px;font-weight:600;letter-spacing:.06em;text-decoration:none!important;box-shadow:0 10px 30px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}',
     '.dcR-sticky .dcR-ico{width:20px;height:20px;border-radius:5px}',
     '.dcR-sticky{opacity:0;transform:translateY(12px);transition:opacity .3s ease,transform .3s ease}',
     '.dcR-sticky.is-on{opacity:1;transform:none}',
@@ -144,27 +150,61 @@
     d.className = 'dcR-sticky';
     d.setAttribute('data-dc-rough', 'sticky');
     var full = kind === 'full';
-    d.appendChild(link('', full ? 'LINEで相談する（無料）' : '愛車のラフを無料で見る', full ? MSG_FULL : (kind === 'semi' ? MSG_SEMI : MSG_ROUGH), 'sticky_' + kind));
+    var a = link('', '', full ? MSG_FULL : (kind === 'semi' ? MSG_SEMI : MSG_ROUGH), 'sticky_' + kind);
+    a.lastChild.outerHTML = '<span class="dcR-st"><span class="dcR-st-main">' +
+      (full ? 'LINEで相談する（無料）' : '愛車のラフを無料で見る') +
+      '</span><span class="dcR-st-sub">ご質問だけでも、お気軽にLINEへ</span></span>';
+    d.appendChild(a);
     document.body.appendChild(d);
-    // show after the first screen; hide while an in-page rough block (or the buy button) is on screen
-    var seen = [], shown = false;
+    document.documentElement.classList.add('dcR-has-sticky');
+    // appears once you scroll past the first screen and then stays put (no flicker);
+    // it only goes away again near the very top of the page
+    var shown = false;
     function update() {
-      var on = window.pageYOffset > window.innerHeight * 0.8 && seen.length === 0;
+      var y = window.pageYOffset, h = window.innerHeight;
+      var on = shown ? y > h * 0.35 : y > h * 0.7;
       if (on !== shown) { shown = on; d.classList.toggle('is-on', on); }
-    }
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          var i = seen.indexOf(en.target);
-          if (en.isIntersecting && i < 0) seen.push(en.target);
-          if (!en.isIntersecting && i >= 0) seen.splice(i, 1);
-        });
-        update();
-      });
-      Array.prototype.forEach.call(document.querySelectorAll('[data-dc-rough]:not([data-dc-rough="sticky"]), #purchase_form .purchaseButton'), function (el) { io.observe(el); });
     }
     window.addEventListener('scroll', update, { passive: true });
     update();
+  }
+
+  // The shop's older floating LINE bubble (bottom right) is no longer needed: hide it.
+  function isLineWidget(n) {
+    try { return lineWidgetTest(n); } catch (_) { return false; }
+  }
+  function lineWidgetTest(n) {
+    if (n.matches && n.matches('iframe') && /line/i.test(n.src || '')) return true;
+    if (n.querySelector && n.querySelector('a[href*="lin.ee"],a[href*="line.me"],iframe[src*="line"],img[src*="line" i],img[alt*="line" i]')) return true;
+    if (n.matches && n.matches('a[href*="lin.ee"],a[href*="line.me"]')) return true;
+    if (/(^|\s)line(\s|$)/i.test((n.textContent || '').trim())) return true;
+    return /(^|[-_\s])line([-_\s]|$)/i.test((n.id || '') + ' ' + (typeof n.className === 'string' ? n.className : ''));
+  }
+  function hideOldLineBubble() {
+    var W = window.innerWidth, H = window.innerHeight, hid = false;
+    Array.prototype.forEach.call(document.querySelectorAll('body > *, body > * > *'), function (n) {
+      if (n.__dcSeen || /^(SCRIPT|STYLE|LINK|NOSCRIPT)$/.test(n.tagName)) return;
+      if (n.closest && n.closest('.dcR,.dcR-sticky,.dc3d,.dc3d-modal,#baseMenu,#mainHeader,#mainContent,#mainFooter,.dcStory')) return;
+      var cs = window.getComputedStyle(n);
+      if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden') return;
+      var r = n.getBoundingClientRect();
+      if (!r.width || r.width > 240 || r.height > 240) return;
+      if (r.left < W * 0.4 || r.top < H * 0.4) return;           // bottom-right corner only
+      n.__dcSeen = true;
+      if (!isLineWidget(n)) return;
+      n.style.setProperty('display', 'none', 'important');
+      hid = true;
+    });
+    if (hid) document.documentElement.classList.add('dcR-no-bubble');
+    return hid;
+  }
+  function watchOldLineBubble() {
+    hideOldLineBubble();
+    if (!('MutationObserver' in window)) return;
+    var mo = new MutationObserver(function () { hideOldLineBubble(); });
+    mo.observe(document.body, { childList: true, subtree: true });
+    setTimeout(function () { mo.disconnect(); }, 20000);
+    window.addEventListener('load', function () { setTimeout(hideOldLineBubble, 800); setTimeout(hideOldLineBubble, 3000); });
   }
 
   // ---------- placement ----------
@@ -217,10 +257,11 @@
     return true;
   }
 
-  window.DCRough = { url: lineUrl, open: open, version: '2.0.0' };
+  window.DCRough = { url: lineUrl, open: open, version: '2.1.0' };
   window.__dcLineCta = true;
 
   function boot() {
+    watchOldLineBubble();
     if (place()) return;
     // the LP and item enhancements are inserted after load, so keep looking for a while
     if ('MutationObserver' in window) {

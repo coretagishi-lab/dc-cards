@@ -331,14 +331,23 @@ body#shopDetailPage .dcPick-img {
 body#shopDetailPage .dcPick-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 body#shopDetailPage .dcPick-name {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: 10.5px;
-  line-height: 1.45;
-  letter-spacing: .02em;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: .06em;
   word-break: keep-all;
   overflow-wrap: anywhere;
+}
+body#shopDetailPage .dcPick-name small {
+  display: block;
+  margin-top: 1px;
+  font-size: 9.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 body#shopDetailPage .dcPick-item:hover .dcPick-img { opacity: .9; }
 body#shopDetailPage .dcPick-item.is-on .dcPick-img { opacity: 1; box-shadow: 0 0 0 2px var(--gold); transform: translateY(-2px); }
