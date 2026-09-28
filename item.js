@@ -111,6 +111,10 @@
   // Writes the choice into BASE's option field whose label contains 「デザイン」 (text or pulldown),
   // so the order shows which design was picked. ?design=<slug> (from the 3D gallery) pre-selects it.
   var LINE_CHOICE = 'LINEで相談して決める';
+  function designHTML(label) {
+    var m = /^No\.?\s*(\d+)$/i.exec(label || '');
+    return m ? '<span class="dcNo"><span class="dcNo-mark">N\u00BA</span><span class="dcNo-num">' + m[1] + '</span></span>' : label;
+  }
 
   function fieldFor(label) {
     if (label.htmlFor) { var byId = document.getElementById(label.htmlFor); if (byId) return byId; }
@@ -186,7 +190,7 @@
         '<div class="dcPick-grid" role="radiogroup" aria-label="デザイン">' + list.map(function (d) {
           return '<button type="button" class="dcPick-item" role="radio" aria-checked="false" data-slug="' + d.slug + '">' +
             '<span class="dcPick-img"><img src="' + d.thumb + '" alt="" loading="lazy" decoding="async"></span>' +
-            '<span class="dcPick-name">' + d.label + (d.car ? '<small>' + d.car + '</small>' : '') + '</span></button>';
+            '<span class="dcPick-name">' + designHTML(d.label) + '</span></button>';
         }).join('') +
         '<button type="button" class="dcPick-item dcPick-item--line" role="radio" aria-checked="false" data-slug="__line">' +
         '<span class="dcPick-img"><span class="dcPick-q">?</span></span><span class="dcPick-name">' + LINE_CHOICE + '</span></button></div>' +
@@ -210,7 +214,7 @@
           b.setAttribute('aria-checked', on ? 'true' : 'false');
         });
         var value = isLine ? LINE_CHOICE : d.label;
-        sel.textContent = value;
+        sel.innerHTML = isLine ? value : designHTML(value);
         setField(field, value);
         showDesign(isLine ? null : d);
         if (fromUser) { try { if (typeof window.clarity === 'function') window.clarity('event', 'dc_pick_design'); } catch (_) {} }

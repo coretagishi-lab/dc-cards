@@ -52,7 +52,7 @@
     '.dcR--item .dcR-h{font-size:16px;margin-bottom:8px}',
     '.dcR--item .dcR-p{font-size:13px;margin-bottom:16px;word-break:normal;line-break:strict}',
     '.dcR--item .dcR-btn{max-width:none}',
-    '.dcR-sticky{position:fixed;left:12px;right:88px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2147482000;display:none;pointer-events:none}',
+    '.dcR-sticky{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2147482000;display:none;pointer-events:none}',
     '.dcR-no-bubble .dcR-sticky{right:12px}',
     '.dcR-sticky.is-on{pointer-events:auto}',
     '.dcR-st{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}',
@@ -162,7 +162,7 @@
     var shown = false;
     function update() {
       var y = window.pageYOffset, h = window.innerHeight;
-      var on = shown ? y > h * 0.35 : y > h * 0.7;
+      var on = shown ? y > h * 0.25 : y > h * 0.7;
       if (on !== shown) { shown = on; d.classList.toggle('is-on', on); }
     }
     window.addEventListener('scroll', update, { passive: true });
@@ -257,7 +257,7 @@
     return true;
   }
 
-  window.DCRough = { url: lineUrl, open: open, version: '2.1.0' };
+  window.DCRough = { url: lineUrl, open: open, version: '2.2.0' };
   window.__dcLineCta = true;
 
   function boot() {

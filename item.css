@@ -340,6 +340,23 @@ body#shopDetailPage .dcPick-name {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
+body#shopDetailPage .dcNo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .2em;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-variant-numeric: lining-nums;
+  background: linear-gradient(180deg, #f6e7b8, #c9a24a 70%, #a88532);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+body#shopDetailPage .dcNo-mark { font-size: .58em; font-style: italic; }
+body#shopDetailPage .dcNo-num { letter-spacing: .08em; }
+body#shopDetailPage .dcPick-name .dcNo { font-size: 19px; line-height: 1.1; }
+body#shopDetailPage .dcPick-item:not(.is-on) .dcPick-name .dcNo { opacity: .75; }
+body#shopDetailPage .dcPick-sel .dcNo { font-size: 18px; vertical-align: -1px; }
 body#shopDetailPage .dcPick-name small {
   display: block;
   margin-top: 1px;

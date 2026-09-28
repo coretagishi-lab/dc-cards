@@ -60,6 +60,13 @@
     '.dc3d-arrow svg,.dc3d-close svg{width:18px;height:18px;display:block}',
     '.dc3d-meta{margin-top:2px;display:flex;flex-direction:column;align-items:center;gap:8px}',
     '.dc3d-name{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-hi);margin:0}',
+    '.dc3d-name.is-no{text-transform:none;letter-spacing:0;line-height:1}',
+    '.dcNo{display:inline-flex;align-items:baseline;gap:.22em;font-family:"Cormorant Garamond","Times New Roman",serif;font-weight:500;color:#ebd28f;font-variant-numeric:lining-nums;background:linear-gradient(180deg,#f6e7b8,#c9a24a 70%,#a88532);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}',
+    '.dcNo-mark{font-size:.56em;font-style:italic;letter-spacing:.02em}',
+    '.dcNo-num{font-size:1em;letter-spacing:.08em}',
+    '.dc3d-meta .dc3d-name.is-no{font-size:30px}',
+    '.dc3d-mfoot .dc3d-name.is-no{font-size:28px}',
+    '.dc3d-count[hidden]{display:none}',
     '.dc3d-car{margin:-4px 0 0;font-size:11px;letter-spacing:.12em;color:var(--muted)}',
     '.dc3d-car:empty{display:none}',
     '.dcStory .dcShow[data-dc3d]{padding-bottom:4px}',
@@ -109,6 +116,12 @@
     hand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.5L4.3 15.4a1.5 1.5 0 0 1 2.3-1.9L9 16"/></svg>'
   };
 
+  // "No.01" -> Nº 01 set in an engraved-looking serif
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function designHTML(label) {
+    var m = /^No\.?\s*(\d+)$/i.exec(label || '');
+    return m ? '<span class="dcNo"><span class="dcNo-mark">N\u00BA</span><span class="dcNo-num">' + m[1] + '</span></span>' : esc(label);
+  }
   var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
   var ease = function (a) { return a * a * (3 - 2 * a); };
   var now = function () { return performance.now(); };
@@ -143,6 +156,12 @@
   function injectCSS() {
     if (cssDone) return;
     cssDone = true;
+    if (!document.querySelector('link[href*="Cormorant+Garamond"]')) {
+      var f = document.createElement('link');
+      f.rel = 'stylesheet';
+      f.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap';
+      document.head.appendChild(f);
+    }
     var s = document.createElement('style');
     s.id = 'dc3d-style';
     s.textContent = CSS;
@@ -332,10 +351,11 @@
       card.style.setProperty('--m-silver', cssUrl(c.silver));
       card.style.setProperty('--m-gold', cssUrl(c.gold));
       card.classList.toggle('no-gold', !c.gold);
-      names.forEach(function (el) { el.textContent = c.label; });
+      var numbered = /^No\.?\s*\d+$/i.test(c.label);
+      names.forEach(function (el) { el.innerHTML = designHTML(c.label); el.classList.toggle('is-no', numbered); });
       cars.forEach(function (el) { el.textContent = c.car; });
       var label = String(i + 1).padStart(2, '0') + ' / ' + String(cards.length).padStart(2, '0');
-      counts.forEach(function (el) { el.textContent = label; });
+      counts.forEach(function (el) { el.textContent = label; el.hidden = numbered; });
       Array.prototype.forEach.call(dots.children, function (d, k) { d.classList.toggle('on', k === i); });
       var base = c.orderUrl || root.getAttribute('data-order-url') || data.orderUrl || '#';
       // tell the semi-order page which design was chosen (it pre-selects it and shows it)
@@ -548,7 +568,7 @@
         data = json;
         cards = (json.cards || []).filter(function (c) { return !c.hidden; }).map(function (c) {
           var base = 'cards/' + c.slug + '/';
-          return { slug: c.slug, name: c.name, label: c.design || c.name, car: c.design ? c.name : '', orderUrl: c.orderUrl,
+          return { slug: c.slug, name: c.name, label: c.design || c.name, car: '', orderUrl: c.orderUrl,
             front: c.front || base + 'front.webp',
             silver: c.silver === false ? null : (c.silver || base + 'silver.webp'),
             gold: c.gold === false ? null : (c.gold || base + 'gold.webp') };
@@ -585,7 +605,7 @@
     var els = document.querySelectorAll('[data-dc3d]:not([data-dc3d-mounted])');
     for (var i = 0; i < els.length; i++) mount(els[i]);
   }
-  window.DC3D = { mount: mount, version: '1.2.0' };
+  window.DC3D = { mount: mount, version: '1.3.0' };
 
   // free-rough buttons (LINE) live in line-cta.js next to this file
   function loadRoughCta() {
