@@ -83,17 +83,19 @@
     '.dc3d-modal.is-open .dc3d-backdrop{opacity:1}',
     '.dc3d-close{position:absolute;top:max(12px,env(safe-area-inset-top));right:12px;z-index:3;appearance:none;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid rgba(235,210,143,.35);background:rgba(10,9,8,.6);color:#ede6d6;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .3s ease}',
     '.dc3d-modal.is-open .dc3d-close{opacity:1}',
-    '.dc3d-mrow{position:absolute;inset:0;z-index:2;display:grid;place-items:center}',
+    '.dc3d-mrow{position:relative;flex:1 1 auto;min-height:0;width:100%;z-index:2;display:grid;place-items:center;padding-top:calc(max(12px,env(safe-area-inset-top)) + 50px);container-type:size}',
     '.dc3d-mslot{display:grid;place-items:center}',
-    '.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100vh - 400px) * .716)));cursor:grab;touch-action:none;padding:28px 0}',
-    '@supports (height:100svh){.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100svh - 400px) * .716)))}}',
-    '.dc3d-mslot .dc3d-floor{bottom:6px}',
+    '.dc3d-mslot .dc3d-stage{--w:min(76vw,420px,max(180px,calc((100vh - 270px) * .716)));cursor:grab;touch-action:none;padding:14px 0 22px}',
+    '@supports (height:100svh){.dc3d-mslot .dc3d-stage{--w:min(76vw,420px,max(180px,calc((100svh - 270px) * .716)))}}',
+    '@supports (height:1cqh){.dc3d-mslot .dc3d-stage{--w:min(76vw,420px,max(160px,calc((100cqh - 40px) * .716)))}}',
+    '.dc3d-mslot .dc3d-floor{bottom:2px}',
     '.dc3d-modal .dc3d-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0;transition:opacity .3s ease,background-color .2s ease}',
     '.dc3d-modal .dc3d-arrow:active{transform:translateY(-50%) scale(.9)}',
     '.dc3d-modal.is-open .dc3d-arrow{opacity:1}',
-    '.dc3d-modal .dc3d-prev{left:max(6px,calc(50% - var(--mw,400px) / 2 - 56px))}',
-    '.dc3d-modal .dc3d-next{right:max(6px,calc(50% - var(--mw,400px) / 2 - 56px))}',
-    '.dc3d-mfoot{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 16px max(16px,env(safe-area-inset-bottom));opacity:0;transform:translateY(10px);transition:opacity .35s ease .1s,transform .35s ease .1s}',
+    '.dc3d-modal .dc3d-prev{left:max(4px,calc(50% - var(--mw,400px) / 2 - 52px))}',
+    '.dc3d-modal .dc3d-next{right:max(4px,calc(50% - var(--mw,400px) / 2 - 52px))}',
+    '.dc3d-modal .dc3d-arrow{top:calc(50% + (max(12px,env(safe-area-inset-top)) + 50px) / 2)}',
+    '.dc3d-mfoot{position:relative;flex:none;width:100%;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 16px max(14px,env(safe-area-inset-bottom));opacity:0;transform:translateY(10px);transition:opacity .35s ease .1s,transform .35s ease .1s}',
     '.dc3d-modal.is-open .dc3d-mfoot{opacity:1;transform:none}',
     '.dc3d-hint{margin:0;font-size:12px;color:#ede6d6;opacity:.7;transition:opacity .5s ease}',
     '.dc3d-hint.is-hidden{opacity:0}',
@@ -605,7 +607,7 @@
     var els = document.querySelectorAll('[data-dc3d]:not([data-dc3d-mounted])');
     for (var i = 0; i < els.length; i++) mount(els[i]);
   }
-  window.DC3D = { mount: mount, version: '1.3.0' };
+  window.DC3D = { mount: mount, version: '1.4.0' };
 
   // free-rough buttons (LINE) live in line-cta.js next to this file
   function loadRoughCta() {
