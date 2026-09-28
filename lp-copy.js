@@ -13,17 +13,18 @@
   // ---- copy (edit here) ----
   var CONCEPT = {
     image: '6aabd5514cc23/',          // BASE file id of the old concept image this replaces
-    heading: '写真1枚から、<br>職人の手で。',
-    body: 'あなたの愛車の写真をもとにデザインし、<br>箔の輝きまで一枚ずつ手作業で仕上げます。<br>同じ一枚は、二つと存在しません。'
+    heading: 'このトレカアート<br>全てハンドメイド',
+    body: 'あなたの愛車専用のトレカは<br>1枚1枚職人が手作業で作ります。<br>これをできるのは世界でここだけ<br>\u201C世界に一個だけ\u201Dをあなたに届けます。'
   };
 
   var SERIF = '"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif';
   var CSS = [
-    '.dcConcept{position:relative;display:grid;place-items:center;min-height:clamp(320px,78vw,540px);padding:60px 20px;background:#040405 url("' + ROOT + 'lp/concept-bg.webp") center/cover no-repeat;text-align:center;overflow:hidden;box-sizing:border-box}',
-    '.dcConcept-h{margin:0;font-family:' + SERIF + ';font-weight:700;font-size:clamp(32px,9vw,48px);line-height:1.45;letter-spacing:.08em;background:linear-gradient(180deg,#fffaf0 0%,#f3e9d3 55%,#d8c190 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f3e9d3}',
-    '.dcConcept-rule{position:relative;width:min(78%,360px);height:1px;margin:24px auto 22px;background:linear-gradient(90deg,transparent,#c9a24a 22%,#ebd28f 50%,#c9a24a 78%,transparent)}',
+    '.dcConcept{position:relative;display:grid;place-items:center;padding:44px 16px 38px;background:#040405 url("' + ROOT + 'lp/concept-bg.webp") center/cover no-repeat;text-align:center;overflow:hidden;box-sizing:border-box}',
+    '.dcConcept-h{margin:0;font-family:' + SERIF + ';font-weight:700;font-size:clamp(30px,8.6vw,46px);line-height:1.42;letter-spacing:.08em;padding-left:.08em;background:linear-gradient(180deg,#fffaf0 0%,#f3e9d3 55%,#d8c190 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f3e9d3}',
+    '.dcConcept-rule{position:relative;width:min(78%,360px);height:1px;margin:18px auto 16px;background:linear-gradient(90deg,transparent,#c9a24a 22%,#ebd28f 50%,#c9a24a 78%,transparent)}',
+    '.dcConcept > div{width:100%;text-align:center}',
     '.dcConcept-rule i{position:absolute;left:50%;top:50%;width:7px;height:7px;background:#ebd28f;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 10px rgba(235,210,143,.7)}',
-    '.dcConcept-p{margin:0;font-family:' + SERIF + ';font-weight:500;font-size:clamp(13.5px,3.7vw,17px);line-height:2.05;letter-spacing:.06em;color:#e9e3d6;word-break:keep-all;overflow-wrap:anywhere}'
+    '.dcConcept-p{margin:0;font-family:' + SERIF + ';font-weight:500;font-size:clamp(13.5px,3.7vw,17px);line-height:1.95;letter-spacing:.06em;padding-left:.06em;color:#e9e3d6;word-break:keep-all;overflow-wrap:anywhere}'
   ].join('\n');
 
   function injectCSS() {
