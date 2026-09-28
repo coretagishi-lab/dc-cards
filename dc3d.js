@@ -28,7 +28,7 @@
   // so the Japanese picture doesn't flash first (shown again after 8 s if a swap never happens)
   (function hideSwapped() {
     if (!document.body || document.body.id !== 'shopTopPage' || document.getElementById('dcSwapHide')) return;
-    var ids = ['6aabd5514cc23/'].concat(EN ? ['6aacdb5db5289/', '6aabd540edcf6/', '6aacae74296a9/'] : []);
+    var ids = ['6aabd5514cc23/', '6aacae74296a9/'].concat(EN ? ['6aacdb5db5289/', '6aabd540edcf6/'] : []);
     var st = document.createElement('style');
     st.id = 'dcSwapHide';
     st.textContent = ids.map(function (id) { return '.dcStory img[src*="' + id + '"]'; }).join(',') + '{visibility:hidden}';

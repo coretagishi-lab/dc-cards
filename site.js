@@ -2,7 +2,8 @@
  * - language: JP / EN toggle (top-left). EN is picked automatically for non-Japanese phones,
  *   remembered in localStorage, and can be forced with ?lang=en / ?lang=ja
  * - item pages: a small "back to top" arrow at the top-left
- * - EN only: the LP pictures that carry Japanese text (hero, gallery title, order flow)
+ * - EN only: the LP pictures that carry Japanese text (hero, gallery title) become live English
+ *   sections of exactly the same size (no page jump); the order flow is done by lp-copy.js
  *   are swapped for live English sections; product names in the list are shown in English
  * Loaded by dc3d.js (top page) and item.js (item pages). No BASE edit needed.
  */
@@ -51,7 +52,7 @@
   });
 
   // BASE file ids of the LP pictures (see the theme's LP script)
-  var IMG = { hero: '6aacdb5db5289/', gallery: '6aabd540edcf6/', flow: '6aacae74296a9/' };
+  var IMG = { hero: '6aacdb5db5289/', gallery: '6aabd540edcf6/' };
   var SERIF = '"Cormorant Garamond","Times New Roman",serif';
 
   var CSS = [
@@ -74,29 +75,24 @@
     '.dcEn-rule{position:relative;width:min(70%,320px);height:1px;margin:18px auto 16px;background:linear-gradient(90deg,transparent,#c9a24a 22%,#ebd28f 50%,#c9a24a 78%,transparent)}',
     '.dcEn-rule i{position:absolute;left:50%;top:50%;width:7px;height:7px;background:#ebd28f;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 10px rgba(235,210,143,.7)}',
     '.dcEn-gold{background:linear-gradient(180deg,#fff6dc 0%,#ebd28f 45%,#b8923f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#ebd28f}',
-    '.dcEnHero{padding:60px 16px 40px}',
-    '.dcEnHero-cards{position:relative;height:clamp(210px,56vw,320px);margin:0 auto 18px;max-width:420px}',
-    '.dcEn .dcEnHero-cards img{position:absolute;top:8%;width:36%;border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 0 1px rgba(235,210,143,.25)}',
-    '.dcEn .dcEnHero-cards .l{left:6%;transform:rotate(-11deg);z-index:1}',
-    '.dcEn .dcEnHero-cards .r{right:6%;transform:rotate(11deg);z-index:1}',
-    '.dcEn .dcEnHero-cards .c{left:32%;top:0;width:36%;z-index:2;box-shadow:0 24px 50px rgba(0,0,0,.7),0 0 36px rgba(201,162,74,.28),0 0 0 1px rgba(235,210,143,.35)}',
-    '.dcEnHero-h{margin:0;font-family:' + SERIF + ';font-weight:600;font-size:clamp(34px,9.6vw,54px);line-height:1.08;letter-spacing:.02em}',
-    '.dcEnHero-sub{margin:0;font-family:' + SERIF + ';font-size:clamp(13px,3.6vw,16px);letter-spacing:.32em;line-height:1.9;color:#e9e3d6;padding-left:.32em}',
-    '.dcEnTitle{padding:26px 16px 24px;background:#050505}',
-    '.dcEnTitle-h{margin:0;font-family:' + SERIF + ';font-weight:600;font-size:clamp(44px,13vw,64px);line-height:1;letter-spacing:.08em;padding-left:.08em}',
-    '.dcEnTitle-p{margin:8px 0 0;font-family:' + SERIF + ';font-style:italic;font-size:15px;letter-spacing:.08em;color:#cfc6b2}',
+    // same shape as the pictures they replace (hero 9:16, gallery title 1640x472), so nothing below moves
+    '.dcEnHero{display:flex;flex-direction:column;justify-content:center;aspect-ratio:9/16;padding:58px 16px 34px}',
+    '.dcEnHero-eyebrow{margin:0;font-family:' + SERIF + ';font-size:12px;letter-spacing:.34em;padding-left:.34em;color:#c9a24a}',
+    '.dcEnHero-brand{margin:6px 0 14px;font-family:' + SERIF + ';font-weight:600;font-size:clamp(32px,9.4vw,50px);line-height:1;letter-spacing:.01em}',
+    '.dcEnHero-cards{position:relative;height:clamp(250px,72vw,390px);margin:0 auto 14px;width:100%;max-width:440px}',
+    '.dcEn .dcEnHero-cards img{position:absolute;top:9%;width:38%;border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 0 1px rgba(235,210,143,.25)}',
+    '.dcEn .dcEnHero-cards .l{left:4%;transform:rotate(-11deg);z-index:1}',
+    '.dcEn .dcEnHero-cards .r{right:4%;transform:rotate(11deg);z-index:1}',
+    '.dcEn .dcEnHero-cards .c{left:31%;top:0;width:38%;z-index:2;box-shadow:0 24px 50px rgba(0,0,0,.7),0 0 36px rgba(201,162,74,.28),0 0 0 1px rgba(235,210,143,.35)}',
+    '.dcEnHero-h{margin:0;font-family:' + SERIF + ';font-weight:600;font-size:clamp(32px,9vw,52px);line-height:1.08;letter-spacing:.02em}',
+    '.dcEnHero .dcEn-rule{margin:14px auto 12px}',
+    '.dcEnHero-sub{margin:0;font-family:' + SERIF + ';font-size:clamp(12px,3.4vw,15px);letter-spacing:.32em;line-height:1.9;color:#e9e3d6;padding-left:.32em}',
+    '.dcEnTitle{display:flex;flex-direction:column;justify-content:center;aspect-ratio:1640/472;padding:0 16px;background:#050505}',
+    '.dcEnTitle-h{margin:0;font-family:' + SERIF + ';font-weight:600;font-size:clamp(34px,10vw,58px);line-height:1;letter-spacing:.1em;padding-left:.1em}',
+    '.dcEnTitle-p{margin:4px 0 0;font-family:' + SERIF + ';font-style:italic;font-size:clamp(12px,3.4vw,15px);letter-spacing:.08em;color:#cfc6b2}',
     '.dcEnTitle .dcEn-rule{margin:0 auto;width:min(86%,420px)}',
-    '.dcEnTitle .dcEn-rule + .dcEnTitle-h{margin-top:22px}',
-    '.dcEnTitle-p + .dcEn-rule{margin-top:20px}',
-    '.dcEnFlow{padding:40px 16px 38px}',
-    '.dcEnFlow-h{margin:0;font-family:' + SERIF + ';font-weight:600;font-size:clamp(30px,8.6vw,42px);letter-spacing:.14em;padding-left:.14em}',
-    '.dcEnFlow ol{list-style:none;margin:6px auto 0;padding:0;max-width:420px;text-align:left;counter-reset:s}',
-    '.dcEnFlow li{position:relative;display:flex;gap:14px;align-items:flex-start;padding:13px 4px;border-bottom:1px solid rgba(201,162,74,.18)}',
-    '.dcEnFlow li:last-child{border-bottom:none}',
-    '.dcEnFlow li b{flex:none;width:30px;font-family:' + SERIF + ';font-size:22px;line-height:1.1;font-weight:600;color:#c9a24a}',
-    '.dcEnFlow li span{font-size:14px;line-height:1.6;color:#e2dccd}',
-    '.dcEnFlow li small{display:block;margin-top:2px;font-size:12px;color:#958c7a}',
-    '.dcEnFlow-note{margin:16px auto 0;max-width:420px;font-size:12.5px;line-height:1.7;color:#b9ad8c}'
+    '.dcEnTitle .dcEn-rule + .dcEnTitle-h{margin-top:9px}',
+    '.dcEnTitle-p + .dcEn-rule{margin-top:9px}'
   ].join('\n');
 
   function injectCSS() {
@@ -178,6 +174,8 @@
     var el = img(IMG.hero);
     if (!el) return !!document.querySelector('.dcEnHero');
     swap(el,
+      '<p class="dcEnHero-eyebrow">FOR EVERYONE WHO LOVES CARS</p>' +
+      '<p class="dcEnHero-brand dcEn-gold">Driver\'s Collection</p>' +
       '<div class="dcEnHero-cards">' +
         '<img class="l" src="' + ROOT + 'cards/sf90-stradale/mid.webp" alt="">' +
         '<img class="r" src="' + ROOT + 'cards/gallardo-spyder/mid.webp" alt="">' +
@@ -198,22 +196,6 @@
       '<div class="dcEn-rule"><i></i></div>', 'dcEnTitle');
     return true;
   }
-  function enFlow() {
-    var el = img(IMG.flow);
-    if (!el) { var box = document.getElementById('dcFlow'); if (box && box.querySelector('.dcEnFlow')) return true; return false; }
-    swap(el,
-      '<h2 class="dcEnFlow-h dcEn-gold">HOW IT WORKS</h2>' +
-      '<div class="dcEn-rule"><i></i></div>' +
-      '<ol>' +
-        '<li><b>01</b><span>Send us a photo of your car<small>By Instagram DM. One photo is enough.</small></span></li>' +
-        '<li><b>02</b><span>Get a free rough design<small>Pick any design from the gallery — no obligation.</small></span></li>' +
-        '<li><b>03</b><span>Place your order<small>Semi Order: a gallery design with your car. Full Order: designed from scratch.</small></span></li>' +
-        '<li><b>04</b><span>Handmade in Japan<small>About one month, finished card by card.</small></span></li>' +
-        '<li><b>05</b><span>Shipped to your door<small>In a Driver\'s Collection gift box. Tracked EMS outside Japan.</small></span></li>' +
-      '</ol>' +
-      '<p class="dcEnFlow-note">Outside Japan, we ship by EMS \u2014 shipping is shown at checkout.<br>In the US? DM us first for a total including import duties.</p>', 'dcEnFlow');
-    return true;
-  }
   function enProducts() {
     var map = { 'フルオーダー': 'Full Order', 'セミオーダー': 'Semi Order' };
     Array.prototype.forEach.call(document.querySelectorAll('#mainContent .item .itemTitle h2'), function (h) {
@@ -228,7 +210,6 @@
     if (LANG === 'en') {
       ok = enHero() && ok;
       ok = enGalleryTitle() && ok;
-      ok = enFlow() && ok;
       ok = enProducts() && ok;
     }
     return ok;

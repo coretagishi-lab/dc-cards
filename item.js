@@ -332,6 +332,7 @@
       after(h1, rule);
       if (key) after(h1, el('p', 'dcItem-sub', SUBS[key]));
     }
+    document.body.classList.add('dcItem-ready');   // item.css stops holding the room for the lines above
 
     var desc = main.querySelector('.itemDescription');
     var purchase = main.querySelector('.purchase');
