@@ -10,7 +10,17 @@ Driver's Collection のLPギャラリー（3Dトレカ）用の素材置き場�
 
 Web用に軽くしたファイルのみ。印刷用の元データは置かない。
 
-- `line-cta.js` … トップページに「LINEで無料ラフを依頼する」ボタンを2か所（ギャラリー直後・商品直前）差し込む
+- `cards/<slug>/mid.webp` … 中サイズ（幅420、英語版トップの見出し用）
+- `dc3d.js` … 3Dギャラリー本体。トップページで `site.js` `line-cta.js` `lp-copy.js` を読み込む
+- `item.js` / `item.css` … 商品ページの装い。`site.js` `line-cta.js` を読み込む
+- `line-cta.js` … 無料ラフのボタン（トップ・商品ページ・固定バー）。日本語はLINE、英語はInstagram DMへ
+- `lp-copy.js` … トップのコンセプト（文字入り画像を文字に置き換え）
+- `site.js` … 左上の JP/EN 切り替え、商品ページの戻る矢印、英語版の画像差し替え
+
+## 英語版
+- 言語の決まり方：`?lang=en` / `?lang=ja` ＞ 前回選んだ言語 ＞ スマホの言語（日本語以外なら英語）
+- 英語版の問い合わせ先は Instagram DM（`ig.me/m/drivers_collection_`）。日本在住の人向けに「LINEはこちら」も併記
+- 英語の文章は各ファイルの中（`site.js` のトップ見出し・流れ、`lp-copy.js` のコンセプト、`line-cta.js` のボタン、`item.js` の商品説明）
 
 ## デザイン番号
 - `cards.json` の各カードの `design`（例：`No.01`）がデザイン番号。ギャラリーとセミオーダーのデザイン選択に表示され、注文の「デザイン」欄にもこの番号が入る

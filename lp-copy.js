@@ -10,14 +10,28 @@
   var SCRIPT = document.currentScript;
   var ROOT = (SCRIPT && SCRIPT.src) ? SCRIPT.src.replace(/[^/]*(\?.*)?$/, '') : 'https://coretagishi-lab.github.io/dc-cards/';
 
+  // JP / EN (same rule as site.js)
+  function dcLang() {
+    try {
+      var q = /[?&]lang=(en|ja)\b/.exec(location.search);
+      if (q) return q[1];
+      var s = localStorage.getItem('dc_lang');
+      if (s === 'en' || s === 'ja') return s;
+    } catch (_) {}
+    return /^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en';
+  }
+  var EN = dcLang() === 'en';
+
   // ---- copy (edit here) ----
   var CONCEPT = {
     image: '6aabd5514cc23/',          // BASE file id of the old concept image this replaces
-    heading: 'このトレカアート<br>全てハンドメイド',
-    body: 'あなたの愛車専用のトレカは<br>1枚1枚職人が手作業で作ります。<br>これをできるのは世界でここだけ<br>\u201C世界に一個だけ\u201Dをあなたに届けます。'
+    heading: EN ? 'Every card,<br>made by hand.' : 'このトレカアート<br>全てハンドメイド',
+    body: EN
+      ? 'Your card is made only for your car,<br>crafted one by one by our artisans.<br>No one else in the world does this.<br>A true \u201Cone of one,\u201D delivered to you.'
+      : 'あなたの愛車専用のトレカは<br>1枚1枚職人が手作業で作ります。<br>これをできるのは世界でここだけ<br>\u201C世界に一個だけ\u201Dをあなたに届けます。'
   };
 
-  var SERIF = '"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif';
+  var SERIF = EN ? '"Cormorant Garamond","Times New Roman",serif' : '"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif';
   var CSS = [
     '.dcConcept{position:relative;display:grid;place-items:center;padding:44px 16px 38px;background:#040405 url("' + ROOT + 'lp/concept-bg.webp") center/cover no-repeat;text-align:center;overflow:hidden;box-sizing:border-box}',
     '.dcConcept-h{margin:0;font-family:' + SERIF + ';font-weight:700;font-size:clamp(30px,8.6vw,46px);line-height:1.42;letter-spacing:.08em;padding-left:.08em;background:linear-gradient(180deg,#fffaf0 0%,#f3e9d3 55%,#d8c190 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f3e9d3}',
@@ -25,7 +39,10 @@
     '.dcConcept > div{width:100%;text-align:center}',
     '.dcConcept-rule i{position:absolute;left:50%;top:50%;width:7px;height:7px;background:#ebd28f;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 10px rgba(235,210,143,.7)}',
     '.dcConcept-p{margin:0;font-family:' + SERIF + ';font-weight:500;font-size:clamp(13.5px,3.7vw,17px);line-height:1.95;letter-spacing:.06em;padding-left:.06em;color:#e9e3d6;word-break:keep-all;overflow-wrap:anywhere}'
-  ].join('\n');
+  ].concat(EN ? [
+    '.dcConcept-h{font-weight:600;font-size:clamp(34px,10vw,52px);line-height:1.12;letter-spacing:.02em;padding-left:0}',
+    '.dcConcept-p{font-size:clamp(16px,4.4vw,19px);line-height:1.75;letter-spacing:.03em;padding-left:0}'
+  ] : []).join('\n');
 
   // top-page spacing: product cards, product list -> closing image -> footer
   // ("html body#..." outranks the theme's own !important rules)
@@ -53,13 +70,18 @@
 
   function injectCSS() {
     if (document.getElementById('dcLpCopyCss')) return;
-    // a Japanese serif, downloaded only for the characters used here (tiny file)
-    var chars = (CONCEPT.heading + CONCEPT.body).replace(/<[^>]+>/g, '');
-    var uniq = Array.from(new Set(chars.split(''))).join('');
     var f = document.createElement('link');
     f.rel = 'stylesheet';
-    f.href = 'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap&text=' + encodeURIComponent(uniq);
-    document.head.appendChild(f);
+    if (EN) {
+      if (document.querySelector('link[href*="Cormorant+Garamond"]')) f = null;
+      else f.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap';
+    } else {
+      // a Japanese serif, downloaded only for the characters used here (tiny file)
+      var chars = (CONCEPT.heading + CONCEPT.body).replace(/<[^>]+>/g, '');
+      var uniq = Array.from(new Set(chars.split(''))).join('');
+      f.href = 'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap&text=' + encodeURIComponent(uniq);
+    }
+    if (f) document.head.appendChild(f);
     var s = document.createElement('style');
     s.id = 'dcLpCopyCss';
     s.textContent = CSS;
@@ -73,6 +95,7 @@
     injectCSS();
     var sec = document.createElement('section');
     sec.className = 'dcConcept';
+    if (EN) sec.setAttribute('lang', 'en');
     sec.innerHTML = '<div><h2 class="dcConcept-h">' + CONCEPT.heading + '</h2>' +
       '<div class="dcConcept-rule"><i></i></div>' +
       '<p class="dcConcept-p">' + CONCEPT.body + '</p></div>';

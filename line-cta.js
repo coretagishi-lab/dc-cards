@@ -12,6 +12,19 @@
   if (window.DCRough) return;
 
   var DEFAULT_LINE_URL = 'https://lin.ee/SNMlSnr';   // LINE公式アカウントの友だち追加URL
+  var IG_DM_URL = 'https://ig.me/m/drivers_collection_'; // English visitors: Instagram DM
+
+  // JP / EN (same rule as site.js)
+  function dcLang() {
+    try {
+      var q = /[?&]lang=(en|ja)\b/.exec(location.search);
+      if (q) return q[1];
+      var s = localStorage.getItem('dc_lang');
+      if (s === 'en' || s === 'ja') return s;
+    } catch (_) {}
+    return /^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en';
+  }
+  var EN = dcLang() === 'en';
 
   function lineUrl() {
     var s = document.querySelector('script[data-line-url]');
@@ -43,6 +56,10 @@
     '.dcR-btn--line{background:transparent;color:var(--gold-hi)!important;border:1px solid rgba(201,162,74,.7);box-shadow:none}',
     '.dcR-ico{flex:none;width:22px;height:22px;border-radius:6px;background:#06c755;display:grid;place-items:center}',
     '.dcR-ico svg{width:16px;height:16px;display:block}',
+    '.dcR-ico--ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285AEB 90%)}',
+    '.dcR-alt{display:inline-block;margin:14px 0 0;font-size:12.5px;color:var(--gold-hi)!important;text-decoration:underline!important;text-underline-offset:3px}',
+    '.dcR-ship{margin:12px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}',
+    '.dcR[lang="en"],.dcR[lang="en"] *,.dcR-sticky[lang="en"] *{word-break:normal!important;overflow-wrap:break-word!important}',
     '.dcR-note{margin:11px 0 0;font-size:11.5px;line-height:1.7;color:var(--muted);word-break:keep-all;overflow-wrap:anywhere}',
     '.dcR[data-dc-rough="gallery"]{margin:10px auto 34px}',
     '.dcR[data-dc-rough="products"]{margin:26px auto 0}',
@@ -71,6 +88,8 @@
 
   var LINE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3.2C6.9 3.2 2.8 6.5 2.8 10.6c0 3.6 3.2 6.6 7.6 7.2.3.1.7.2.8.5.1.3.1.6 0 .9l-.1.8c0 .2-.2.9.8.5s5.4-3.2 7.4-5.5c1.4-1.5 2-3 2-4.6 0-4-4.1-7.2-9.3-7.2z"/></svg>';
 
+  var IG_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="#fff" stroke="none"/></svg>';
+
   function track(name) { try { if (typeof window.clarity === 'function') window.clarity('event', name); } catch (_) {} }
 
   // put a ready-made first message on the clipboard, so the visitor only has to paste it in LINE
@@ -87,8 +106,10 @@
     } catch (_) {}
   }
 
+  function ctaUrl() { return EN ? IG_DM_URL : lineUrl(); }
+
   function open(message, place) {
-    var url = lineUrl();
+    var url = ctaUrl();
     if (!url) return false;
     copy(message);
     track('dc_rough_' + (place || 'other'));
@@ -99,19 +120,49 @@
   function link(cls, label, message, place) {
     var a = document.createElement('a');
     a.className = cls;
-    a.href = lineUrl();
+    a.href = ctaUrl();
     a.target = '_blank';
     a.rel = 'noopener';
-    a.innerHTML = '<span class="dcR-ico">' + LINE_SVG + '</span><span>' + label + '</span>';
+    a.innerHTML = '<span class="dcR-ico' + (EN ? ' dcR-ico--ig' : '') + '">' + (EN ? IG_SVG : LINE_SVG) + '</span><span>' + label + '</span>';
     a.addEventListener('click', function () { copy(message); track('dc_rough_' + place); });
     return a;
   }
 
   // ---------- copy ----------
-  var MSG_ROUGH = '無料ラフをお願いします。愛車の写真を送ります。';
-  var MSG_SEMI = 'セミオーダーの無料ラフをお願いします。愛車の写真を送ります。';
-  var MSG_FULL = 'フルオーダーについて相談したいです。';
-  var STEPS = '<ol class="dcR-steps"><li><b>STEP 1</b>愛車の写真を<br>LINEで送る</li><li><b>STEP 2</b>あなたの車の<br>ラフが届く</li><li><b>STEP 3</b>気に入ったら<br>ご注文</li></ol>';
+  var MSG_ROUGH = EN ? 'Hi! I\'d like a free rough design. I\'ll send a photo of my car.' : '無料ラフをお願いします。愛車の写真を送ります。';
+  var MSG_SEMI = EN ? 'Hi! I\'d like a free rough for a Semi Order. I\'ll send a photo of my car.' : 'セミオーダーの無料ラフをお願いします。愛車の写真を送ります。';
+  var MSG_FULL = EN ? 'Hi! I\'d like to talk about a Full Order.' : 'フルオーダーについて相談したいです。';
+  var STEPS = EN
+    ? '<ol class="dcR-steps"><li><b>STEP 1</b>Send a photo<br>of your car by DM</li><li><b>STEP 2</b>Get your<br>free rough</li><li><b>STEP 3</b>Order if<br>you love it</li></ol>'
+    : '<ol class="dcR-steps"><li><b>STEP 1</b>愛車の写真を<br>LINEで送る</li><li><b>STEP 2</b>あなたの車の<br>ラフが届く</li><li><b>STEP 3</b>気に入ったら<br>ご注文</li></ol>';
+  var T = EN ? {
+    galleryH: 'What would your car look like<br>as one of these?',
+    galleryP: 'Pick any design from the gallery and we\'ll make<br>a free rough with your car. Just send one photo.',
+    btn: 'Get a free rough of your car',
+    productsH: 'Not sure yet? Start with a free rough',
+    productsP: 'See it first, then decide.<br>Questions are welcome too.',
+    semiH: 'A free rough before you buy',
+    semiP: 'Pick a design and we\'ll show you a rough with your car first. Order only if you love it.',
+    fullH: 'Let\'s talk first',
+    fullP: 'Full Order designs are created together with you after you order. Share your ideas by DM — it\'s free. Want a feel for it first? We can also make a free rough with a gallery design.',
+    fullBtn: 'Talk to us by DM (free)',
+    stickyMain: 'Get a free rough of your car', stickyFull: 'Talk to us by DM (free)', stickySub: 'Questions? DM us on Instagram',
+    alt: 'Living in Japan? Chat with us on LINE',
+    ship: 'Shipping outside Japan is charged separately — we\'ll quote it for your country by DM.'
+  } : {
+    galleryH: 'あなたの愛車だと、<br>どんな一枚になる？',
+    galleryP: 'ギャラリーのデザインで、あなたの愛車のラフを<br>無料でお作りします。写真を1枚送るだけ。',
+    btn: '愛車のラフを無料で見る',
+    productsH: '迷ったら、まず無料ラフから',
+    productsP: '仕上がりを見てから決められます。<br>ご質問だけでもお気軽にどうぞ。',
+    semiH: 'ご購入前に、無料でラフをお作りします',
+    semiP: 'お好きな掲載デザインで、あなたの愛車のラフを先にお見せします。仕上がりを見てからご購入いただけます。',
+    fullH: 'まずはLINEでご相談ください',
+    fullP: 'フルオーダーのデザインは、ご注文後の打ち合わせで一緒に作り上げます。イメージのご相談は無料です。掲載デザインで仕上がりの雰囲気を先に見たい方には、無料ラフもお作りします。',
+    fullBtn: 'LINEで無料相談・ラフ依頼',
+    stickyMain: '愛車のラフを無料で見る', stickyFull: 'LINEで相談する（無料）', stickySub: 'ご質問だけでも、お気軽にLINEへ',
+    alt: '', ship: ''
+  };
 
   function block(kind) {
     var wrap = document.createElement('section');
@@ -120,29 +171,45 @@
     var html, label, msg, cls = 'dcR';
     if (kind === 'gallery') {
       html = '<p class="dcR-eyebrow">FREE ROUGH DESIGN</p>' +
-        '<h3 class="dcR-h">あなたの愛車だと、<br>どんな一枚になる？</h3>' +
-        '<p class="dcR-p">ギャラリーのデザインで、あなたの愛車のラフを<br>無料でお作りします。写真を1枚送るだけ。</p>' + STEPS;
-      label = '愛車のラフを無料で見る'; msg = MSG_ROUGH;
+        '<h3 class="dcR-h">' + T.galleryH + '</h3>' +
+        '<p class="dcR-p">' + T.galleryP + '</p>' + STEPS;
+      label = T.btn; msg = MSG_ROUGH;
     } else if (kind === 'products') {
       cls += ' dcR--slim';
-      html = '<h3 class="dcR-h">迷ったら、まず無料ラフから</h3>' +
-        '<p class="dcR-p">仕上がりを見てから決められます。<br>ご質問だけでもお気軽にどうぞ。</p>';
-      label = '愛車のラフを無料で見る'; msg = MSG_ROUGH;
+      html = '<h3 class="dcR-h">' + T.productsH + '</h3>' +
+        '<p class="dcR-p">' + T.productsP + '</p>';
+      label = T.btn; msg = MSG_ROUGH;
     } else if (kind === 'semi') {
       cls += ' dcR--item';
-      html = '<h3 class="dcR-h">ご購入前に、無料でラフをお作りします</h3>' +
-        '<p class="dcR-p">お好きな掲載デザインで、あなたの愛車のラフを先にお見せします。仕上がりを見てからご購入いただけます。</p>';
-      label = '愛車のラフを無料で見る'; msg = MSG_SEMI;
+      html = '<h3 class="dcR-h">' + T.semiH + '</h3>' +
+        '<p class="dcR-p">' + T.semiP + '</p>';
+      label = T.btn; msg = MSG_SEMI;
     } else { // full
       cls += ' dcR--item';
-      html = '<h3 class="dcR-h">まずはLINEでご相談ください</h3>' +
-        '<p class="dcR-p">フルオーダーのデザインは、ご注文後の打ち合わせで一緒に作り上げます。イメージのご相談は無料です。掲載デザインで仕上がりの雰囲気を先に見たい方には、無料ラフもお作りします。</p>';
-      label = 'LINEで無料相談・ラフ依頼'; msg = MSG_FULL;
+      html = '<h3 class="dcR-h">' + T.fullH + '</h3>' +
+        '<p class="dcR-p">' + T.fullP + '</p>';
+      label = T.fullBtn; msg = MSG_FULL;
     }
     wrap.className = cls;
+    if (EN) wrap.setAttribute('lang', 'en');
     wrap.innerHTML = '<div class="dcR-box">' + badge + html + '</div>';
     var box = wrap.firstChild;
     box.appendChild(link('dcR-btn', label, msg, kind));
+    if (EN) {
+      // people living in Japan often use LINE; keep that door open
+      var alt = document.createElement('a');
+      alt.className = 'dcR-alt';
+      alt.href = lineUrl(); alt.target = '_blank'; alt.rel = 'noopener';
+      alt.textContent = T.alt;
+      alt.addEventListener('click', function () { track('dc_rough_line_en_' + kind); });
+      box.appendChild(alt);
+      if (kind === 'semi' || kind === 'full') {   // the top page says it in HOW IT WORKS
+        var ship = document.createElement('p');
+        ship.className = 'dcR-ship';
+        ship.textContent = T.ship;
+        box.appendChild(ship);
+      }
+    }
     return wrap;
   }
 
@@ -150,11 +217,12 @@
     var d = document.createElement('div');
     d.className = 'dcR-sticky';
     d.setAttribute('data-dc-rough', 'sticky');
+    if (EN) d.setAttribute('lang', 'en');
     var full = kind === 'full';
     var a = link('', '', full ? MSG_FULL : (kind === 'semi' ? MSG_SEMI : MSG_ROUGH), 'sticky_' + kind);
     a.lastChild.outerHTML = '<span class="dcR-st"><span class="dcR-st-main">' +
-      (full ? 'LINEで相談する（無料）' : '愛車のラフを無料で見る') +
-      '</span><span class="dcR-st-sub">ご質問だけでも、お気軽にLINEへ</span></span>';
+      (full ? T.stickyFull : T.stickyMain) +
+      '</span><span class="dcR-st-sub">' + T.stickySub + '</span></span>';
     d.appendChild(a);
     document.body.appendChild(d);
     document.documentElement.classList.add('dcR-has-sticky');
@@ -217,10 +285,12 @@
     document.head.appendChild(st);
   }
   function itemKind() {
+    var k = document.body.getAttribute('data-dc-kind');   // set by item.js
+    if (k === 'semi' || k === 'full') return k;
     var h1 = document.querySelector('#mainContent h1.itemTitle');
     var t = h1 ? h1.textContent.trim() : '';
-    if (t.indexOf('セミオーダー') === 0) return 'semi';
-    if (t.indexOf('フルオーダー') === 0) return 'full';
+    if (t.indexOf('セミオーダー') === 0 || t.indexOf('Semi Order') === 0) return 'semi';
+    if (t.indexOf('フルオーダー') === 0 || t.indexOf('Full Order') === 0) return 'full';
     return '';
   }
 
@@ -228,7 +298,7 @@
   function place() {
     var page = document.body && document.body.id;
     if (page !== 'shopTopPage' && page !== 'shopDetailPage') return true;
-    if (!lineUrl()) return false;
+    if (!ctaUrl()) return false;
     injectCSS();
     var done = true;
 
@@ -258,7 +328,7 @@
     return true;
   }
 
-  window.DCRough = { url: lineUrl, open: open, version: '2.2.0' };
+  window.DCRough = { url: ctaUrl, open: open, en: EN, version: '3.1.0' };
   window.__dcLineCta = true;
 
   function boot() {
