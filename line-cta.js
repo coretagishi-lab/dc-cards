@@ -1,102 +1,231 @@
-/*! Driver's Collection — "free rough design via LINE" buttons for the top page (line-cta.js)
- * Adds two call-to-action blocks to the BASE top page:
- *   1) right after the gallery   (after .dcScroll, or after [data-dc3d] once the 3D gallery is in)
- *   2) right before the products (before #mainContent)
- * Usage (paste once before </body> in the BASE theme):
- *   <script src="https://coretagishi-lab.github.io/dc-cards/line-cta.js"
- *           data-line-url="https://lin.ee/XXXXXXX" data-slots="今月の制作枠 残り2枠" defer></script>
- * data-line-url : LINE friend-add URL. If omitted, the first lin.ee / line.me link on the page is used.
- * data-slots    : optional small badge text (e.g. remaining slots). Leave out to hide the badge.
- * Clarity event : dc_line_cta_gallery / dc_line_cta_products
+/*! Driver's Collection — "free rough design via LINE" calls to action (line-cta.js)
+ * One file for every rough-request button on the shop:
+ *   top page    : block after the 3D gallery, slim block before the product list, sticky bar (phones)
+ *   item pages  : block under the purchase button (semi = free rough / full = consultation), sticky bar
+ *   3D gallery  : dc3d.js calls window.DCRough.open(message, place) from its enlarged view
+ * Loaded automatically by dc3d.js (top page) and item.js (item pages); no BASE edit needed.
+ * The LINE friend-add URL comes from DEFAULT_LINE_URL below, or data-line-url on any <script> tag.
+ * Clarity events: dc_rough_<place>
  */
 (function () {
   'use strict';
-  if (window.__dcLineCta) return;
-  window.__dcLineCta = true;
+  if (window.DCRough) return;
 
-  var me = document.currentScript;
-  var cfgUrl = me && me.getAttribute('data-line-url');
-  var slots = me && me.getAttribute('data-slots');
+  var DEFAULT_LINE_URL = '';   // e.g. https://lin.ee/XXXXXXX  (LINE公式アカウントの友だち追加URL)
+
+  function lineUrl() {
+    var s = document.querySelector('script[data-line-url]');
+    var v = s && s.getAttribute('data-line-url');
+    if (v && /^https?:\/\//.test(v)) return v;
+    if (DEFAULT_LINE_URL) return DEFAULT_LINE_URL;
+    var a = document.querySelector('a[href*="lin.ee"],a[href*="line.me/R/ti"]');
+    return a ? a.href : '';
+  }
+  function slots() {
+    var s = document.querySelector('script[data-slots]');
+    return s ? s.getAttribute('data-slots') : '';
+  }
 
   var CSS = [
-    '.dcLine{box-sizing:border-box;max-width:560px;margin:28px auto;padding:0 16px;font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;color:#ede6d6;text-align:center}',
-    '.dcLine *{box-sizing:border-box}',
-    '.dcLine-box{position:relative;padding:26px 20px 22px;border:1px solid rgba(201,162,74,.45);border-radius:18px;background:linear-gradient(180deg,rgba(201,162,74,.10),rgba(10,10,12,.92) 60%);box-shadow:0 10px 40px rgba(0,0,0,.45)}',
-    '.dcLine-badge{display:inline-block;margin:0 0 12px;padding:3px 12px;border-radius:999px;border:1px solid rgba(235,210,143,.6);color:#ebd28f;font-size:11px;letter-spacing:.14em}',
-    '.dcLine-eyebrow{margin:0 0 6px;font-size:11px;letter-spacing:.32em;color:#c9a24a}',
-    '.dcLine-h{margin:0 0 10px;font-size:20px;line-height:1.5;font-weight:700;letter-spacing:.04em;color:#f3e7c4}',
-    '.dcLine-p{margin:0 0 18px;font-size:13px;line-height:1.85;color:#bdb5a3}',
-    '.dcLine-steps{display:flex;justify-content:center;gap:6px;margin:0 0 18px;padding:0;list-style:none;font-size:11px;color:#d9cfb6}',
-    '.dcLine-steps li{flex:1;max-width:120px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(201,162,74,.18);line-height:1.5}',
-    '.dcLine-steps b{display:block;color:#ebd28f;font-size:10px;letter-spacing:.12em;font-weight:500}',
-    '.dcLine-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:340px;margin:0 auto;padding:15px 20px;border-radius:999px;background:#06c755;color:#fff!important;font-size:15px;font-weight:700;letter-spacing:.06em;text-decoration:none!important;box-shadow:0 8px 26px rgba(6,199,85,.28);animation:dcLinePulse 2.6s ease-in-out infinite}',
-    '.dcLine-btn:active{transform:scale(.98)}',
-    '.dcLine-btn svg{width:24px;height:24px;flex:none}',
-    '.dcLine-note{margin:10px 0 0;font-size:11px;color:#8e8676}',
-    '.dcLine--slim .dcLine-box{padding:20px 18px 18px}',
-    '.dcLine--slim .dcLine-h{font-size:17px}',
-    '@keyframes dcLinePulse{0%,100%{box-shadow:0 8px 26px rgba(6,199,85,.22)}50%{box-shadow:0 8px 34px rgba(6,199,85,.5)}}',
-    '@media (prefers-reduced-motion:reduce){.dcLine-btn{animation:none}}'
-  ].join('');
+    '.dcR{--gold:#c9a24a;--gold-hi:#ebd28f;--text:#ede6d6;--muted:#958c7a;box-sizing:border-box;max-width:560px;margin:30px auto;padding:0 16px;color:var(--text);text-align:center;font-family:inherit}',
+    '.dcR *{box-sizing:border-box}',
+    '.dcR-box{position:relative;padding:28px 20px 22px;border:1px solid rgba(201,162,74,.42);border-radius:14px;background:radial-gradient(120% 90% at 50% 0%,rgba(201,162,74,.13),rgba(12,11,10,.94) 62%);box-shadow:0 18px 50px rgba(0,0,0,.5)}',
+    '.dcR-badge{display:inline-block;margin:0 0 12px;padding:3px 12px;border-radius:999px;border:1px solid rgba(235,210,143,.55);color:var(--gold-hi);font-size:11px;letter-spacing:.14em}',
+    '.dcR-eyebrow{margin:0 0 8px;font-size:11px;letter-spacing:.34em;color:var(--gold)}',
+    '.dcR-h{margin:0 0 10px;font-size:19px;line-height:1.55;font-weight:600;letter-spacing:.05em;color:#f3e7c4;word-break:keep-all;overflow-wrap:anywhere}',
+    '.dcR-p{margin:0 0 18px;font-size:13.5px;line-height:1.9;color:#c2baa8;word-break:keep-all;overflow-wrap:anywhere}',
+    '.dcR-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 20px;padding:0;list-style:none}',
+    '.dcR-steps li{padding:10px 4px 9px;border-radius:8px;border:1px solid rgba(201,162,74,.2);background:rgba(255,255,255,.03);font-size:11.5px;line-height:1.5;color:#dcd3bd}',
+    '.dcR-steps b{display:block;margin-bottom:3px;font-size:10px;font-weight:500;letter-spacing:.14em;color:var(--gold-hi)}',
+    '.dcR-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:360px;margin:0 auto;padding:16px 18px;border-radius:999px;border:none;background:linear-gradient(180deg,#e8ca7b,#b68d35);color:#15110a!important;font-size:15px;font-weight:700;letter-spacing:.08em;line-height:1.3;text-decoration:none!important;box-shadow:0 12px 30px rgba(201,162,74,.26),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s ease,filter .2s ease}',
+    '.dcR-btn:hover{filter:brightness(1.05)}',
+    '.dcR-btn:active{transform:translateY(1px)}',
+    '.dcR-btn--line{background:transparent;color:var(--gold-hi)!important;border:1px solid rgba(201,162,74,.7);box-shadow:none}',
+    '.dcR-ico{flex:none;width:22px;height:22px;border-radius:6px;background:#06c755;display:grid;place-items:center}',
+    '.dcR-ico svg{width:16px;height:16px;display:block}',
+    '.dcR-note{margin:11px 0 0;font-size:11.5px;line-height:1.7;color:var(--muted);word-break:keep-all;overflow-wrap:anywhere}',
+    '.dcR--slim .dcR-box{padding:22px 18px 18px}',
+    '.dcR--slim .dcR-h{font-size:17px}',
+    '.dcR--item{max-width:none;margin:22px 0 0;padding:0;text-align:left}',
+    '.dcR--item .dcR-box{padding:22px 18px 18px;border-radius:10px}',
+    '.dcR--item .dcR-h{font-size:16px;margin-bottom:8px}',
+    '.dcR--item .dcR-p{font-size:13px;margin-bottom:16px;word-break:normal;line-break:strict}',
+    '.dcR--item .dcR-btn{max-width:none}',
+    '.dcR-sticky{position:fixed;left:12px;right:88px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2147482000;display:none}',
+    '.dcR-sticky a{display:flex;align-items:center;justify-content:center;gap:9px;height:52px;padding:0 16px;border-radius:999px;border:1px solid rgba(201,162,74,.65);background:rgba(12,11,10,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--gold-hi,#ebd28f)!important;font-size:14px;font-weight:600;letter-spacing:.06em;text-decoration:none!important;box-shadow:0 10px 30px rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent}',
+    '.dcR-sticky .dcR-ico{width:20px;height:20px;border-radius:5px}',
+    '.dcR-sticky{opacity:0;transform:translateY(12px);transition:opacity .3s ease,transform .3s ease}',
+    '.dcR-sticky.is-on{opacity:1;transform:none}',
+    '@media (max-width:768px){.dcR-sticky{display:block}}',
+    '.dc3d-open .dcR-sticky{display:none!important}',
+    '@media (prefers-reduced-motion:reduce){.dcR-sticky{transition:none}}'
+  ].join('\n');
 
-  var ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.5s5.9-3.5 8.1-6c1.5-1.6 2.2-3.3 2.2-4.8C22 6.6 17.5 3 12 3z"/><path fill="#06c755" d="M8.6 13.4H6.8a.5.5 0 0 1-.5-.5V9.3a.5.5 0 0 1 1 0v3.1h1.3a.5.5 0 0 1 0 1zm1.9-.5a.5.5 0 0 1-1 0V9.3a.5.5 0 0 1 1 0zm4.4 0a.5.5 0 0 1-.9.3l-1.8-2.5v2.2a.5.5 0 0 1-1 0V9.3a.5.5 0 0 1 .9-.3l1.8 2.5V9.3a.5.5 0 0 1 1 0zm2.9-2.3a.5.5 0 0 1 0 1h-1.3v.8h1.3a.5.5 0 0 1 0 1h-1.8a.5.5 0 0 1-.5-.5V9.3a.5.5 0 0 1 .5-.5h1.8a.5.5 0 0 1 0 1h-1.3v.8z"/></svg>';
+  var LINE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3.2C6.9 3.2 2.8 6.5 2.8 10.6c0 3.6 3.2 6.6 7.6 7.2.3.1.7.2.8.5.1.3.1.6 0 .9l-.1.8c0 .2-.2.9.8.5s5.4-3.2 7.4-5.5c1.4-1.5 2-3 2-4.6 0-4-4.1-7.2-9.3-7.2z"/></svg>';
 
   function track(name) { try { if (typeof window.clarity === 'function') window.clarity('event', name); } catch (_) {} }
 
-  function lineUrl() {
-    if (cfgUrl) return cfgUrl;
-    var a = document.querySelector('a[href*="lin.ee"],a[href*="line.me"]');
-    return a ? a.href : '';
+  // put a ready-made first message on the clipboard, so the visitor only has to paste it in LINE
+  function copy(text) {
+    if (!text) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).catch(function () {}); return; }
+    } catch (_) {}
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-100px;opacity:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    } catch (_) {}
   }
 
-  function block(kind, url) {
+  function open(message, place) {
+    var url = lineUrl();
+    if (!url) return false;
+    copy(message);
+    track('dc_rough_' + (place || 'other'));
+    window.location.href = url;
+    return true;
+  }
+
+  function link(cls, label, message, place) {
+    var a = document.createElement('a');
+    a.className = cls;
+    a.href = lineUrl();
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.innerHTML = '<span class="dcR-ico">' + LINE_SVG + '</span><span>' + label + '</span>';
+    a.addEventListener('click', function () { copy(message); track('dc_rough_' + place); });
+    return a;
+  }
+
+  // ---------- copy ----------
+  var MSG_ROUGH = '無料ラフをお願いします。愛車の写真を送ります。';
+  var MSG_SEMI = 'セミオーダーの無料ラフをお願いします。愛車の写真を送ります。';
+  var MSG_FULL = 'フルオーダーについて相談したいです。';
+  var STEPS = '<ol class="dcR-steps"><li><b>STEP 1</b>愛車の写真を<br>LINEで送る</li><li><b>STEP 2</b>あなたの車の<br>ラフが届く</li><li><b>STEP 3</b>気に入ったら<br>ご注文</li></ol>';
+
+  function block(kind) {
     var wrap = document.createElement('section');
-    wrap.className = 'dcLine' + (kind === 'products' ? ' dcLine--slim' : '');
-    wrap.setAttribute('data-dc-line', kind);
-    var badge = slots ? '<p class="dcLine-badge">' + slots + '</p>' : '';
-    var body = kind === 'gallery'
-      ? '<p class="dcLine-eyebrow">FREE ROUGH DESIGN</p>' +
-        '<h3 class="dcLine-h">購入前に、無料でラフデザイン</h3>' +
-        '<p class="dcLine-p">愛車の写真を送るだけ。<br>あなたの車がどんな一枚になるか、<br>先にお見せします。</p>' +
-        '<ol class="dcLine-steps"><li><b>STEP 1</b>LINEで<br>写真を送る</li><li><b>STEP 2</b>無料で<br>ラフ作成</li><li><b>STEP 3</b>気に入ったら<br>ご購入</li></ol>'
-      : '<h3 class="dcLine-h">迷ったら、まず無料ラフから</h3>' +
-        '<p class="dcLine-p">仕上がりを見てから決められます。<br>ご質問だけでもお気軽にどうぞ。</p>';
-    wrap.innerHTML = '<div class="dcLine-box">' + badge + body +
-      '<a class="dcLine-btn" href="' + url + '" target="_blank" rel="noopener">' + ICON + '<span>LINEで無料ラフを依頼する</span></a>' +
-      '<p class="dcLine-note">写真1枚でOK・購入の義務はありません</p></div>';
-    wrap.querySelector('a').addEventListener('click', function () { track('dc_line_cta_' + kind); });
+    wrap.setAttribute('data-dc-rough', kind);
+    var badge = slots() ? '<p class="dcR-badge">' + slots() + '</p>' : '';
+    var html, label, msg, cls = 'dcR';
+    if (kind === 'gallery') {
+      html = '<p class="dcR-eyebrow">FREE ROUGH DESIGN</p>' +
+        '<h3 class="dcR-h">あなたの愛車だと、<br>どんな一枚になる？</h3>' +
+        '<p class="dcR-p">ギャラリーのデザインで、あなたの愛車のラフを<br>無料でお作りします。写真を1枚送るだけ。</p>' + STEPS;
+      label = '愛車のラフを無料で見る'; msg = MSG_ROUGH;
+    } else if (kind === 'products') {
+      cls += ' dcR--slim';
+      html = '<h3 class="dcR-h">迷ったら、まず無料ラフから</h3>' +
+        '<p class="dcR-p">仕上がりを見てから決められます。<br>ご質問だけでもお気軽にどうぞ。</p>';
+      label = '愛車のラフを無料で見る'; msg = MSG_ROUGH;
+    } else if (kind === 'semi') {
+      cls += ' dcR--item';
+      html = '<h3 class="dcR-h">ご購入前に、無料でラフをお作りします</h3>' +
+        '<p class="dcR-p">お好きな掲載デザインで、あなたの愛車のラフを先にお見せします。仕上がりを見てからご購入いただけます。</p>';
+      label = '愛車のラフを無料で見る'; msg = MSG_SEMI;
+    } else { // full
+      cls += ' dcR--item';
+      html = '<h3 class="dcR-h">まずはLINEでご相談ください</h3>' +
+        '<p class="dcR-p">フルオーダーのデザインは、ご注文後の打ち合わせで一緒に作り上げます。イメージのご相談は無料です。掲載デザインで仕上がりの雰囲気を先に見たい方には、無料ラフもお作りします。</p>';
+      label = 'LINEで無料相談・ラフ依頼'; msg = MSG_FULL;
+    }
+    wrap.className = cls;
+    wrap.innerHTML = '<div class="dcR-box">' + badge + html + '</div>';
+    var box = wrap.firstChild;
+    box.appendChild(link('dcR-btn', label, msg, kind));
+    var note = document.createElement('p');
+    note.className = 'dcR-note';
+    note.innerHTML = '写真1枚でOK・購入の義務はありません<br>送る文面はコピー済み。LINEに貼るだけ';
+    box.appendChild(note);
     return wrap;
   }
 
-  function place() {
-    if (document.body.id !== 'shopTopPage') return true;   // top page only
-    var url = lineUrl();
-    if (!url) return false;                                // wait for the LINE link to appear
-
-    if (!document.getElementById('dcLineCss')) {
-      var st = document.createElement('style');
-      st.id = 'dcLineCss';
-      st.textContent = CSS;
-      document.head.appendChild(st);
+  function sticky(kind) {
+    var d = document.createElement('div');
+    d.className = 'dcR-sticky';
+    d.setAttribute('data-dc-rough', 'sticky');
+    var full = kind === 'full';
+    d.appendChild(link('', full ? 'LINEで相談する（無料）' : '愛車のラフを無料で見る', full ? MSG_FULL : (kind === 'semi' ? MSG_SEMI : MSG_ROUGH), 'sticky_' + kind));
+    document.body.appendChild(d);
+    // show after the first screen; hide while an in-page rough block (or the buy button) is on screen
+    var seen = [], shown = false;
+    function update() {
+      var on = window.pageYOffset > window.innerHeight * 0.8 && seen.length === 0;
+      if (on !== shown) { shown = on; d.classList.toggle('is-on', on); }
     }
-
-    var done = true;
-    if (!document.querySelector('[data-dc-line="gallery"]')) {
-      var g = document.querySelector('[data-dc3d]') || document.querySelector('.dcScroll');
-      if (g) g.parentNode.insertBefore(block('gallery', url), g.nextSibling);
-      else done = false;
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          var i = seen.indexOf(en.target);
+          if (en.isIntersecting && i < 0) seen.push(en.target);
+          if (!en.isIntersecting && i >= 0) seen.splice(i, 1);
+        });
+        update();
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-dc-rough]:not([data-dc-rough="sticky"]), #purchase_form .purchaseButton'), function (el) { io.observe(el); });
     }
-    if (!document.querySelector('[data-dc-line="products"]')) {
-      var m = document.getElementById('mainContent');
-      if (m) m.parentNode.insertBefore(block('products', url), m);
-      else done = false;
-    }
-    return done;
+    window.addEventListener('scroll', update, { passive: true });
+    update();
   }
+
+  // ---------- placement ----------
+  function injectCSS() {
+    if (document.getElementById('dcRoughCss')) return;
+    var st = document.createElement('style');
+    st.id = 'dcRoughCss';
+    st.textContent = CSS;
+    document.head.appendChild(st);
+  }
+  function itemKind() {
+    var h1 = document.querySelector('#mainContent h1.itemTitle');
+    var t = h1 ? h1.textContent.trim() : '';
+    if (t.indexOf('セミオーダー') === 0) return 'semi';
+    if (t.indexOf('フルオーダー') === 0) return 'full';
+    return '';
+  }
+
+  var stickyDone = false;
+  function place() {
+    var page = document.body && document.body.id;
+    if (page !== 'shopTopPage' && page !== 'shopDetailPage') return true;
+    if (!lineUrl()) return false;
+    injectCSS();
+    var done = true;
+
+    if (page === 'shopTopPage') {
+      if (!document.querySelector('[data-dc-rough="gallery"]')) {
+        var g = document.querySelector('[data-dc3d]') || document.querySelector('.dcScroll');
+        if (g) g.parentNode.insertBefore(block('gallery'), g.nextSibling); else done = false;
+      }
+      if (!document.querySelector('[data-dc-rough="products"]')) {
+        var m = document.getElementById('mainContent');
+        if (m) m.parentNode.insertBefore(block('products'), m); else done = false;
+      }
+      if (done && !stickyDone) { stickyDone = true; sticky('top'); }
+      return done;
+    }
+
+    var kind = itemKind();
+    if (!kind) return true;
+    if (!document.querySelector('[data-dc-rough="' + kind + '"]')) {
+      var anchor = document.querySelector('#mainContent .dcItem-trust') ||
+        document.querySelector('#mainContent .purchaseButton') ||
+        document.querySelector('#mainContent #purchase_form');
+      if (!anchor) return false;
+      anchor.parentNode.insertBefore(block(kind), anchor.nextSibling);
+    }
+    if (!stickyDone) { stickyDone = true; sticky(kind); }
+    return true;
+  }
+
+  window.DCRough = { url: lineUrl, open: open, version: '2.0.0' };
+  window.__dcLineCta = true;
 
   function boot() {
     if (place()) return;
-    // the LP and the LINE widget are inserted after load, so keep looking for a while
+    // the LP and item enhancements are inserted after load, so keep looking for a while
     if ('MutationObserver' in window) {
       var mo = new MutationObserver(function () { if (place()) mo.disconnect(); });
       mo.observe(document.documentElement, { childList: true, subtree: true });

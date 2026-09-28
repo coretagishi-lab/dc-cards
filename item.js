@@ -10,6 +10,8 @@
   window.__dcItem = true;
 
   var LABELS = { 'フルオーダー': 'Full Order', 'セミオーダー': 'Semi Order' };
+  var SUBS = { 'フルオーダー': 'あなたの愛車のためだけに、ゼロから。', 'セミオーダー': '掲載デザインを、あなたの愛車で。' };
+  var ROOT = (document.currentScript && document.currentScript.src) ? document.currentScript.src.replace(/[^/]*(\?.*)?$/, '') : 'https://coretagishi-lab.github.io/dc-cards/';
   var TRUST = [
     ['<path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.4 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z"/>', '一点物<br>完全ハンドメイド'],
     ['<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', '納期<br>約1ヶ月'],
@@ -118,7 +120,9 @@
 
     if (h1) {
       h1.parentNode.insertBefore(el('p', 'dcItem-eyebrow', key ? LABELS[key] : "Driver's Collection"), h1);
-      after(h1, el('div', 'dcItem-rule'));
+      var rule = el('div', 'dcItem-rule');
+      after(h1, rule);
+      if (key) after(h1, el('p', 'dcItem-sub', SUBS[key]));
     }
 
     var desc = main.querySelector('.itemDescription');
@@ -142,6 +146,16 @@
     }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
-  else run();
+  // free-rough / consultation buttons (LINE) live in line-cta.js
+  function loadRoughCta() {
+    if (window.DCRough || document.querySelector('script[src*="line-cta.js"]')) return;
+    var s = document.createElement('script');
+    s.src = ROOT + 'line-cta.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
+  function start() { run(); loadRoughCta(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();

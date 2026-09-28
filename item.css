@@ -48,6 +48,13 @@ body#shopDetailPage header h1.itemTitle {
   letter-spacing: .2em;
   line-height: 1.4;
 }
+body#shopDetailPage .dcItem-sub {
+  margin: 14px 0 0;
+  color: var(--body);
+  font-size: 14px;
+  letter-spacing: .14em;
+  line-height: 1.7;
+}
 body#shopDetailPage .dcItem-rule {
   width: 48px;
   height: 1px;

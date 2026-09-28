@@ -75,8 +75,8 @@
     '.dc3d-modal.is-open .dc3d-close{opacity:1}',
     '.dc3d-mrow{position:absolute;inset:0;z-index:2;display:grid;place-items:center}',
     '.dc3d-mslot{display:grid;place-items:center}',
-    '.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100vh - 330px) * .716)));cursor:grab;touch-action:none;padding:28px 0}',
-    '@supports (height:100svh){.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100svh - 330px) * .716)))}}',
+    '.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100vh - 400px) * .716)));cursor:grab;touch-action:none;padding:28px 0}',
+    '@supports (height:100svh){.dc3d-mslot .dc3d-stage{--w:min(74vw,400px,max(200px,calc((100svh - 400px) * .716)))}}',
     '.dc3d-mslot .dc3d-floor{bottom:6px}',
     '.dc3d-modal .dc3d-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0;transition:opacity .3s ease,background-color .2s ease}',
     '.dc3d-modal .dc3d-arrow:active{transform:translateY(-50%) scale(.9)}',
@@ -89,6 +89,12 @@
     '.dc3d-hint.is-hidden{opacity:0}',
     '.dc3d-order{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;padding:13px 26px;border-radius:999px;background:linear-gradient(180deg,#e4c36f,#b58c34);color:#141008;font-size:14px;font-weight:700;letter-spacing:.06em;text-decoration:none;white-space:nowrap;box-shadow:0 6px 24px rgba(201,162,74,.28)}',
     '.dc3d-order:active{transform:translateY(1px)}',
+    '.dc3d-rough{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-top:4px;padding:14px 24px;border:none;border-radius:999px;background:linear-gradient(180deg,#e4c36f,#b58c34);color:#141008;font:inherit;font-size:14px;font-weight:700;letter-spacing:.05em;white-space:nowrap;cursor:pointer;box-shadow:0 6px 24px rgba(201,162,74,.28)}',
+    '.dc3d-rough[hidden]{display:none}',
+    '.dc3d-rough:active{transform:translateY(1px)}',
+    '.dc3d-rough-ico{flex:none;width:20px;height:20px;border-radius:5px;background:#06c755;display:grid;place-items:center}',
+    '.dc3d-rough-ico svg{width:14px;height:14px;display:block}',
+    '.dc3d-order.is-sub{margin-top:0;padding:6px 10px;background:none;box-shadow:none;color:#ebd28f;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:4px}',
     '@media (prefers-reduced-motion:reduce){.dc3d-cta{animation:none}}'
   ].join('\n');
 
@@ -96,6 +102,7 @@
     prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
     next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    line: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3.2C6.9 3.2 2.8 6.5 2.8 10.6c0 3.6 3.2 6.6 7.6 7.2.3.1.7.2.8.5.1.3.1.6 0 .9l-.1.8c0 .2-.2.9.8.5s5.4-3.2 7.4-5.5c1.4-1.5 2-3 2-4.6 0-4-4.1-7.2-9.3-7.2z"/></svg>',
     hand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.5L4.3 15.4a1.5 1.5 0 0 1 2.3-1.9L9 16"/></svg>'
   };
 
@@ -186,6 +193,7 @@
       '</div>' +
       '<div class="dc3d-mfoot"><p class="dc3d-name"></p><span class="dc3d-count"></span>' +
         '<p class="dc3d-hint">← ドラッグで回転・裏面も見られます →</p>' +
+        '<button class="dc3d-rough" type="button" hidden><span class="dc3d-rough-ico">' + ICON.line + '</span><span>このデザインで愛車のラフを見る（無料）</span></button>' +
         '<a class="dc3d-order" href="#">このデザインでオーダーする</a></div>';
     document.body.appendChild(modal);
 
@@ -402,6 +410,8 @@
       rel = { x: from.left - sr.left, y: from.top - sr.top, w: from.width, h: from.height };
       slot.style.width = sr.width + 'px'; slot.style.height = sr.height + 'px';
       modal.hidden = false;
+      syncRough();
+      document.documentElement.classList.add('dc3d-open');
       mslot.appendChild(stage);
       modal.style.setProperty('--mw', fly.getBoundingClientRect().width + 'px');
       lockScroll(true);
@@ -436,6 +446,7 @@
         void fly.offsetWidth; fly.style.transition = '';
         slot.style.width = ''; slot.style.height = '';
         modal.hidden = true; isOpen = false; animating = false;
+        document.documentElement.classList.remove('dc3d-open');
         lockScroll(false);
         if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
         run();
@@ -498,6 +509,16 @@
     modal.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     q('.dc3d-close', modal).addEventListener('click', close);
     order.addEventListener('click', function () { track('dc3d_order'); });
+    var rough = q('.dc3d-rough', modal);
+    function syncRough() {
+      var ok = !!(window.DCRough && window.DCRough.url());
+      rough.hidden = !ok;
+      order.classList.toggle('is-sub', ok);
+    }
+    rough.addEventListener('click', function () {
+      var c = cards[idx];
+      if (window.DCRough) window.DCRough.open('「' + (c ? c.name : '') + '」のデザインで無料ラフをお願いします。愛車の写真を送ります。', 'modal');
+    });
     document.addEventListener('keydown', function (e) {
       if (!isOpen) return;
       if (e.key === 'Escape') close();
@@ -557,9 +578,19 @@
     var els = document.querySelectorAll('[data-dc3d]:not([data-dc3d-mounted])');
     for (var i = 0; i < els.length; i++) mount(els[i]);
   }
-  window.DC3D = { mount: mount, version: '1.0.1' };
+  window.DC3D = { mount: mount, version: '1.1.0' };
+
+  // free-rough buttons (LINE) live in line-cta.js next to this file
+  function loadRoughCta() {
+    if (window.DCRough || document.querySelector('script[src*="line-cta.js"]')) return;
+    var s = document.createElement('script');
+    s.src = ROOT + 'line-cta.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
 
   function boot() {
+    loadRoughCta();
     autoMount();
     // the BASE page inserts the LP after load, so keep looking for a while
     if ('MutationObserver' in window) {
