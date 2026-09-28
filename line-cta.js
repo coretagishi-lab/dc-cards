@@ -11,7 +11,7 @@
   'use strict';
   if (window.DCRough) return;
 
-  var DEFAULT_LINE_URL = '';   // e.g. https://lin.ee/XXXXXXX  (LINE公式アカウントの友だち追加URL)
+  var DEFAULT_LINE_URL = 'https://lin.ee/SNMlSnr';   // LINE公式アカウントの友だち追加URL
 
   function lineUrl() {
     var s = document.querySelector('script[data-line-url]');
