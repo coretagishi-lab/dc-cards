@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="営業記録">
+<meta name="theme-color" content="#0b0b0d">
+<link rel="apple-touch-icon" href="icon.png">
+<title>営業記録</title>
+<style>
+:root{--bg:#0b0b0d;--card:#16161b;--card2:#1f1f25;--line:#2d2d35;--text:#f3f0e8;--mute:#9b978d;--gold:#d6b25e;--gold2:#7d6932;--red:#e3665f;--green:#5cc08c;--blue:#72a9e6;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(70px + env(safe-area-inset-bottom))}
+body.lock{overflow:hidden}
+main{max-width:560px;margin:0 auto;padding:10px 16px 24px}
+h1{font-size:12px;letter-spacing:.18em;color:var(--gold);margin:10px 0 2px;font-weight:600}
+a{color:var(--gold);text-decoration:none}
+.mute{color:var(--mute)}.small{font-size:12px}.right{text-align:right}.grow{flex:1;min-width:0}.center{text-align:center}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(14,14,17,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:10}
+.tabs button{flex:1;background:none;border:0;color:var(--mute);padding:8px 0 7px;font-size:11px;position:relative}
+.tabs button b{display:block;font-size:19px;line-height:1.3;font-weight:400}
+.tabs button.on{color:var(--gold)}
+.badge{position:absolute;top:3px;left:calc(50% + 6px);background:var(--red);color:#fff;border-radius:9px;font-size:10px;min-width:18px;height:18px;line-height:18px;padding:0 5px;font-style:normal}
+.counter{display:block;margin:18px auto 12px;width:min(70vw,260px);aspect-ratio:1;border-radius:50%;border:0;padding:9px;background:conic-gradient(var(--gold) var(--p),var(--line) 0);color:var(--text);font:inherit}
+.counter span{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 50% 35%,#24242b,#101013);transition:transform .1s}
+.counter:active span{transform:scale(.96)}
+.counter .n{font-size:88px;font-weight:200;line-height:1}
+.counter .g{color:var(--mute);font-size:14px;font-style:normal}
+.counter .plus{margin-top:10px;color:var(--gold);font-size:14px;letter-spacing:.08em;font-style:normal}
+.btn{display:block;width:100%;border:0;border-radius:12px;background:var(--gold);color:#17130a;font:inherit;font-weight:700;font-size:16px;padding:14px;margin-top:12px;text-align:center}
+.btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:600}
+.btn:disabled{opacity:.5}
+.btn2{display:inline-block;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:9px 12px;font:inherit;font-size:13px;white-space:nowrap}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;font-size:16px}
+textarea{resize:vertical}
+.row input{flex:1;min-width:0;width:auto}
+.lb{display:block;font-size:12px;color:var(--mute);margin:14px 0 6px}
+.card{display:block;width:100%;text-align:left;color:var(--text);font:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.warn{background:rgba(227,102,95,.12);border:1px solid rgba(227,102,95,.5);color:#ffbab5;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14px}
+.ok{background:rgba(92,192,140,.12);border:1px solid rgba(92,192,140,.45);color:#aee6c7;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14px}
+.hint{color:var(--mute);font-size:13px;margin-top:8px}
+.sheet{position:fixed;inset:0;background:var(--bg);z-index:20;overflow:auto;-webkit-overflow-scrolling:touch}
+.sheetHead{position:sticky;top:0;display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:rgba(11,11,13,.97);border-bottom:1px solid var(--line);z-index:2}
+.sheetHead button{background:none;border:0;color:var(--gold);font:inherit;font-size:16px;padding:6px 8px 6px 0}
+.sheetHead b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheetBody{max-width:560px;margin:0 auto;padding:6px 16px calc(40px + env(safe-area-inset-bottom))}
+.pick{display:flex;align-items:center;justify-content:center;flex-direction:column;border:1px dashed var(--gold2);border-radius:12px;min-height:84px;color:var(--gold);padding:10px;text-align:center}
+.pick img{max-width:100%;max-height:260px;border-radius:8px;margin-top:8px}
+.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.av{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--card2);flex:none;display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:700}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;background:var(--card2);color:var(--mute);border:1px solid var(--line);margin:2px 4px 0 0}
+.s-reply_comment,.s-reply_dm{color:var(--blue);border-color:rgba(114,169,230,.5)}
+.s-considering,.s-rough{color:var(--gold);border-color:var(--gold2)}
+.s-purchased{color:var(--green);border-color:rgba(92,192,140,.5)}
+.s-lost{color:#8a6763}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips.wrap{flex-wrap:wrap;overflow:visible}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:99px;padding:7px 12px;font:inherit;font-size:13px}
+.chip.on{background:var(--gold);color:#17130a;border-color:var(--gold);font-weight:700}
+.msg{white-space:pre-wrap;word-break:break-word}
+.clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.tl{border-left:2px solid var(--line);padding:2px 0 2px 12px;margin:10px 0 10px 2px}
+.tl.them{border-color:var(--gold)}
+.shot{display:block;max-width:140px;border-radius:8px;margin-top:6px;border:1px solid var(--line);min-height:40px;background:var(--card2)}
+.bars{display:flex;gap:6px;align-items:flex-end;height:80px;margin-top:22px}
+.bars div{flex:1;background:var(--gold2);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+.bars div.today{background:var(--gold)}
+.bars s{position:absolute;top:-17px;left:0;right:0;text-align:center;font-size:11px;text-decoration:none;color:var(--text)}
+.barl{display:flex;gap:6px;margin-top:4px}.barl span{flex:1;text-align:center;font-size:10px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}td:first-child,th:first-child{text-align:left}th{color:var(--mute);font-weight:500;font-size:11px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.kpi div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center}.kpi b{display:block;font-size:21px;font-weight:500}.kpi span{font-size:11px;color:var(--mute)}
+.sec{font-size:12px;color:var(--mute);letter-spacing:.1em;margin:22px 0 4px}
+.ja{font-size:12px;color:var(--mute);margin-top:6px;white-space:pre-wrap}
+.ja summary{cursor:pointer}
+.due{color:var(--red)}.soon{color:var(--gold)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.danger{background:none;border:1px solid rgba(227,102,95,.5);color:var(--red);border-radius:10px;padding:11px;width:100%;margin-top:28px;font:inherit}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#f3f0e8;color:#111;padding:10px 16px;border-radius:99px;font-size:14px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:50;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.viewer img{max-width:100%;max-height:100%}
+</style>
+</head>
+<body>
+<main id="main"></main>
+<nav class="tabs">
+  <button data-tab="today"><b>●</b>今日</button>
+  <button data-tab="list"><b>☰</b>顧客</button>
+  <button data-tab="remind"><b>◷</b>リマインド<i class="badge" id="dueBadge" hidden></i></button>
+  <button data-tab="data"><b>▤</b>データ</button>
+</nav>
+<div id="sheet" class="sheet" hidden><div class="sheetHead"><button id="back">‹ 戻る</button><b id="sheetTitle"></b></div></div>
+<div id="viewer" class="viewer" hidden><img alt=""></div>
+<div id="toast" class="toast"></div>
+<script>
+'use strict';
+const MODEL='claude-haiku-4-5-20251001';
+const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1]};
+const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
+const SYS="You help Takuya Tagishi, a Japanese craftsman who runs Driver's Collection (Instagram @drivers_collection_): handmade one-of-one art trading cards made from a customer's car photo (the owner can be in it too). Semi-order ¥30,000 (pick a gallery design, quick), full order ¥50,000 (one-of-a-kind design from scratch, gold authentication tag), optional light-up wall display +¥10,000. Free rough mock before purchase. Ships worldwide by EMS. He reaches out to car owners, car photographers and influencers on Instagram with comments and DMs. Always answer with one JSON object only, no other text.";
+const P_REPLY='Screenshot from Instagram: either comment replies or a DM thread. His account is drivers_collection_ (his messages are "me").\nReturn JSON: {"username":"the other person\'s Instagram handle exactly as shown, without @ (top of a DM thread, or next to their comment)","name":"their display name if shown, else empty","channel":"dm|comment","messages":[{"from":"them|me","text":"..."}]}\nOnly readable messages, oldest first, at most 12, original language.';
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const localDT=d=>ymd(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+const md=s=>{const d=new Date(s);return (d.getMonth()+1)+'/'+d.getDate()};
+const mdhm=s=>{const d=new Date(s);return md(s)+' '+pad(d.getHours())+':'+pad(d.getMinutes())};
+const eod=()=>{const d=new Date();d.setHours(23,59,59,999);return d};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+const S={get key(){return ls('dc_out_key')||''},set key(v){ls('dc_out_key',v)},get goal(){return Math.max(1,+ls('dc_out_goal')||10)},set goal(v){ls('dc_out_goal',v)}};
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2400)}
+function copy(t){if(!t)return;const ok=()=>toast('コピーしました');if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>fallback());else fallback();function fallback(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){toast('コピーできませんでした')}a.remove()}}
+function parseUser(s){s=(s||'').trim();let m=s.match(/instagram\.com\/([A-Za-z0-9._]+)/i);if(m&&!/^(p|reel|reels|stories|explore|accounts|tv)$/i.test(m[1]))return m[1].toLowerCase();m=s.match(/^@?([A-Za-z0-9._]{1,30})$/);return m?m[1].toLowerCase():''}
+const clean=u=>String(u||'').replace(/^@/,'').replace(/…|\.\.\.$|\s/g,'').toLowerCase();
+function nextAt(days,time){days=Math.max(0,parseInt(days)||0);const d=new Date();d.setDate(d.getDate()+days);const m=/^(\d{1,2}):(\d{2})$/.exec(time||'');d.setHours(m?+m[1]:20,m?+m[2]:0,0,0);if(d<new Date()){const n=new Date();n.setMinutes(n.getMinutes()+5);return localDT(n)}return localDT(d)}
+
+/* ---------- storage ---------- */
+const DB={db:null,
+ open(){return new Promise((res,rej)=>{const r=indexedDB.open('dc-outreach',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('people',{keyPath:'id'});d.createObjectStore('images',{keyPath:'id'})};r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error)})},
+ tx(st,mode,fn){return new Promise((res,rej)=>{const t=this.db.transaction(st,mode),s=t.objectStore(st);let out;const q=fn(s);if(q)q.onsuccess=()=>{out=q.result};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})},
+ all(st){return this.tx(st,'readonly',s=>s.getAll())},get(st,id){return this.tx(st,'readonly',s=>s.get(id))},
+ put(st,v){return this.tx(st,'readwrite',s=>s.put(v))},del(st,id){return this.tx(st,'readwrite',s=>s.delete(id))},clear(st){return this.tx(st,'readwrite',s=>s.clear())}};
+let P=[],view='today',filter='all',q='';
+const byId=id=>P.find(p=>p.id===id);
+async function save(p){if(!P.includes(p))P.push(p);await DB.put('people',JSON.parse(JSON.stringify(p)))}
+async function putImg(d){const id=uid();await DB.put('images',{id,d});return id}
+async function getImg(id){const r=await DB.get('images',id);return r&&r.d}
+function newPerson(n){return{id:uid(),username:n,url:'https://www.instagram.com/'+n+'/',created:new Date().toISOString(),firstDate:today(),inbound:false,genre:'',country:'',followers:'',car:'',name:'',who:'',summary:'',memo:'',lang:'',status:'waiting',profileImg:null,thumb:'',events:[],next:null,ai:''}}
+function upStatus(p,s){if(!ST[s]||p.status===s)return;if(p.status==='purchased')return;if(s==='lost'){p.status='lost';return}if(p.status==='lost'||ST[s][1]>ST[p.status][1])p.status=s}
+const replied=p=>p.events.some(e=>e.kind==='reply');
+const adv=p=>['considering','rough','purchased'].includes(p.status);
+const isDue=p=>!!(p.next&&p.next.at&&new Date(p.next.at)<=eod());
+const last=p=>p.events.length?p.events[p.events.length-1].at:p.created;
+const lastCh=p=>{for(let i=p.events.length-1;i>=0;i--)if(p.events[i].kind==='reply')return p.events[i].ch;return 'dm'};
+const av=p=>p.thumb?`<img class=av src="${p.thumb}" alt="">`:`<div class=av>${esc((p.username[0]||'?').toUpperCase())}</div>`;
+const stPill=s=>`<span class="pill s-${s}">${ST[s][0]}</span>`;
+
+/* ---------- images ---------- */
+function compress(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),im=new Image();im.onload=()=>{const w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,1280/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);const full=c.toDataURL('image/jpeg',.72);const t=document.createElement('canvas');t.width=t.height=96;const side=Math.min(w,h),sy=Math.min(h-side,Math.round(h*.06));t.getContext('2d').drawImage(im,0,sy,side,side,0,0,96,96);URL.revokeObjectURL(url);res({full,thumb:t.toDataURL('image/jpeg',.6)})};im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('画像を読めません'))};im.src=url})}
+function pick(input,cb){input.onchange=async()=>{const f=input.files&&input.files[0];if(!f)return;try{const r=await compress(f);const box=input.parentElement,im=box.querySelector('img');if(im){im.src=r.full;im.hidden=false}const sp=box.querySelector('span');if(sp)sp.textContent='画像を変更';cb(r)}catch(e){toast(e.message)}input.value=''}}
+const imgPart=d=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:d.split(',')[1]}});
+function loadImgs(el){el.querySelectorAll('img[data-imgid]').forEach(async im=>{const d=await getImg(im.dataset.imgid);if(d)im.src=d;im.onclick=()=>viewer(im.src)})}
+function viewer(src){const v=$('#viewer');v.querySelector('img').src=src;v.hidden=false;v.onclick=()=>{v.hidden=true}}
+
+/* ---------- AI (Anthropic API, called straight from this page) ---------- */
+function cost(){let c={};try{c=JSON.parse(ls('dc_out_cost')||'{}')}catch(e){}const m=today().slice(0,7);if(c.m!==m)c={m,usd:0,calls:0};return c}
+function addCost(u){if(!u)return;const c=cost();c.usd+=((u.input_tokens||0)*1+(u.output_tokens||0)*5)/1e6;c.calls++;ls('dc_out_cost',JSON.stringify(c))}
+async function claude(content,max){
+ if(!S.key)throw new Error('APIキーが未設定です');
+ const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':S.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:max,system:SYS,messages:[{role:'user',content}]})});
+ let d={};try{d=await r.json()}catch(e){}
+ if(!r.ok)throw new Error((d.error&&d.error.message)||('HTTP '+r.status));
+ addCost(d.usage);
+ const t=(d.content||[]).map(c=>c.text||'').join(''),m=t.match(/\{[\s\S]*\}/);
+ if(!m)throw new Error('AIの返答を読めませんでした');return JSON.parse(m[0])}
+function streak(p){const days=new Set();for(let i=p.events.length-1;i>=0;i--){const e=p.events[i];if(e.kind==='reply')break;days.add(ymd(new Date(e.at)))}return days.size}
+function history(p){return p.events.slice(-20).map(e=>{const d=md(e.at),cut=t=>String(t||'').slice(0,400);if(e.kind==='reply'&&e.msgs&&e.msgs.length)return e.msgs.map(m=>`${d} ${m.from==='me'?'me':'them'} (${e.ch}): ${cut(m.text)}`).join('\n');return `${d} ${e.kind==='reply'?'them':'me'} (${e.ch}): ${cut(e.text)||'(screenshot)'}`}).join('\n')}
+async function aiProfile(p,force){
+ if(!S.key){toast('APIキーが未設定です');return}
+ p.ai='プロフィールを読み取り中…';await save(p);render();refresh(p);
+ try{const c=[];if(p.profileImg){const d=await getImg(p.profileImg);if(d)c.push(imgPart(d))}
+  const sent=p.events.filter(e=>e.kind==='sent').map(e=>(e.ch==='dm'?'DM: ':'Comment: ')+e.text).join('\n');
+  c.push({type:'text',text:`${c.length?'Screenshot: Instagram profile of':'No screenshot. Instagram account'} @${p.username}, whom he just contacted.\nWhat he sent:\n${sent||'(nothing recorded)'}\nReturn JSON:\n{"username":"handle shown in the screenshot, no @","name":"display name","genre":"owner|photographer|influencer|shop|media|other (owner = car owner)","country":"country in Japanese like アメリカ, or empty","followers":number or null,"car":"their car model(s) or empty","summary_ja":"who they are in Japanese, max 40 chars","lang":"language to use with them (ja/en/ko/zh/...)","next_in_days":3 to 7,"next_time":"HH:MM Japan time that is early evening in their time zone","next_text":"short friendly follow-up in their language, to send if they do not reply","next_text_ja":"Japanese translation of next_text, empty if lang is ja"}`});
+  const j=await claude(c,800);
+  const set=(k,v)=>{if(v!==undefined&&v!==null&&v!==''&&(force||!p[k]))p[k]=v};
+  set('name',j.name);set('genre',GENRE[j.genre]?j.genre:(j.genre?'other':''));set('country',j.country);set('followers',j.followers);set('car',j.car);set('who',j.summary_ja);set('lang',j.lang);
+  const u=clean(j.username);if(u&&u!==p.username&&!(p.memo||'').includes(u))p.memo=(p.memo?p.memo+'\n':'')+'※スクショのID: @'+u;
+  if(!replied(p)&&j.next_text)p.next={at:nextAt(j.next_in_days==null?5:j.next_in_days,j.next_time),text:j.next_text,ja:j.next_text_ja||''};
+  p.ai=''}catch(e){p.ai='読み取り失敗: '+e.message}
+ await save(p);render();refresh(p)}
+async function aiPlan(p){
+ if(!S.key){toast('APIキーが未設定です');return}
+ p.ai='AIが次の一手を考え中…';await save(p);render();refresh(p);
+ try{const j=await claude([{type:'text',text:`Customer: @${p.username}${p.name?' / '+p.name:''} / ${GENRE[p.genre]||'?'} / ${p.country||'?'} / car: ${p.car||'?'} / ${p.who||''}\nCurrent status: ${p.status}\nConversation (oldest first):\n${history(p)||'(none)'}\nDays in a row he messaged without any reply from them (first contact counts): ${streak(p)}\nToday: ${today()} (Japan)\nDecide his next action. Return JSON:\n{"status":"waiting|reply_comment|reply_dm|considering|rough|purchased|lost","summary_ja":"current situation in Japanese, max 60 chars","next_in_days":integer or null,"next_time":"HH:MM Japan time, early evening in their time zone","next_text":"message he should send next, in their language","next_text_ja":"Japanese translation, empty if Japanese"}\nRules: waiting = no reply yet; reply_comment / reply_dm = they replied; considering = interested or asked price/details; rough = asked for the free rough mock; purchased = paid; lost = clearly declined. If their last message needs an answer, next_in_days = 0 and next_text answers it. If he spoke last, follow up in 3-7 days only if it adds value. If the streak is 3 or more, or they declined, next_in_days = null. Messages: warm and human, 2-4 sentences, specific to their car or photo, no links, no pressure, price only if they asked; offering the free rough mock is a good natural step.`}],900);
+  upStatus(p,j.status);if(j.summary_ja)p.summary=j.summary_ja;
+  p.next=(j.next_in_days===null||j.next_in_days===undefined||!j.next_text)?null:{at:nextAt(j.next_in_days,j.next_time),text:j.next_text,ja:j.next_text_ja||''};
+  p.ai=''}catch(e){p.ai='AI失敗: '+e.message}
+ await save(p);render();refresh(p)}
+async function markSent(p){if(!p||!p.next)return;const t=p.next.text||'';if(t)p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:lastCh(p),text:t});p.next=null;await save(p);toast('送信を記録しました');render();refresh(p);if(S.key&&t)aiPlan(p)}
+
+/* ---------- sheets ---------- */
+const stack=[];
+function openSheet(title,fn,id){const d=document.createElement('div');d.className='sheetBody';stack.forEach(s=>{s.el.hidden=true});$('#sheet').appendChild(d);stack.push({title,fn,id,el:d});$('#sheet').hidden=false;document.body.classList.add('lock');$('#sheetTitle').textContent=title;fn(d);loadImgs(d);$('#sheet').scrollTop=0}
+function closeSheet(){const s=stack.pop();if(s)s.el.remove();const t=stack[stack.length-1];if(!t){$('#sheet').hidden=true;document.body.classList.remove('lock');return}t.el.hidden=false;$('#sheetTitle').textContent=t.title}
+function refresh(p){stack.forEach(s=>{if(s.id===p.id){s.fn(s.el);loadImgs(s.el)}})}
+function openDetail(id){const p=byId(id);if(p)openSheet('@'+p.username,detailFn(p),p.id)}
+
+/* new approach */
+function newFn(b){let img=null;
+ b.innerHTML=`<label class=lb>プロフィールURL または @ユーザー名</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nDup></div>
+ <label class=lb>プロフィールのスクショ(ジャンル・国・車をAIが読み取り)</label><label class=pick><input type=file accept="image/*" hidden><span>＋ 画像を選ぶ</span><img hidden alt=""></label>
+ <label class=lb>送ったコメント</label><textarea id=nC rows=3></textarea>
+ <label class=lb>送ったDM</label><textarea id=nD rows=4></textarea>
+ <button class=btn id=nSave>保存して +1</button>`;
+ const g=s=>b.querySelector(s),u=g('#nU');
+ const check=()=>{const n=parseUser(u.value),ex=n&&P.find(p=>p.username===n);g('#nDup').innerHTML=!n?'':ex?`<div class=warn>⚠ @${esc(n)} は ${md(ex.created)} にアプローチ済み(${ST[ex.status][0]})<br><button class=btn2 data-open="${ex.id}" style="margin-top:6px">記録を開く</button></div>`:`<div class=ok>✓ @${esc(n)} は初めてのアカウント</div>`;g('#nSave').textContent=ex?'既存の記録に追加(カウントしない)':'保存して +1'};
+ u.addEventListener('input',check);
+ g('#nPaste').onclick=async()=>{try{u.value=(await navigator.clipboard.readText()).trim();check()}catch(e){u.focus()}};
+ pick(g('.pick input'),r=>{img=r});
+ g('#nSave').onclick=async function(){const n=parseUser(u.value);if(!n){toast('URLか@ユーザー名を入れてください');u.focus();return}this.disabled=true;
+  const c=g('#nC').value.trim(),d=g('#nD').value.trim();let p=P.find(x=>x.username===n);const isNew=!p;if(isNew)p=newPerson(n);
+  if(img){p.profileImg=await putImg(img.full);p.thumb=img.thumb}
+  const at=new Date().toISOString();if(c)p.events.push({id:uid(),at,kind:'sent',ch:'comment',text:c});if(d)p.events.push({id:uid(),at,kind:'sent',ch:'dm',text:d});
+  if(isNew)p.next={at:nextAt(5,'20:00'),text:'',ja:''};
+  await save(p);closeSheet();render();toast(isNew?'+1 保存しました':'記録に追加しました');
+  if(S.key&&(img||c||d)){if(isNew)aiProfile(p);else aiPlan(p)}}}
+
+/* reply screenshot */
+function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
+ b.innerHTML=`<div class=hint>${pre?'@'+esc(pre.username)+' の記録に追加します':'スクショに写っているIDから、過去の記録を自動で探します'}</div>
+ <label class=pick style="margin-top:10px"><input type=file accept="image/*" hidden><span>＋ 返信のスクショを選ぶ</span><img hidden alt=""></label><div id=rOut></div>`;
+ const out=b.querySelector('#rOut');
+ pick(b.querySelector('.pick input'),async r=>{img=r;j=null;out.innerHTML='<div class=hint>読み取り中…</div>';
+  if(S.key){try{j=await claude([imgPart(r.full),{type:'text',text:P_REPLY}],900)}catch(e){toast('読み取り失敗: '+e.message)}}
+  ch=j&&j.channel==='comment'?'comment':'dm';show()});
+ function show(){const u=j?clean(j.username):'',m=pre||findMatch(u,j&&j.name),msgs=j&&Array.isArray(j.messages)?j.messages:[];
+  out.innerHTML=`${!S.key?'<div class=warn>APIキー未設定のため自動読み取りはオフです。下から相手を選んでください。</div>':''}
+  ${msgs.length?`<div class=card>${msgs.map(x=>`<div class="tl ${x.from==='me'?'':'them'}"><div class="small mute">${x.from==='me'?'自分':'相手'}</div><div class=msg>${esc(x.text)}</div></div>`).join('')}</div>`:''}
+  <div class=chips><button class="chip ${ch==='dm'?'on':''}" data-ch=dm>DM</button><button class="chip ${ch==='comment'?'on':''}" data-ch=comment>コメント</button></div>
+  ${m?`<div class=ok>✓ @${esc(m.username)} の記録と一致(${ST[m.status][0]})</div><button class=btn data-add="${m.id}">この人に追加</button>`:`<div class=warn>${u?'@'+esc(u)+' は記録に':'相手が'}見つかりません</div>${u?`<button class="btn ghost" id=rNew>@${esc(u)} を新規登録して追加</button>`:''}`}
+  ${pre?'':`<label class=lb>${m?'違う人なら検索':'記録から探す'}</label><input id=rQ type=search autocapitalize=off placeholder="@ユーザー名"><div id=rList></div>`}`;
+  const rq=out.querySelector('#rQ');if(rq)rq.oninput=()=>{const k=clean(rq.value);out.querySelector('#rList').innerHTML=k?P.filter(p=>p.username.includes(k)||(p.name||'').toLowerCase().includes(k)).slice(0,8).map(p=>`<div class=item>${av(p)}<div class=grow>@${esc(p.username)}<br>${stPill(p.status)}</div><button class=btn2 data-add="${p.id}">追加</button></div>`).join('')||'<div class=hint>該当なし</div>':''};
+  const nb=out.querySelector('#rNew');if(nb)nb.onclick=async()=>{const p=newPerson(u);p.inbound=true;if(j&&j.name)p.name=j.name;await add(p)};
+ }
+ out.onclick=e=>{const c=e.target.closest('[data-ch]');if(c){ch=c.dataset.ch;out.querySelectorAll('[data-ch]').forEach(x=>x.classList.toggle('on',x===c));return}const a=e.target.closest('[data-add]');if(a){a.disabled=true;add(byId(a.dataset.add))}};
+ async function add(p){if(!p||!img)return;const id=await putImg(img.full),msgs=j&&Array.isArray(j.messages)?j.messages:[];
+  p.events.push({id:uid(),at:new Date().toISOString(),kind:'reply',ch,text:msgs.map(x=>(x.from==='me'?'自分: ':'相手: ')+x.text).join('\n'),msgs,img:id});
+  upStatus(p,ch==='dm'?'reply_dm':'reply_comment');p.next=null;await save(p);closeSheet();render();refresh(p);toast('@'+p.username+' に返信を追加しました');if(S.key)aiPlan(p)}
+}}
+function findMatch(u,name){if(u){let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p}}if(name){const n=String(name).trim().toLowerCase();const p=P.find(x=>x.name&&x.name.trim().toLowerCase()===n);if(p)return p}return null}
+
+/* customer detail */
+function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}</div>`).join('')}
+function detailFn(p){return b=>{const n=p.next||{};
+ b.innerHTML=`<div class=item style="border:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
+ ${p.ai?`<div class=hint>${esc(p.ai)}</div>`:''}${p.summary?`<div class=card style="margin-top:2px">${esc(p.summary)}</div>`:''}
+ <div class=sec>状態</div><div class="chips wrap">${Object.keys(ST).map(s=>`<button class="chip ${p.status===s?'on':''}" data-st="${s}">${ST[s][0]}</button>`).join('')}</div>
+ <div class=sec>次のアクション</div>
+ <input type=datetime-local id=dAt value="${esc(n.at||'')}">
+ <textarea id=dTx rows=5 style="margin-top:8px" placeholder="次に送る文章">${esc(n.text||'')}</textarea>${n.ja?`<div class=ja>${esc(n.ja)}</div>`:''}
+ <div class=row style="margin-top:8px"><button class=btn2 id=dCopy>コピー</button><button class=btn2 id=dSent>送った ✓</button><button class=btn2 id=dAi>AIで作り直す</button><button class=btn2 id=dClr>予定なし</button></div>
+ <button class=btn id=dReply>返信のスクショを追加</button>
+ <button class="btn ghost" id=dLogT>送った文章を記録</button>
+ <div id=dLog class=card hidden><div class=chips><button class="chip on" data-lch=dm>DM</button><button class=chip data-lch=comment>コメント</button></div><textarea id=dLogTx rows=3 placeholder="送った文章"></textarea><button class=btn id=dLogSave>記録する</button></div>
+ <div class=sec>やりとり</div>${tl(p)}
+ <div class=sec>プロフィール</div>
+ <div class=grid><div><label class=lb>ジャンル</label><select id=fG><option value="">-</option>${Object.keys(GENRE).map(g=>`<option value="${g}" ${p.genre===g?'selected':''}>${GENRE[g]}</option>`).join('')}</select></div><div><label class=lb>国</label><input id=fC value="${esc(p.country)}"></div><div><label class=lb>フォロワー</label><input id=fF inputmode=numeric value="${esc(p.followers)}"></div><div><label class=lb>車</label><input id=fCar value="${esc(p.car)}"></div></div>
+ <label class=lb>メモ</label><textarea id=fM rows=2>${esc(p.memo)}</textarea>
+ ${p.profileImg?`<img class=shot data-imgid="${p.profileImg}" alt="">`:''}
+ <div class=row style="margin-top:10px"><label class=btn2>${p.profileImg?'スクショを差し替え':'スクショを追加'}<input type=file accept="image/*" id=fImg hidden></label><button class=btn2 id=dProf>AIで読み取り直す</button></div>
+ <button class=danger id=dDel>この記録を削除</button>`;
+ const g=s=>b.querySelector(s),upd=async()=>{await save(p);render()};
+ b.querySelectorAll('[data-st]').forEach(x=>x.onclick=async()=>{p.status=x.dataset.st;await upd();refresh(p)});
+ const setNext=async()=>{const at=g('#dAt').value,tx=g('#dTx').value;p.next=(at||tx.trim())?{at:at||nextAt(0),text:tx,ja:(tx===(n.text||''))?(n.ja||''):''}:null;await upd()};
+ g('#dAt').onchange=setNext;g('#dTx').onchange=setNext;
+ g('#dCopy').onclick=()=>copy(g('#dTx').value);
+ g('#dSent').onclick=async()=>{await setNext();if(!p.next||!p.next.text.trim()){toast('送る文章がありません');return}markSent(p)};
+ g('#dAi').onclick=()=>aiPlan(p);
+ g('#dClr').onclick=async()=>{p.next=null;await upd();refresh(p)};
+ g('#dReply').onclick=()=>openSheet('返信を追加',replyFn(p));
+ let lch='dm';g('#dLogT').onclick=()=>{g('#dLog').hidden=!g('#dLog').hidden};
+ b.querySelectorAll('[data-lch]').forEach(x=>x.onclick=()=>{lch=x.dataset.lch;b.querySelectorAll('[data-lch]').forEach(y=>y.classList.toggle('on',y===x))});
+ g('#dLogSave').onclick=async()=>{const t=g('#dLogTx').value.trim();if(!t)return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:lch,text:t});await upd();refresh(p);toast('記録しました');if(S.key)aiPlan(p)};
+ g('#fG').onchange=e=>{p.genre=e.target.value;upd()};g('#fC').onchange=e=>{p.country=e.target.value.trim();upd()};g('#fF').onchange=e=>{p.followers=e.target.value.trim();upd()};g('#fCar').onchange=e=>{p.car=e.target.value.trim();upd()};g('#fM').onchange=e=>{p.memo=e.target.value;upd()};
+ pick(g('#fImg'),async r=>{p.profileImg=await putImg(r.full);p.thumb=r.thumb;await upd();refresh(p);if(S.key)aiProfile(p,true)});
+ g('#dProf').onclick=()=>aiProfile(p,true);
+ g('#dDel').onclick=async()=>{if(!confirm('@'+p.username+' の記録を削除します。よろしいですか?'))return;for(const id of [p.profileImg,...p.events.map(e=>e.img)])if(id)await DB.del('images',id);await DB.del('people',p.id);P=P.filter(x=>x!==p);closeSheet();render();toast('削除しました')};
+}}
+
+/* ---------- views ---------- */
+function vToday(){const t=today(),n=P.filter(p=>!p.inbound&&p.firstDate===t).length,g=S.goal,pc=Math.min(100,n/g*100);
+ const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=ymd(d);return{l:i===6?'今日':(d.getMonth()+1)+'/'+d.getDate(),n:P.filter(p=>!p.inbound&&p.firstDate===k).length,t:i===6}});
+ const mx=Math.max(g,...days.map(d=>d.n)),wk=days.reduce((a,d)=>a+d.n,0),due=P.filter(isDue).length;
+ return `<h1>DRIVER'S COLLECTION ─ 営業記録</h1><div class="mute small">${t.replace(/-/g,'/')}</div>
+ <button class=counter id=bigBtn style="--p:${pc}%"><span><b class=n>${n}</b><i class=g>/ ${g} 人</i><i class=plus>＋ 新規アプローチ</i></span></button>
+ ${n>=g?'<div class="ok center">今日の目標達成 🎉</div>':''}
+ <button class="btn ghost" id=replyBtn>返信のスクショを貼る</button>
+ ${due?`<button class=card data-tab=remind>⏰ 今日までのリマインド <b>${due}件</b> →</button>`:''}
+ ${S.key?'':'<div class=hint>「データ」タブでAPIキーを入れると、スクショの自動読み取りと文面の提案が使えます。</div>'}
+ <div class=sec>直近7日(計${wk}人)</div><div class=bars>${days.map(d=>`<div class="${d.t?'today':''}" style="height:${d.n/mx*100}%"><s>${d.n||''}</s></div>`).join('')}</div><div class=barl>${days.map(d=>`<span>${d.l}</span>`).join('')}</div>`}
+function rows(){const k=q.trim().toLowerCase().replace(/^@/,'');const L=P.filter(p=>(filter==='all'||p.status===filter)&&(!k||[p.username,p.name,p.country,p.car,p.who,p.summary,p.memo].join(' ').toLowerCase().includes(k))).sort((a,b)=>last(b).localeCompare(last(a)));
+ if(!L.length)return '<div class=hint>該当する記録はありません</div>';
+ return L.map(p=>`<div class=item data-open="${p.id}">${av(p)}<div class=grow><b>@${esc(p.username)}</b><div>${stPill(p.status)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
+function vList(){const cnt=s=>P.filter(p=>s==='all'||p.status===s).length;
+ return `<h1>顧客リスト</h1><input id=q type=search autocapitalize=off placeholder="@ユーザー名・国・車で検索" value="${esc(q)}" style="margin-top:8px">
+ <div class=chips>${['all',...Object.keys(ST)].map(s=>`<button class="chip ${filter===s?'on':''}" data-f="${s}">${s==='all'?'すべて':ST[s][0]} ${cnt(s)}</button>`).join('')}</div><div id=rows>${rows()}</div>`}
+function rcard(p){const late=new Date(p.next.at)<new Date();
+ return `<div class=card><div class=item style="border:0;padding:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="small ${late?'due':'soon'}">${mdhm(p.next.at)}${late?'(期限)':''} ${stPill(p.status)}</div></div><button class=btn2 data-open="${p.id}">開く</button></div>
+ ${p.summary||p.who?`<div class="mute small" style="margin-top:6px">${esc(p.summary||p.who)}</div>`:''}
+ ${p.next.text?`<div class="msg clamp" style="margin-top:8px">${esc(p.next.text)}</div>${p.next.ja?`<details class=ja><summary>日本語訳</summary>${esc(p.next.ja)}</details>`:''}`:'<div class=hint>文面なし(「開く」→AIで作り直す で作れます)</div>'}
+ <div class=row style="margin-top:10px">${p.next.text?`<button class=btn2 data-copyid="${p.id}">コピー</button>`:''}<a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>Instagramへ</a>${p.next.text?`<button class=btn2 data-sentid="${p.id}">送った ✓</button>`:''}</div></div>`}
+function vRemind(){const L=P.filter(p=>p.next&&p.next.at).sort((a,b)=>a.next.at.localeCompare(b.next.at)),e=eod();
+ if(!L.length)return '<h1>リマインド</h1><div class=hint>予定はありません</div>';
+ const a=L.filter(p=>new Date(p.next.at)<=e),b=L.filter(p=>new Date(p.next.at)>e);
+ return `<h1>リマインド</h1>${a.length?`<div class=sec>今日まで(${a.length})</div>${a.map(rcard).join('')}`:''}${b.length?`<div class=sec>これから(${b.length})</div>${b.map(rcard).join('')}`:''}`}
+function weekOf(s){const d=new Date(s+'T00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return (d.getMonth()+1)+'/'+d.getDate()+'〜'}
+function firstCh(p){const f=p.events.filter(e=>e.kind==='sent'&&ymd(new Date(e.at))===p.firstDate),c=f.some(e=>e.ch==='comment'),d=f.some(e=>e.ch==='dm');return c&&d?'コメント+DM':c?'コメントのみ':d?'DMのみ':'記録なし'}
+function grp(O,fn){const m={};O.forEach(p=>{const k=fn(p)||'不明';const v=m[k]||(m[k]={n:0,r:0,a:0,b:0,s:p.firstDate});v.n++;if(replied(p))v.r++;if(adv(p))v.a++;if(p.status==='purchased')v.b++});return Object.entries(m)}
+function vData(){const O=P.filter(p=>!p.inbound),n=O.length,r=O.filter(replied).length,a=O.filter(adv).length,rg=O.filter(p=>['rough','purchased'].includes(p.status)).length,b=O.filter(p=>p.status==='purchased').length;
+ const pct=(x,y)=>y?Math.round(x/y*100)+'%':'-',c=cost();
+ const tbl=(t,rs)=>`<div class=sec>${t}</div><table><tr><th></th><th>人数</th><th>返信率</th><th>検討以上</th><th>購入</th></tr>${rs.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td><td>${pct(v.r,v.n)}</td><td>${pct(v.a,v.n)}</td><td>${v.b}</td></tr>`).join('')}</table>`;
+ const bySize=x=>x.sort((p,q)=>q[1].n-p[1].n);
+ return `<h1>データ</h1><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
+ ${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
+ <div class=sec>データの書き出し</div>
+ <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
+ <div class=row style="margin-top:10px"><button class=btn2 id=xP>顧客CSV</button><button class=btn2 id=xE>やりとりCSV</button><button class=btn2 id=xB>バックアップ(画像込み)</button><label class=btn2>バックアップから復元<input type=file id=xR accept=".json,application/json" hidden></label></div>
+ <div class=sec>設定</div>
+ <label class=lb>1日の目標人数</label><input id=sGoal type=number inputmode=numeric min=1 value="${S.goal}">
+ <label class=lb>Anthropic APIキー(この端末の中にだけ保存)</label><input id=sKey type=password autocomplete=off autocapitalize=off placeholder="sk-ant-…" value="${esc(S.key)}">
+ <div class=hint>${S.key?'✓ 設定済み':'未設定: スクショの自動読み取りとAIの文面提案はオフです'}<br>今月のAI費用の目安: $${c.usd.toFixed(3)}(約${Math.round(c.usd*150)}円 / ${c.calls}回)<br>データはこの端末のブラウザ内に保存されます。ホーム画面のアイコンから開いて使ってください。<span id=stor></span></div>`}
+function render(){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===view));
+ const due=P.filter(isDue).length,bd=$('#dueBadge');bd.textContent=due;bd.hidden=!due;
+ $('#main').innerHTML=({today:vToday,list:vList,remind:vRemind,data:vData})[view]();
+ if(view==='list'){const i=$('#q');i.oninput=()=>{q=i.value;$('#rows').innerHTML=rows()}}
+ if(view==='data')bindData()}
+
+/* ---------- export / settings ---------- */
+function csv(R){return R.map(r=>r.map(v=>{v=v==null?'':String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n')}
+function peopleRows(){return [['username','url','初回日','相手から','ジャンル','国','フォロワー','車','状態','どんな人','現状','送信数','返信数','最初のコメント','最初のDM','次回予定','次回文面','メモ'],...P.map(p=>{const s=p.events.filter(e=>e.kind==='sent'),r=p.events.filter(e=>e.kind==='reply');return [p.username,p.url,p.firstDate,p.inbound?'1':'',GENRE[p.genre]||p.genre,p.country,p.followers,p.car,ST[p.status][0],p.who,p.summary,s.length,r.length,(s.find(e=>e.ch==='comment')||{}).text,(s.find(e=>e.ch==='dm')||{}).text,p.next?p.next.at:'',p.next?p.next.text:'',p.memo]})]}
+function eventRows(){const R=[['username','ジャンル','国','状態','日時','種類','手段','内容']];P.forEach(p=>p.events.forEach(e=>R.push([p.username,GENRE[p.genre]||p.genre,p.country,ST[p.status][0],localDT(new Date(e.at)).replace('T',' '),e.kind==='reply'?'返信':'送信',e.ch==='dm'?'DM':'コメント',e.text])));return R}
+async function saveFile(name,text,type){const f=new File([text],name,{type});if(navigator.canShare&&/iPhone|iPad|Android/i.test(navigator.userAgent)&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]});return}catch(e){if(e.name==='AbortError')return}}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},3000)}
+function bindData(){const stamp=today().replace(/-/g,'');
+ $('#xCopy').onclick=()=>copy(`【営業記録 ${today()} 時点】\n\n[顧客]\n${csv(peopleRows())}\n\n[やりとり]\n${csv(eventRows())}`);
+ $('#xP').onclick=()=>saveFile(`顧客_${stamp}.csv`,'﻿'+csv(peopleRows()),'text/csv');
+ $('#xE').onclick=()=>saveFile(`やりとり_${stamp}.csv`,'﻿'+csv(eventRows()),'text/csv');
+ $('#xB').onclick=async()=>{toast('バックアップを作成中…');const imgs=await DB.all('images');saveFile(`営業記録バックアップ_${stamp}.json`,JSON.stringify({v:1,at:new Date().toISOString(),people:P,images:imgs}),'application/json')};
+ $('#xR').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.people))throw new Error('形式が違います');if(!confirm(`${d.people.length}件の記録で、今のデータを置き換えます。よろしいですか?`))return;await DB.clear('people');await DB.clear('images');for(const x of d.images||[])await DB.put('images',x);for(const p of d.people)await DB.put('people',p);P=await DB.all('people');render();toast('復元しました')}catch(err){toast('復元できません: '+err.message)}};
+ $('#sGoal').onchange=e=>{S.goal=Math.max(1,parseInt(e.target.value)||10);toast('目標を保存しました')};
+ $('#sKey').onchange=e=>{S.key=e.target.value.trim();render();toast(S.key?'APIキーを保存しました':'APIキーを消しました')};
+ if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
+ if(t.id==='back')return closeSheet();
+ if(t.id==='bigBtn')return openSheet('新規アプローチ',newFn);
+ if(t.id==='replyBtn')return openSheet('返信を追加',replyFn(null));
+ if(t.dataset.tab){view=t.dataset.tab;window.scrollTo(0,0);return render()}
+ if(t.dataset.open)return openDetail(t.dataset.open);
+ if(t.dataset.copyid){const p=byId(t.dataset.copyid);return p&&p.next&&copy(p.next.text)}
+ if(t.dataset.sentid)return markSent(byId(t.dataset.sentid));
+ if(t.dataset.f){filter=t.dataset.f;return render()}});
+(async()=>{try{await DB.open();P=await DB.all('people')}catch(e){toast('保存領域を開けません: '+e.message)}
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+ render()})();
+</script>
+</body>
+</html>
