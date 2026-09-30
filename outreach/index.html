@@ -124,6 +124,11 @@ function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clea
 function copy(t){if(!t)return;const ok=()=>toast('コピーしました');if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>fallback());else fallback();function fallback(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){toast('コピーできませんでした')}a.remove()}}
 function parseUser(s){s=(s||'').trim();let m=s.match(/instagram\.com\/([A-Za-z0-9._]+)/i);if(m&&!/^(p|reel|reels|stories|explore|accounts|tv)$/i.test(m[1]))return m[1].toLowerCase();m=s.match(/^@?([A-Za-z0-9._]{1,30})$/);return m?m[1].toLowerCase():''}
 const clean=u=>String(u||'').replace(/^@/,'').replace(/…|\.\.\.$|\s/g,'').toLowerCase();
+/* look-alike IDs (l/I/1, 0/o, . and _) so a misread ID still finds the earlier record */
+const norm=s=>String(s||'').toLowerCase().replace(/[1i|]/g,'l').replace(/0/g,'o').replace(/[._]/g,'');
+function lev(a,b){if(Math.abs(a.length-b.length)>1)return 9;let prev=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){const cur=[i];for(let j=1;j<=b.length;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur}return prev[b.length]}
+const similar=u=>{const nu=norm(u);return P.filter(x=>x.username!==u&&(norm(x.username)===nu||(nu.length>=6&&lev(norm(x.username),nu)<=1)))};
+const sameName=n=>{n=String(n||'').trim().toLowerCase();return n?P.filter(x=>x.name&&x.name.trim().toLowerCase()===n):[]};
 function nextAt(days,time){days=Math.max(0,parseInt(days)||0);const d=new Date();d.setDate(d.getDate()+days);const m=/^(\d{1,2}):(\d{2})$/.exec(time||'');d.setHours(m?+m[1]:20,m?+m[2]:0,0,0);if(d<new Date()){const n=new Date();n.setMinutes(n.getMinutes()+5);return localDT(n)}return localDT(d)}
 
 /* ---------- storage ---------- */
@@ -148,7 +153,7 @@ const av=p=>p.thumb?`<img class=av src="${p.thumb}" alt="">`:`<div class=av>${es
 const stPill=s=>`<span class="pill s-${s}">${ST[s][0]}</span>`;
 
 /* ---------- images ---------- */
-function compress(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),im=new Image();im.onload=()=>{const w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,1280/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);const full=c.toDataURL('image/jpeg',.72);const t=document.createElement('canvas');t.width=t.height=96;const side=Math.min(w,h),sy=Math.min(h-side,Math.round(h*.06));t.getContext('2d').drawImage(im,0,sy,side,side,0,0,96,96);URL.revokeObjectURL(url);res({full,thumb:t.toDataURL('image/jpeg',.6)})};im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('画像を読めません'))};im.src=url})}
+function compress(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file),im=new Image();im.onload=()=>{const w=im.naturalWidth,h=im.naturalHeight,s=Math.min(1,1280/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);const full=c.toDataURL('image/jpeg',.72);const th=Math.round(h*.22),tw=Math.min(w,900),tc=document.createElement('canvas');tc.width=tw;tc.height=Math.round(th*tw/w);tc.getContext('2d').drawImage(im,0,0,w,th,0,0,tc.width,tc.height);const top=tc.toDataURL('image/jpeg',.8);const t=document.createElement('canvas');t.width=t.height=96;const side=Math.min(w,h),sy=Math.min(h-side,Math.round(h*.06));t.getContext('2d').drawImage(im,0,sy,side,side,0,0,96,96);URL.revokeObjectURL(url);res({full,top,thumb:t.toDataURL('image/jpeg',.6)})};im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('画像を読めません'))};im.src=url})}
 function pick(input,cb){input.onchange=async()=>{const f=input.files&&input.files[0];if(!f)return;try{const r=await compress(f);const box=input.parentElement,im=box.querySelector('img');if(im){im.src=r.full;im.hidden=false}const sp=box.querySelector('span');if(sp)sp.textContent='画像を変更';cb(r)}catch(e){toast(e.message)}input.value=''}}
 const imgPart=d=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:d.split(',')[1]}});
 function loadImgs(el){el.querySelectorAll('img[data-imgid]').forEach(async im=>{const d=await getImg(im.dataset.imgid);if(d)im.src=d;im.onclick=()=>viewer(im.src)})}
@@ -198,19 +203,26 @@ function refresh(p){stack.forEach(s=>{if(s.id===p.id){s.fn(s.el);loadImgs(s.el)}
 function openDetail(id){const p=byId(id);if(p)openSheet('@'+p.username,detailFn(p),p.id)}
 
 /* new approach */
-function newFn(b){let img=null;
- b.innerHTML=`<label class=lb>プロフィールURL または @ユーザー名</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nDup></div>
- <label class=lb>プロフィールのスクショ(ジャンル・国・車をAIが読み取り)</label><label class=pick><input type=file accept="image/*" hidden><span>＋ 画像を選ぶ</span><img hidden alt=""></label>
+function newFn(b){let img=null,idName='';
+ b.innerHTML=`<label class=lb>プロフィールのスクショ(ID・ジャンル・国・車をAIが読み取り)</label><label class=pick><input type=file accept="image/*" hidden><span>＋ 画像を選ぶ</span><img hidden alt=""></label>
+ <label class=lb>@ID(スクショから自動で入ります。URLを貼ると確実)</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="@id または instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nId></div><div id=nDup></div>
  <label class=lb>送ったコメント</label><textarea id=nC rows=3></textarea>
  <label class=lb>送ったDM</label><textarea id=nD rows=4></textarea>
  <button class=btn id=nSave>保存して +1</button>`;
  const g=s=>b.querySelector(s),u=g('#nU');
- const check=()=>{const n=parseUser(u.value),ex=n&&P.find(p=>p.username===n);g('#nDup').innerHTML=!n?'':ex?`<div class=warn>⚠ @${esc(n)} は ${md(ex.created)} にアプローチ済み(${ST[ex.status][0]})<br><button class=btn2 data-open="${ex.id}" style="margin-top:6px">記録を開く</button></div>`:`<div class=ok>✓ @${esc(n)} は初めてのアカウント</div>`;g('#nSave').textContent=ex?'既存の記録に追加(カウントしない)':'保存して +1'};
- u.addEventListener('input',check);
- g('#nPaste').onclick=async()=>{try{u.value=(await navigator.clipboard.readText()).trim();check()}catch(e){u.focus()}};
- pick(g('.pick input'),r=>{img=r});
+ const check=()=>{const n=parseUser(u.value),ex=n&&P.find(p=>p.username===n);let h='';
+  if(ex)h=`<div class=warn>⚠ @${esc(n)} は ${md(ex.created)} にアプローチ済み(${ST[ex.status][0]})<br><button class=btn2 data-open="${ex.id}" style="margin-top:6px">記録を開く</button></div>`;
+  else if(n){const L=[...new Set([...similar(n),...sameName(idName)])];h=L.length?`<div class=warn>⚠ 似ているアカウントの記録があります。同じ人でないか確認してください${L.slice(0,3).map(x=>`<br><button class=btn2 data-open="${x.id}" style="margin-top:6px">@${esc(x.username)}(${md(x.created)} ${ST[x.status][0]})</button>`).join('')}</div>`:`<div class=ok>✓ @${esc(n)} は初めてのアカウント</div>`}
+  g('#nDup').innerHTML=h;g('#nSave').textContent=ex?'既存の記録に追加(カウントしない)':'保存して +1'};
+ u.addEventListener('input',()=>{g('#nId').innerHTML='';check()});
+ g('#nPaste').onclick=async()=>{try{u.value=(await navigator.clipboard.readText()).trim();g('#nId').innerHTML='';check()}catch(e){u.focus()}};
+ pick(g('.pick input'),async r=>{img=r;if(parseUser(u.value)||!S.key)return;const box=g('#nId');box.innerHTML='<div class=hint>スクショからIDを読み取り中…</div>';
+  try{const j=await claude([imgPart(r.top),{type:'text',text:'Top part of an Instagram profile screenshot. Return JSON: {"username":"the account handle shown at the top, exactly, without @","name":"display name if visible, else empty"}'}],80);
+   const id=clean(j.username);if(id&&/^[a-z0-9._]{1,30}$/.test(id)&&!parseUser(u.value)){u.value='@'+id;idName=j.name||'';box.innerHTML=`<div class=hint>読み取ったID: <b style="font-family:ui-monospace,Menlo,monospace;font-size:18px;color:var(--text)">@${esc(id)}</b><br>スクショと見比べて合っていれば、そのまま保存してください</div>`;check()}
+   else box.innerHTML='<div class=warn>IDを読み取れませんでした。URLか@IDを入れてください</div>'}
+  catch(e){box.innerHTML=`<div class=warn>読み取り失敗: ${esc(e.message)}</div>`}});
  g('#nSave').onclick=async function(){const n=parseUser(u.value);if(!n){toast('URLか@ユーザー名を入れてください');u.focus();return}this.disabled=true;
-  const c=g('#nC').value.trim(),d=g('#nD').value.trim();let p=P.find(x=>x.username===n);const isNew=!p;if(isNew)p=newPerson(n);
+  const c=g('#nC').value.trim(),d=g('#nD').value.trim();let p=P.find(x=>x.username===n);const isNew=!p;if(isNew)p=newPerson(n);if(idName&&!p.name)p.name=idName;
   if(img){p.profileImg=await putImg(img.full);p.thumb=img.thumb}
   const at=new Date().toISOString();if(c)p.events.push({id:uid(),at,kind:'sent',ch:'comment',text:c});if(d)p.events.push({id:uid(),at,kind:'sent',ch:'dm',text:d});
   if(isNew)p.next={at:nextAt(5,'20:00'),text:'',ja:''};
@@ -239,7 +251,7 @@ function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
   p.events.push({id:uid(),at:new Date().toISOString(),kind:'reply',ch,text:msgs.map(x=>(x.from==='me'?'自分: ':'相手: ')+x.text).join('\n'),msgs,img:id});
   upStatus(p,ch==='dm'?'reply_dm':'reply_comment');p.next=null;await save(p);closeSheet();render();refresh(p);toast('@'+p.username+' に返信を追加しました');if(S.key)aiPlan(p)}
 }}
-function findMatch(u,name){if(u){let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p}}if(name){const n=String(name).trim().toLowerCase();const p=P.find(x=>x.name&&x.name.trim().toLowerCase()===n);if(p)return p}return null}
+function findMatch(u,name){if(u){let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p;const s=similar(u);if(s.length===1)return s[0]}}const nm=sameName(name);if(nm.length===1)return nm[0];return null}
 
 /* customer detail */
 function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}</div>`).join('')}
