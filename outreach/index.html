@@ -85,6 +85,17 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 .danger{background:none;border:1px solid rgba(227,102,95,.5);color:var(--red);border-radius:10px;padding:11px;width:100%;margin-top:28px;font:inherit}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#f3f0e8;color:#111;padding:10px 16px;border-radius:99px;font-size:14px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
+.sig{display:flex;gap:12px;align-items:flex-start;border-radius:14px;padding:12px;margin-top:10px;border:1px solid currentColor}
+.sig i{width:26px;height:26px;border-radius:50%;flex:none;background:currentColor;box-shadow:0 0 14px currentColor;margin-top:2px}
+.sig .grow{color:var(--text)}
+.sig.g{color:var(--green);background:rgba(92,192,140,.1)}.sig.y{color:#e8c14a;background:rgba(232,193,74,.1)}.sig.r{color:var(--red);background:rgba(227,102,95,.12)}
+.tplrow{display:flex;gap:6px;align-items:stretch}.tplrow .cp{margin-top:8px}
+.tpl{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;color:var(--text);font:inherit}
+.tpl .ck{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#17130a}
+.tpl.on{border-color:var(--gold);background:rgba(214,178,94,.12)}.tpl.on .ck{background:var(--gold);border-color:var(--gold)}.tpl.on .ck::after{content:'✓'}
+.tpl b{display:block;font-size:14px;font-weight:600}.tpl small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.more{margin-top:18px;color:var(--mute);font-size:13px}.more summary{cursor:pointer;padding:6px 0}
+.s-ng{color:var(--red);border-color:rgba(227,102,95,.6)}
 .viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:50;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.viewer img{max-width:100%;max-height:100%}
 </style>
 </head>
@@ -105,6 +116,17 @@ const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1]};
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
 const SYS="You help Takuya Tagishi, a Japanese craftsman who runs Driver's Collection (Instagram @drivers_collection_): handmade one-of-one art trading cards made from a customer's car photo (the owner can be in it too). Semi-order ¥30,000 (pick a gallery design, quick), full order ¥50,000 (one-of-a-kind design from scratch, gold authentication tag), optional light-up wall display +¥10,000. Free rough mock before purchase. Ships worldwide by EMS. He reaches out to car owners, car photographers and influencers on Instagram with comments and DMs. Always answer with one JSON object only, no other text.";
+const TPL=[
+ {id:'1-1',g:'c1',ch:'comment',label:'①-1 機材編',text:'めちゃくちゃカッコよく撮れてますね！！\n何か機材を使って撮ってるんですか？'},
+ {id:'1-2',g:'c1',ch:'comment',label:'①-2 アプリ編',text:'この色味、すごく好きです！\n編集はどんなアプリでやってるんですか？'},
+ {id:'1-3',g:'c1',ch:'comment',label:'①-3 場所編',text:'撮影場所の雰囲気が最高ですね✨\nもし聞いて大丈夫でしたら、どちらで撮影されたんですか？'},
+ {id:'2-1',g:'c2',ch:'comment',label:'②-1 そうだったんですね(機材の返事)',text:'そうだったんですね！\nいやぁほんとカッコよくて、何度も保存したの見返してます笑\n実はご相談があって、お手すきのタイミングでDMを見てもらえると嬉しいです!'},
+ {id:'2-2',g:'c2',ch:'comment',label:'②-2 なるほど(アプリの返事)',text:'なるほど、だからこんなにかっこいいんですね！\n保存して何回も見返してます笑\n実はひとつご相談があって、お時間あるときにDMを見ていただけたら嬉しいです！'},
+ {id:'2-3',g:'c2',ch:'comment',label:'②-3 教えてくれた(場所の返事)',text:'教えて下さってありがとうございます！\n本当にカッコよくてスクショしちゃいました笑\n実はご相談があって、DMを送ったのでお手すきのときに見てもらえると嬉しいです🙏'},
+ {id:'3',g:'dm',ch:'dm',label:'③ DM(無料デザインのご提案)',text:'突然のDM失礼します、Driver\'s Collectionと申します。\n先ほどはコメントへのご返信ありがとうございました！\n\n実は、オーナーさんの愛車を世界に一枚のトレカアートに仕上げる活動をしています！\n\nもしご興味があれば、愛車でカードデザインを無料で作らせていただけませんか？\n\nこれまでの作品はこのアカウントの投稿で見られますので、気軽にお返事いただけたら嬉しいです！'}];
+function tplCustom(){try{return JSON.parse(ls('dc_out_tpl')||'{}')}catch(e){return {}}}
+const tplText=id=>{const c=tplCustom();if(c[id])return c[id];const t=TPL.find(x=>x.id===id);return t?t.text:''};
+const tplLabel=id=>{const t=TPL.find(x=>x.id===id);return t?t.label.split(' ')[0]:id};
 const P_REPLY='Screenshot from Instagram: either comment replies or a DM thread. His account is drivers_collection_ (his messages are "me").\nReturn JSON: {"username":"the other person\'s Instagram handle exactly as shown, without @ (top of a DM thread, or next to their comment)","name":"their display name if shown, else empty","channel":"dm|comment","messages":[{"from":"them|me","text":"..."}]}\nOnly readable messages, oldest first, at most 12, original language.';
 
 /* ---------- helpers ---------- */
@@ -144,9 +166,9 @@ async function putImg(d){const id=uid();await DB.put('images',{id,d});return id}
 async function getImg(id){const r=await DB.get('images',id);return r&&r.d}
 function newPerson(n){return{id:uid(),username:n,url:'https://www.instagram.com/'+n+'/',created:new Date().toISOString(),firstDate:today(),inbound:false,genre:'',country:'',followers:'',car:'',name:'',who:'',summary:'',memo:'',lang:'',status:'waiting',profileImg:null,thumb:'',events:[],next:null,ai:''}}
 function upStatus(p,s){if(!ST[s]||p.status===s)return;if(p.status==='purchased')return;if(s==='lost'){p.status='lost';return}if(p.status==='lost'||ST[s][1]>ST[p.status][1])p.status=s}
-const replied=p=>p.events.some(e=>e.kind==='reply');
+const replied=p=>p.events.some(e=>e.kind==='reply')||['reply_comment','reply_dm','considering','rough','purchased'].includes(p.status);
 const adv=p=>['considering','rough','purchased'].includes(p.status);
-const isDue=p=>!!(p.next&&p.next.at&&new Date(p.next.at)<=eod());
+const isDue=p=>!p.ng&&!!(p.next&&p.next.at&&new Date(p.next.at)<=eod());
 const last=p=>p.events.length?p.events[p.events.length-1].at:p.created;
 const lastCh=p=>{for(let i=p.events.length-1;i>=0;i--)if(p.events[i].kind==='reply')return p.events[i].ch;return 'dm'};
 const av=p=>p.thumb?`<img class=av src="${p.thumb}" alt="">`:`<div class=av>${esc((p.username[0]||'?').toUpperCase())}</div>`;
@@ -198,36 +220,51 @@ async function markSent(p){if(!p||!p.next)return;const t=p.next.text||'';if(t)p.
 /* ---------- sheets ---------- */
 const stack=[];
 function openSheet(title,fn,id){const d=document.createElement('div');d.className='sheetBody';stack.forEach(s=>{s.el.hidden=true});$('#sheet').appendChild(d);stack.push({title,fn,id,el:d});$('#sheet').hidden=false;document.body.classList.add('lock');$('#sheetTitle').textContent=title;fn(d);loadImgs(d);$('#sheet').scrollTop=0}
-function closeSheet(){const s=stack.pop();if(s)s.el.remove();const t=stack[stack.length-1];if(!t){$('#sheet').hidden=true;document.body.classList.remove('lock');return}t.el.hidden=false;$('#sheetTitle').textContent=t.title}
+function closeSheet(){const s=stack.pop();if(s)s.el.remove();const t=stack[stack.length-1];if(!t){$('#sheet').hidden=true;document.body.classList.remove('lock');return}t.el.hidden=false;$('#sheetTitle').textContent=t.title;if(t.el._check)t.el._check()}
 function refresh(p){stack.forEach(s=>{if(s.id===p.id){s.fn(s.el);loadImgs(s.el)}})}
 function openDetail(id){const p=byId(id);if(p)openSheet('@'+p.username,detailFn(p),p.id)}
 
 /* new approach */
-function newFn(b){let img=null,idName='';
- b.innerHTML=`<label class=lb>プロフィールのスクショ(ID・ジャンル・国・車をAIが読み取り)</label><label class=pick><input type=file accept="image/*" hidden><span>＋ 画像を選ぶ</span><img hidden alt=""></label>
- <label class=lb>@ID(スクショから自動で入ります。URLを貼ると確実)</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="@id または instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nId></div><div id=nDup></div>
- <label class=lb>送ったコメント</label><textarea id=nC rows=3></textarea>
- <label class=lb>送ったDM</label><textarea id=nD rows=4></textarea>
- <button class=btn id=nSave>保存して +1</button>`;
+function sentLog(p){return p.events.filter(e=>e.kind==='sent').map(e=>(e.tpl?tplLabel(e.tpl):(e.ch==='dm'?'DM':'コメント'))+'('+md(e.at)+')').join(' → ')}
+function newFn(b){let img=null,idName='';const on=new Set();
+ const tdy=P.filter(p=>!p.inbound&&p.firstDate===today()).length;
+ const grpHtml=(g,title)=>`<div class=sec>${title}</div>`+TPL.filter(t=>t.g===g).map(t=>`<div class=tplrow><button class=tpl data-t="${t.id}"><span class=ck></span><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(t.id).replace(/\n/g,' '))}</small></span></button><button class="btn2 cp" data-cp="${t.id}">コピー</button></div>`).join('');
+ b.innerHTML=`<div class="mute small right">今日 ${tdy} / ${S.goal} 人</div>
+ <label class=lb>プロフィールURL または @ID</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nId></div><div id=nDup></div>
+ ${grpHtml('c1','① 最初のコメント')}${grpHtml('c2','② コメント返信(相手から返信が来た後)')}${grpHtml('dm','③ DM')}
+ <details class=more><summary>スクショ・自由入力(任意)</summary>
+ <label class=lb>プロフィールのスクショ(ID・ジャンル・国・車をAIが読み取り)</label><label class=pick><input type=file accept="image/*" hidden><span>＋ 画像を選ぶ</span><img hidden alt=""></label>
+ <label class=lb>テンプレ以外のコメント</label><textarea id=nC rows=2></textarea>
+ <label class=lb>テンプレ以外のDM</label><textarea id=nD rows=3></textarea></details>
+ <button class=btn id=nSave>保存</button>`;
  const g=s=>b.querySelector(s),u=g('#nU');
  const check=()=>{const n=parseUser(u.value),ex=n&&P.find(p=>p.username===n);let h='';
-  if(ex)h=`<div class=warn>⚠ @${esc(n)} は ${md(ex.created)} にアプローチ済み(${ST[ex.status][0]})<br><button class=btn2 data-open="${ex.id}" style="margin-top:6px">記録を開く</button></div>`;
-  else if(n){const L=[...new Set([...similar(n),...sameName(idName)])];h=L.length?`<div class=warn>⚠ 似ているアカウントの記録があります。同じ人でないか確認してください${L.slice(0,3).map(x=>`<br><button class=btn2 data-open="${x.id}" style="margin-top:6px">@${esc(x.username)}(${md(x.created)} ${ST[x.status][0]})</button>`).join('')}</div>`:`<div class=ok>✓ @${esc(n)} は初めてのアカウント</div>`}
-  g('#nDup').innerHTML=h;g('#nSave').textContent=ex?'既存の記録に追加(カウントしない)':'保存して +1'};
+  if(ex&&ex.ng)h=`<div class="sig r"><i></i><div class=grow><b>連絡NG(要注意)</b><br>@${esc(n)}${ex.memo?'<br><span class=small>'+esc(ex.memo)+'</span>':''}<br><button class=btn2 data-open="${ex.id}" style="margin-top:6px">アカウントページを開く</button></div></div>`;
+  else if(ex)h=`<div class="sig y"><i></i><div class=grow><b>アプローチ済み</b>(${ST[ex.status][0]})<br><span class=small>${esc(sentLog(ex)||'送信記録なし')}</span><br><button class=btn2 data-open="${ex.id}" style="margin-top:6px">アカウントページを開く</button></div></div>`;
+  else if(n){const L=[...new Set([...similar(n),...sameName(idName)])];h=L.length?`<div class="sig y"><i></i><div class=grow><b>似ているアカウントの記録あり</b><br><span class=small>同じ人でないか確認してください</span>${L.slice(0,3).map(x=>`<br><button class=btn2 data-open="${x.id}" style="margin-top:6px">@${esc(x.username)}(${md(x.created)} ${ST[x.status][0]})</button>`).join('')}</div></div>`:`<div class="sig g"><i></i><div class=grow><b>初めてのアカウント</b><br><span class=small>@${esc(n)}</span></div></div>`}
+  g('#nDup').innerHTML=h;g('#nSave').textContent=!n?'保存':ex?'記録に追加して保存':'保存して +1'};
+ b._check=check;
  u.addEventListener('input',()=>{g('#nId').innerHTML='';check()});
  g('#nPaste').onclick=async()=>{try{u.value=(await navigator.clipboard.readText()).trim();g('#nId').innerHTML='';check()}catch(e){u.focus()}};
+ b.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{const id=x.dataset.t;on.has(id)?on.delete(id):on.add(id);x.classList.toggle('on',on.has(id))});
+ b.querySelectorAll('[data-cp]').forEach(x=>x.onclick=()=>copy(tplText(x.dataset.cp)));
  pick(g('.pick input'),async r=>{img=r;if(parseUser(u.value)||!S.key)return;const box=g('#nId');box.innerHTML='<div class=hint>スクショからIDを読み取り中…</div>';
   try{const j=await claude([imgPart(r.top),{type:'text',text:'Top part of an Instagram profile screenshot. Return JSON: {"username":"the account handle shown at the top, exactly, without @","name":"display name if visible, else empty"}'}],80);
    const id=clean(j.username);if(id&&/^[a-z0-9._]{1,30}$/.test(id)&&!parseUser(u.value)){u.value='@'+id;idName=j.name||'';box.innerHTML=`<div class=hint>読み取ったID: <b style="font-family:ui-monospace,Menlo,monospace;font-size:18px;color:var(--text)">@${esc(id)}</b><br>スクショと見比べて合っていれば、そのまま保存してください</div>`;check()}
    else box.innerHTML='<div class=warn>IDを読み取れませんでした。URLか@IDを入れてください</div>'}
   catch(e){box.innerHTML=`<div class=warn>読み取り失敗: ${esc(e.message)}</div>`}});
- g('#nSave').onclick=async function(){const n=parseUser(u.value);if(!n){toast('URLか@ユーザー名を入れてください');u.focus();return}this.disabled=true;
-  const c=g('#nC').value.trim(),d=g('#nD').value.trim();let p=P.find(x=>x.username===n);const isNew=!p;if(isNew)p=newPerson(n);if(idName&&!p.name)p.name=idName;
+ g('#nSave').onclick=async function(){const n=parseUser(u.value);if(!n){toast('URLか@IDを入れてください');u.focus();return}
+  const c=g('#nC').value.trim(),d=g('#nD').value.trim();
+  if(!on.size&&!c&&!d&&!img){toast('送ったものにチェックを入れてください');return}
+  this.disabled=true;let p=P.find(x=>x.username===n);const isNew=!p;if(isNew)p=newPerson(n);if(idName&&!p.name)p.name=idName;
   if(img){p.profileImg=await putImg(img.full);p.thumb=img.thumb}
-  const at=new Date().toISOString();if(c)p.events.push({id:uid(),at,kind:'sent',ch:'comment',text:c});if(d)p.events.push({id:uid(),at,kind:'sent',ch:'dm',text:d});
-  if(isNew)p.next={at:nextAt(5,'20:00'),text:'',ja:''};
-  await save(p);closeSheet();render();toast(isNew?'+1 保存しました':'記録に追加しました');
-  if(S.key&&(img||c||d)){if(isNew)aiProfile(p);else aiPlan(p)}}}
+  const at=new Date().toISOString();
+  TPL.filter(t=>on.has(t.id)).forEach(t=>{p.events.push({id:uid(),at,kind:'sent',ch:t.ch,tpl:t.id,text:tplText(t.id)});if(t.g==='c2')upStatus(p,'reply_comment')});
+  if(c)p.events.push({id:uid(),at,kind:'sent',ch:'comment',text:c});if(d)p.events.push({id:uid(),at,kind:'sent',ch:'dm',text:d});
+  if((on.has('3')||d)&&!p.next)p.next={at:nextAt(5,'20:00'),text:'',ja:''};
+  await save(p);render();toast(isNew?'+1 保存しました':'@'+n+' に記録しました');
+  newFn(b);document.getElementById('sheet').scrollTop=0;
+  if(S.key&&img)aiProfile(p,!isNew)}}
 
 /* reply screenshot */
 function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
@@ -254,7 +291,7 @@ function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
 function findMatch(u,name){if(u){let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p;const s=similar(u);if(s.length===1)return s[0]}}const nm=sameName(name);if(nm.length===1)return nm[0];return null}
 
 /* customer detail */
-function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}</div>`).join('')}
+function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}</div>`).join('')}
 function detailFn(p){return b=>{const n=p.next||{};
  b.innerHTML=`<div class=item style="border:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
  ${p.ai?`<div class=hint>${esc(p.ai)}</div>`:''}${p.summary?`<div class=card style="margin-top:2px">${esc(p.summary)}</div>`:''}
@@ -272,6 +309,7 @@ function detailFn(p){return b=>{const n=p.next||{};
  <label class=lb>メモ</label><textarea id=fM rows=2>${esc(p.memo)}</textarea>
  ${p.profileImg?`<img class=shot data-imgid="${p.profileImg}" alt="">`:''}
  <div class=row style="margin-top:10px"><label class=btn2>${p.profileImg?'スクショを差し替え':'スクショを追加'}<input type=file accept="image/*" id=fImg hidden></label><button class=btn2 id=dProf>AIで読み取り直す</button></div>
+ <button class="btn ghost" id=dNg style="margin-top:20px;${p.ng?'color:var(--red);border-color:var(--red)':''}">${p.ng?'🔴 連絡NG(要注意)を解除':'連絡NG(要注意)にする'}</button>
  <button class=danger id=dDel>この記録を削除</button>`;
  const g=s=>b.querySelector(s),upd=async()=>{await save(p);render()};
  b.querySelectorAll('[data-st]').forEach(x=>x.onclick=async()=>{p.status=x.dataset.st;await upd();refresh(p)});
@@ -288,6 +326,7 @@ function detailFn(p){return b=>{const n=p.next||{};
  g('#fG').onchange=e=>{p.genre=e.target.value;upd()};g('#fC').onchange=e=>{p.country=e.target.value.trim();upd()};g('#fF').onchange=e=>{p.followers=e.target.value.trim();upd()};g('#fCar').onchange=e=>{p.car=e.target.value.trim();upd()};g('#fM').onchange=e=>{p.memo=e.target.value;upd()};
  pick(g('#fImg'),async r=>{p.profileImg=await putImg(r.full);p.thumb=r.thumb;await upd();refresh(p);if(S.key)aiProfile(p,true)});
  g('#dProf').onclick=()=>aiProfile(p,true);
+ g('#dNg').onclick=async()=>{p.ng=!p.ng;if(p.ng)p.next=null;await upd();refresh(p);toast(p.ng?'連絡NGにしました':'解除しました')};
  g('#dDel').onclick=async()=>{if(!confirm('@'+p.username+' の記録を削除します。よろしいですか?'))return;for(const id of [p.profileImg,...p.events.map(e=>e.img)])if(id)await DB.del('images',id);await DB.del('people',p.id);P=P.filter(x=>x!==p);closeSheet();render();toast('削除しました')};
 }}
 
@@ -304,7 +343,7 @@ function vToday(){const t=today(),n=P.filter(p=>!p.inbound&&p.firstDate===t).len
  <div class=sec>直近7日(計${wk}人)</div><div class=bars>${days.map(d=>`<div class="${d.t?'today':''}" style="height:${d.n/mx*100}%"><s>${d.n||''}</s></div>`).join('')}</div><div class=barl>${days.map(d=>`<span>${d.l}</span>`).join('')}</div>`}
 function rows(){const k=q.trim().toLowerCase().replace(/^@/,'');const L=P.filter(p=>(filter==='all'||p.status===filter)&&(!k||[p.username,p.name,p.country,p.car,p.who,p.summary,p.memo].join(' ').toLowerCase().includes(k))).sort((a,b)=>last(b).localeCompare(last(a)));
  if(!L.length)return '<div class=hint>該当する記録はありません</div>';
- return L.map(p=>`<div class=item data-open="${p.id}">${av(p)}<div class=grow><b>@${esc(p.username)}</b><div>${stPill(p.status)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
+ return L.map(p=>`<div class=item data-open="${p.id}">${av(p)}<div class=grow><b>@${esc(p.username)}</b><div>${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
 function vList(){const cnt=s=>P.filter(p=>s==='all'||p.status===s).length;
  return `<h1>顧客リスト</h1><input id=q type=search autocapitalize=off placeholder="@ユーザー名・国・車で検索" value="${esc(q)}" style="margin-top:8px">
  <div class=chips>${['all',...Object.keys(ST)].map(s=>`<button class="chip ${filter===s?'on':''}" data-f="${s}">${s==='all'?'すべて':ST[s][0]} ${cnt(s)}</button>`).join('')}</div><div id=rows>${rows()}</div>`}
@@ -313,7 +352,7 @@ function rcard(p){const late=new Date(p.next.at)<new Date();
  ${p.summary||p.who?`<div class="mute small" style="margin-top:6px">${esc(p.summary||p.who)}</div>`:''}
  ${p.next.text?`<div class="msg clamp" style="margin-top:8px">${esc(p.next.text)}</div>${p.next.ja?`<details class=ja><summary>日本語訳</summary>${esc(p.next.ja)}</details>`:''}`:'<div class=hint>文面なし(「開く」→AIで作り直す で作れます)</div>'}
  <div class=row style="margin-top:10px">${p.next.text?`<button class=btn2 data-copyid="${p.id}">コピー</button>`:''}<a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>Instagramへ</a>${p.next.text?`<button class=btn2 data-sentid="${p.id}">送った ✓</button>`:''}</div></div>`}
-function vRemind(){const L=P.filter(p=>p.next&&p.next.at).sort((a,b)=>a.next.at.localeCompare(b.next.at)),e=eod();
+function vRemind(){const L=P.filter(p=>!p.ng&&p.next&&p.next.at).sort((a,b)=>a.next.at.localeCompare(b.next.at)),e=eod();
  if(!L.length)return '<h1>リマインド</h1><div class=hint>予定はありません</div>';
  const a=L.filter(p=>new Date(p.next.at)<=e),b=L.filter(p=>new Date(p.next.at)>e);
  return `<h1>リマインド</h1>${a.length?`<div class=sec>今日まで(${a.length})</div>${a.map(rcard).join('')}`:''}${b.length?`<div class=sec>これから(${b.length})</div>${b.map(rcard).join('')}`:''}`}
@@ -325,10 +364,11 @@ function vData(){const O=P.filter(p=>!p.inbound),n=O.length,r=O.filter(replied).
  const tbl=(t,rs)=>`<div class=sec>${t}</div><table><tr><th></th><th>人数</th><th>返信率</th><th>検討以上</th><th>購入</th></tr>${rs.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td><td>${pct(v.r,v.n)}</td><td>${pct(v.a,v.n)}</td><td>${v.b}</td></tr>`).join('')}</table>`;
  const bySize=x=>x.sort((p,q)=>q[1].n-p[1].n);
  return `<h1>データ</h1><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
- ${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
+ ${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
  <div class=sec>データの書き出し</div>
  <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
  <div class=row style="margin-top:10px"><button class=btn2 id=xP>顧客CSV</button><button class=btn2 id=xE>やりとりCSV</button><button class=btn2 id=xB>バックアップ(画像込み)</button><label class=btn2>バックアップから復元<input type=file id=xR accept=".json,application/json" hidden></label></div>
+ <div class=sec>テンプレート(書き換えると保存されます)</div>${TPL.map(t=>`<label class=lb>${esc(t.label)}</label><textarea data-tpl="${t.id}" rows=3>${esc(tplText(t.id))}</textarea>`).join('')}
  <div class=sec>設定</div>
  <label class=lb>1日の目標人数</label><input id=sGoal type=number inputmode=numeric min=1 value="${S.goal}">
  <label class=lb>Anthropic APIキー(この端末の中にだけ保存)</label><input id=sKey type=password autocomplete=off autocapitalize=off placeholder="sk-ant-…" value="${esc(S.key)}">
@@ -350,6 +390,7 @@ function bindData(){const stamp=today().replace(/-/g,'');
  $('#xE').onclick=()=>saveFile(`やりとり_${stamp}.csv`,'﻿'+csv(eventRows()),'text/csv');
  $('#xB').onclick=async()=>{toast('バックアップを作成中…');const imgs=await DB.all('images');saveFile(`営業記録バックアップ_${stamp}.json`,JSON.stringify({v:1,at:new Date().toISOString(),people:P,images:imgs}),'application/json')};
  $('#xR').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.people))throw new Error('形式が違います');if(!confirm(`${d.people.length}件の記録で、今のデータを置き換えます。よろしいですか?`))return;await DB.clear('people');await DB.clear('images');for(const x of d.images||[])await DB.put('images',x);for(const p of d.people)await DB.put('people',p);P=await DB.all('people');render();toast('復元しました')}catch(err){toast('復元できません: '+err.message)}};
+ document.querySelectorAll('[data-tpl]').forEach(x=>x.onchange=()=>{const c=tplCustom(),t=TPL.find(y=>y.id===x.dataset.tpl);if(x.value.trim()&&x.value!==t.text)c[t.id]=x.value;else delete c[t.id];ls('dc_out_tpl',JSON.stringify(c));toast('テンプレートを保存しました')});
  $('#sGoal').onchange=e=>{S.goal=Math.max(1,parseInt(e.target.value)||10);toast('目標を保存しました')};
  $('#sKey').onchange=e=>{S.key=e.target.value.trim();render();toast(S.key?'APIキーを保存しました':'APIキーを消しました')};
  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
