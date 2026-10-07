@@ -111,7 +111,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261007-3';
+const VER='20261007-4';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1]};
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
@@ -217,7 +217,7 @@ async function aiPlan(p){
  p.ai='AIが次の一手を考え中…';await save(p);render();refresh(p);
  try{const j=await claude([{type:'text',text:`Customer: @${p.username}${p.name?' / '+p.name:''} / ${GENRE[p.genre]||'?'} / ${p.country||'?'} / car: ${p.car||'?'} / ${p.who||''}\nCurrent status: ${p.status}\nConversation (oldest first):\n${history(p)||'(none)'}\nDays in a row he messaged without any reply from them (first contact counts): ${streak(p)}\nToday: ${today()} (Japan)\nDecide his next action. Return JSON:\n{"status":"waiting|reply_comment|reply_dm|considering|rough|purchased|lost","summary_ja":"current situation in Japanese, max 60 chars","next_in_days":integer or null,"next_time":"HH:MM Japan time, early evening in their time zone","next_text":"message he should send next, in their language","next_text_ja":"Japanese translation, empty if Japanese"}\nRules: waiting = no reply yet; reply_comment / reply_dm = they replied; considering = interested or asked price/details; rough = asked for the free rough mock; purchased = paid; lost = clearly declined. If their last message needs an answer, next_in_days = 0 and next_text answers it. If he spoke last, follow up in 3-7 days only if it adds value. If the streak is 3 or more, or they declined, next_in_days = null. Messages: warm and human, 2-4 sentences, specific to their car or photo, no links, no pressure, price only if they asked; offering the free rough mock is a good natural step.`}],900);
   upStatus(p,j.status);if(j.summary_ja)p.summary=j.summary_ja;
-  p.next=(j.next_in_days===null||j.next_in_days===undefined||!j.next_text)?null:{at:nextAt(j.next_in_days,j.next_time),text:j.next_text,ja:j.next_text_ja||''};
+  p.next=(j.next_in_days===null||j.next_in_days===undefined||!j.next_text)?null:{at:nextAt(j.next_in_days,j.next_time),text:'',ja:''};
   p.ai=''}catch(e){p.ai='AI失敗: '+e.message}
  await save(p);render();refresh(p)}
 async function markSent(p){if(!p||!p.next)return;const t=p.next.text||'';if(t)p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:lastCh(p),text:t});p.next=null;await save(p);toast('送信を記録しました');render();refresh(p);if(S.key&&t)aiPlan(p)}
@@ -297,15 +297,23 @@ function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
 function findMatch(us,name){for(const u of [].concat(us||[])){if(!u)continue;let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p;const sm=similar(u);if(sm.length===1)return sm[0]}}const nm=sameName(name);if(nm.length===1)return nm[0];return null}
 
 /* customer detail */
-function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}</div>`).join('')}
+function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}${e.kind==='sent'&&e.tpl?`<button class=btn2 data-undo="${e.id}" style="margin-top:6px">取り消す</button>`:''}</div>`).join('')}
+const sentSet=p=>new Set(p.events.filter(e=>e.kind==='sent'&&e.tpl).map(e=>e.tpl));
+const hasReply=p=>p.status!=='waiting'&&p.status!=='lost'||p.events.some(e=>e.kind==='reply');
+function nextTpls(p){const sent=sentSet(p),out=[];if(!hasReply(p))return out;const c1=p.events.filter(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')).pop();if(c1){const id='2-'+c1.tpl.slice(2);if(TPL.some(t=>t.id===id)&&!sent.has(id))out.push(id)}if(!sent.has('3'))out.push('3');return out}
+const tplRow=(id,p)=>{const t=TPL.find(x=>x.id===id),on=sentSet(p).has(id);return `<button class="tpl ${on?'on':''}" data-dt="${id}" data-pid="${p.id}"><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(id).replace(/\n/g,' '))}</small></span><span class=ck></span></button>`};
+function nextBox(p){const L=nextTpls(p);return L.length?L.map(id=>tplRow(id,p)).join('')+'<div class=hint style="margin-top:6px">タップ=コピー+送信済みに記録</div>':`<div class=hint>${hasReply(p)?'用意した返信はすべて送信済みです':'返信待ちです(コメントに返信が来たら ②・③ が出ます)'}</div>`}
+async function sendTpl(p,id){const t=TPL.find(x=>x.id===id);if(!t)return;const tx=tplText(id);copy(tx);if(sentSet(p).has(id))return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:t.ch,tpl:id,text:tx});if(t.g==='c2')upStatus(p,'reply_comment');if(id==='3'&&!p.next)p.next={at:nextAt(5,'20:00'),text:'',ja:''};await save(p);render();refresh(p)}
 function detailFn(p){return b=>{const n=p.next||{};
  b.innerHTML=`<div class=item style="border:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
  ${p.ai?`<div class=hint>${esc(p.ai)}</div>`:''}${p.summary?`<div class=card style="margin-top:2px">${esc(p.summary)}</div>`:''}
  <div class=sec>状態</div><div class="chips wrap">${Object.keys(ST).map(s=>`<button class="chip ${p.status===s?'on':''}" data-st="${s}">${ST[s][0]}</button>`).join('')}</div>
- <div class=sec>次のアクション</div>
- <input type=datetime-local id=dAt value="${esc(n.at||'')}">
- <textarea id=dTx rows=5 style="margin-top:8px" placeholder="次に送る文章">${esc(n.text||'')}</textarea>${n.ja?`<div class=ja>${esc(n.ja)}</div>`:''}
- <div class=row style="margin-top:8px"><button class=btn2 id=dCopy>コピー</button><button class=btn2 id=dSent>送った ✓</button><button class=btn2 id=dAi>AIで作り直す</button><button class=btn2 id=dClr>予定なし</button></div>
+ <div class=sec>次に送る</div>
+ ${nextBox(p)}
+ <details class=more><summary>ほかのテンプレを送る</summary>${TPL.map(t=>tplRow(t.id,p)).join('')}</details>
+ <div class=sec>次の連絡日</div>
+ <div class=row><input type=datetime-local id=dAt value="${esc(n.at||'')}" style="flex:1"><button class=btn2 id=dClr>予定なし</button></div>
+ <details class=more><summary>自由な文面を送る</summary><textarea id=dTx rows=4 style="margin-top:8px" placeholder="自由な文面">${esc(n.text||'')}</textarea><div class=row style="margin-top:8px"><button class=btn2 id=dCopy>コピー</button><button class=btn2 id=dSent>送った ✓</button></div></details>
  <button class=btn id=dReply>返信のスクショを追加</button>
  <button class="btn ghost" id=dLogT>送った文章を記録</button>
  <div id=dLog class=card hidden><div class=chips><button class="chip on" data-lch=dm>DM</button><button class=chip data-lch=comment>コメント</button></div><textarea id=dLogTx rows=3 placeholder="送った文章"></textarea><button class=btn id=dLogSave>記録する</button></div>
@@ -320,10 +328,10 @@ function detailFn(p){return b=>{const n=p.next||{};
  const g=s=>b.querySelector(s),upd=async()=>{await save(p);render()};
  b.querySelectorAll('[data-st]').forEach(x=>x.onclick=async()=>{p.status=x.dataset.st;await upd();refresh(p)});
  const setNext=async()=>{const at=g('#dAt').value,tx=g('#dTx').value;p.next=(at||tx.trim())?{at:at||nextAt(0),text:tx,ja:(tx===(n.text||''))?(n.ja||''):''}:null;await upd()};
+ b.querySelectorAll('[data-undo]').forEach(x=>x.onclick=async()=>{p.events=p.events.filter(e=>e.id!==x.dataset.undo);await upd();refresh(p);toast('取り消しました')});
  g('#dAt').onchange=setNext;g('#dTx').onchange=setNext;
  g('#dCopy').onclick=()=>copy(g('#dTx').value);
  g('#dSent').onclick=async()=>{await setNext();if(!p.next||!p.next.text.trim()){toast('送る文章がありません');return}markSent(p)};
- g('#dAi').onclick=()=>aiPlan(p);
  g('#dClr').onclick=async()=>{p.next=null;await upd();refresh(p)};
  g('#dReply').onclick=()=>openSheet('返信を追加',replyFn(p));
  let lch='dm';g('#dLogT').onclick=()=>{g('#dLog').hidden=!g('#dLog').hidden};
@@ -356,8 +364,8 @@ function vList(){const cnt=s=>P.filter(p=>s==='all'||p.status===s).length;
 function rcard(p){const late=new Date(p.next.at)<new Date();
  return `<div class=card><div class=item style="border:0;padding:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="small ${late?'due':'soon'}">${mdhm(p.next.at)}${late?'(期限)':''} ${stPill(p.status)}</div></div><button class=btn2 data-open="${p.id}">開く</button></div>
  ${p.summary||p.who?`<div class="mute small" style="margin-top:6px">${esc(p.summary||p.who)}</div>`:''}
- ${p.next.text?`<div class="msg clamp" style="margin-top:8px">${esc(p.next.text)}</div>${p.next.ja?`<details class=ja><summary>日本語訳</summary>${esc(p.next.ja)}</details>`:''}`:'<div class=hint>文面なし(「開く」→AIで作り直す で作れます)</div>'}
- <div class=row style="margin-top:10px">${p.next.text?`<button class=btn2 data-copyid="${p.id}">コピー</button>`:''}<a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>Instagramへ</a>${p.next.text?`<button class=btn2 data-sentid="${p.id}">送った ✓</button>`:''}</div></div>`}
+ ${nextBox(p)}
+ <div class=row style="margin-top:10px"><a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>Instagramへ</a>${p.next.text?`<button class=btn2 data-copyid="${p.id}">自由文コピー</button><button class=btn2 data-sentid="${p.id}">送った ✓</button>`:''}</div></div>`}
 function vRemind(){const L=P.filter(p=>!p.ng&&p.next&&p.next.at).sort((a,b)=>a.next.at.localeCompare(b.next.at)),e=eod();
  if(!L.length)return '<h1>リマインド</h1><div class=hint>予定はありません</div>';
  const a=L.filter(p=>new Date(p.next.at)<=e),b=L.filter(p=>new Date(p.next.at)>e);
@@ -402,12 +410,13 @@ function bindData(){const stamp=today().replace(/-/g,'');
  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
 
 /* ---------- events ---------- */
-document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
  if(t.id==='back')return closeSheet();
  if(t.id==='bigBtn')return openSheet('新規アプローチ',newFn);
  if(t.id==='replyBtn')return openSheet('返信を追加',replyFn(null));
  if(t.dataset.tab){view=t.dataset.tab;window.scrollTo(0,0);return render()}
  if(t.dataset.open)return openDetail(t.dataset.open);
+ if(t.dataset.dt&&t.dataset.pid){const p=byId(t.dataset.pid);return p&&sendTpl(p,t.dataset.dt)}
  if(t.dataset.copyid){const p=byId(t.dataset.copyid);return p&&p.next&&copy(p.next.text)}
  if(t.dataset.sentid)return markSent(byId(t.dataset.sentid));
  if(t.dataset.f){filter=t.dataset.f;return render()}});
