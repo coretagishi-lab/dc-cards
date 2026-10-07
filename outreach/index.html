@@ -89,9 +89,8 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 .sig i{width:26px;height:26px;border-radius:50%;flex:none;background:currentColor;box-shadow:0 0 14px currentColor;margin-top:2px}
 .sig .grow{color:var(--text)}
 .sig.g{color:var(--green);background:rgba(92,192,140,.1)}.sig.y{color:#e8c14a;background:rgba(232,193,74,.1)}.sig.r{color:var(--red);background:rgba(227,102,95,.12)}
-.tplrow{display:flex;gap:6px;align-items:stretch}.tplrow .cp{margin-top:8px}
-.tpl{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;color:var(--text);font:inherit}
-.tpl .ck{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#17130a}
+.tpl{display:flex;align-items:center;gap:12px;width:100%;min-width:0;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 14px;margin-top:8px;color:var(--text);font:inherit}
+.tpl .ck{width:34px;height:34px;border-radius:9px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#17130a}
 .tpl.on{border-color:var(--gold);background:rgba(214,178,94,.12)}.tpl.on .ck{background:var(--gold);border-color:var(--gold)}.tpl.on .ck::after{content:'✓'}
 .tpl b{display:block;font-size:14px;font-weight:600}.tpl small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .more{margin-top:18px;color:var(--mute);font-size:13px}.more summary{cursor:pointer;padding:6px 0}
@@ -112,6 +111,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
+const VER='20261007-2';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1]};
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
@@ -230,9 +230,10 @@ function openDetail(id){const p=byId(id);if(p)openSheet('@'+p.username,detailFn(
 
 /* new approach */
 function sentLog(p){return p.events.filter(e=>e.kind==='sent').map(e=>(e.tpl?tplLabel(e.tpl):(e.ch==='dm'?'DM':'コメント'))+'('+md(e.at)+')').join(' → ')}
-function newFn(b){let img=null,idName='';const on=new Set();
+let lastSaved='';
+function newFn(b,again){let img=null,idName='';const on=new Set();
  const tdy=P.filter(p=>!p.inbound&&p.firstDate===today()).length;
- const grpHtml=(g,title)=>`<div class=sec>${title}</div>`+TPL.filter(t=>t.g===g).map(t=>`<div class=tplrow><button class=tpl data-t="${t.id}"><span class=ck></span><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(t.id).replace(/\n/g,' '))}</small></span></button><button class="btn2 cp" data-cp="${t.id}">コピー</button></div>`).join('');
+ const grpHtml=(g,title)=>`<div class=sec>${title}</div>`+TPL.filter(t=>t.g===g).map(t=>`<button class=tpl data-t="${t.id}"><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(t.id).replace(/\n/g,' '))}</small></span><span class=ck></span></button>`).join('');
  b.innerHTML=`<div class="mute small right">今日 ${tdy} / ${S.goal} 人</div>
  <label class=lb>プロフィールURL または @ID</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nId></div><div id=nDup></div>
  ${grpHtml('c1','① 最初のコメント')}${grpHtml('c2','② コメント返信(相手から返信が来た後)')}${grpHtml('dm','③ DM')}
@@ -248,10 +249,10 @@ function newFn(b){let img=null,idName='';const on=new Set();
   else if(n){const L=[...new Set([...similar(n),...sameName(idName)])];h=L.length?`<div class="sig y"><i></i><div class=grow><b>似ているアカウントの記録あり</b><br><span class=small>同じ人でないか確認してください</span>${L.slice(0,3).map(x=>`<br><button class=btn2 data-open="${x.id}" style="margin-top:6px">@${esc(x.username)}(${md(x.created)} ${ST[x.status][0]})</button>`).join('')}</div></div>`:`<div class="sig g"><i></i><div class=grow><b>初めてのアカウント</b><br><span class=small>@${esc(n)}</span></div></div>`}
   g('#nDup').innerHTML=h;g('#nSave').textContent=!n?'保存':ex?'記録に追加して保存':'保存して +1'};
  b._check=check;
+ if(!again)(async()=>{try{const t=(await navigator.clipboard.readText()).trim(),n=parseUser(t);if(n&&n!==lastSaved&&!u.value){u.value=t;check()}}catch(e){}})();
  u.addEventListener('input',()=>{g('#nId').innerHTML='';check()});
  g('#nPaste').onclick=async()=>{try{u.value=(await navigator.clipboard.readText()).trim();g('#nId').innerHTML='';check()}catch(e){u.focus()}};
- b.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{const id=x.dataset.t;on.has(id)?on.delete(id):on.add(id);x.classList.toggle('on',on.has(id))});
- b.querySelectorAll('[data-cp]').forEach(x=>x.onclick=()=>copy(tplText(x.dataset.cp)));
+ b.querySelectorAll('[data-t]').forEach(x=>x.onclick=()=>{const id=x.dataset.t;if(on.has(id))on.delete(id);else{on.add(id);copy(tplText(id))}x.classList.toggle('on',on.has(id))});
  pick(g('.pick input'),async r=>{img=r;if(parseUser(u.value)||!S.key)return;const box=g('#nId');box.innerHTML='<div class=hint>スクショからIDを読み取り中…</div>';
   try{const j=await claude([imgPart(r.top),{type:'text',text:'Top part of an Instagram profile screenshot. Return JSON: {"username":"the account handle shown at the top, exactly, without @","name":"display name if visible, else empty"}'}],80);
    const id=clean(j.username);if(id&&/^[a-z0-9._]{1,30}$/.test(id)&&!parseUser(u.value)){u.value='@'+id;idName=j.name||'';box.innerHTML=`<div class=hint>読み取ったID: <b style="font-family:ui-monospace,Menlo,monospace;font-size:18px;color:var(--text)">@${esc(id)}</b><br>スクショと見比べて合っていれば、そのまま保存してください</div>`;check()}
@@ -267,7 +268,7 @@ function newFn(b){let img=null,idName='';const on=new Set();
   if(c)p.events.push({id:uid(),at,kind:'sent',ch:'comment',text:c});if(d)p.events.push({id:uid(),at,kind:'sent',ch:'dm',text:d});
   if((on.has('3')||d)&&!p.next)p.next={at:nextAt(5,'20:00'),text:'',ja:''};
   await save(p);render();toast(isNew?'+1 保存しました':'@'+n+' に記録しました');
-  newFn(b);document.getElementById('sheet').scrollTop=0;
+  lastSaved=n;newFn(b,true);document.getElementById('sheet').scrollTop=0;
   if(S.key&&img)aiProfile(p,!isNew)}}
 
 /* reply screenshot */
@@ -376,7 +377,7 @@ function vData(){const O=P.filter(p=>!p.inbound),n=O.length,r=O.filter(replied).
  <div class=sec>設定</div>
  <label class=lb>1日の目標人数</label><input id=sGoal type=number inputmode=numeric min=1 value="${S.goal}">
  <label class=lb>Anthropic APIキー(この端末の中にだけ保存)</label><input id=sKey type=password autocomplete=off autocapitalize=off placeholder="sk-ant-…" value="${esc(S.key)}">
- <div class=hint>${S.key?'✓ 設定済み':'未設定: スクショの自動読み取りとAIの文面提案はオフです'}<br>今月のAI費用の目安: $${c.usd.toFixed(3)}(約${Math.round(c.usd*150)}円 / ${c.calls}回)<br>データはこの端末のブラウザ内に保存されます。ホーム画面のアイコンから開いて使ってください。<span id=stor></span></div>`}
+ <div class=hint>${S.key?'✓ 設定済み':'未設定: スクショの自動読み取りとAIの文面提案はオフです'}<br>今月のAI費用の目安: $${c.usd.toFixed(3)}(約${Math.round(c.usd*150)}円 / ${c.calls}回)<br>データはこの端末のブラウザ内に保存されます。(版 ${VER})ホーム画面のアイコンから開いて使ってください。<span id=stor></span></div>`}
 function render(){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===view));
  const due=P.filter(isDue).length,bd=$('#dueBadge');bd.textContent=due;bd.hidden=!due;
  $('#main').innerHTML=({today:vToday,list:vList,remind:vRemind,data:vData})[view]();
@@ -409,6 +410,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data
  if(t.dataset.copyid){const p=byId(t.dataset.copyid);return p&&p.next&&copy(p.next.text)}
  if(t.dataset.sentid)return markSent(byId(t.dataset.sentid));
  if(t.dataset.f){filter=t.dataset.f;return render()}});
+(function(){try{if(!navigator.onLine)return;fetch(location.pathname+'?_='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{const m=/const VER='([^']+)'/.exec(t);if(m&&m[1]!==VER&&sessionStorage.getItem('dc_out_upd')!==m[1]){sessionStorage.setItem('dc_out_upd',m[1]);location.replace(location.pathname+'?v='+m[1])}}).catch(()=>{})}catch(e){}})();
 (async()=>{try{await DB.open();P=await DB.all('people')}catch(e){toast('保存領域を開けません: '+e.message)}
  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
  render()})();
