@@ -111,7 +111,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261007-2';
+const VER='20261007-3';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1]};
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
@@ -131,7 +131,8 @@ const TPL=[
 function tplCustom(){try{return JSON.parse(ls('dc_out_tpl')||'{}')}catch(e){return {}}}
 const tplText=id=>{const c=tplCustom();if(c[id])return c[id];const t=TPL.find(x=>x.id===id);return t?t.text:''};
 const tplLabel=id=>{const t=TPL.find(x=>x.id===id);return t?t.label.split(' ')[0]:id};
-const P_REPLY='Screenshot from Instagram: either comment replies or a DM thread. His account is drivers_collection_ (his messages are "me").\nReturn JSON: {"username":"the other person\'s Instagram handle exactly as shown, without @ (top of a DM thread, or next to their comment)","name":"their display name if shown, else empty","channel":"dm|comment","messages":[{"from":"them|me","text":"..."}]}\nOnly readable messages, oldest first, at most 12, original language.';
+const OWN='drivers_collection_';
+const P_REPLY='Screenshot from Instagram: either a comment thread or a DM thread. The sender of the screenshot is the account "drivers_collection_" (his messages are "me"; ignore this account, never return it as the other person).\nReturn JSON: {"username":"the OTHER person\'s Instagram handle, exactly as shown, without @ (the author of the reply or the person on the other side of the DM; never drivers_collection_)","others":["every other handle visible besides drivers_collection_, without @"],"name":"their display name if shown, else empty","channel":"dm|comment","messages":[{"from":"them|me","text":"..."}]}\nOnly readable messages, oldest first, at most 12, original language.';
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -279,7 +280,7 @@ function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
  pick(b.querySelector('.pick input'),async r=>{img=r;j=null;out.innerHTML='<div class=hint>読み取り中…</div>';
   if(S.key){try{j=await claude([imgPart(r.full),{type:'text',text:P_REPLY}],900)}catch(e){toast('読み取り失敗: '+e.message)}}
   ch=j&&j.channel==='comment'?'comment':'dm';show()});
- function show(){const u=j?clean(j.username):'',m=pre||findMatch(u,j&&j.name),msgs=j&&Array.isArray(j.messages)?j.messages:[];
+ function show(){const cands=j?[j.username,...(Array.isArray(j.others)?j.others:[])].map(clean).filter(x=>x&&!x.startsWith('drivers_collection')):[],u=cands[0]||'',m=pre||findMatch(cands,j&&j.name),msgs=j&&Array.isArray(j.messages)?j.messages:[];
   out.innerHTML=`${!S.key?'<div class=warn>APIキー未設定のため自動読み取りはオフです。下から相手を選んでください。</div>':''}
   ${msgs.length?`<div class=card>${msgs.map(x=>`<div class="tl ${x.from==='me'?'':'them'}"><div class="small mute">${x.from==='me'?'自分':'相手'}</div><div class=msg>${esc(x.text)}</div></div>`).join('')}</div>`:''}
   <div class=chips><button class="chip ${ch==='dm'?'on':''}" data-ch=dm>DM</button><button class="chip ${ch==='comment'?'on':''}" data-ch=comment>コメント</button></div>
@@ -293,7 +294,7 @@ function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
   p.events.push({id:uid(),at:new Date().toISOString(),kind:'reply',ch,text:msgs.map(x=>(x.from==='me'?'自分: ':'相手: ')+x.text).join('\n'),msgs,img:id});
   upStatus(p,ch==='dm'?'reply_dm':'reply_comment');p.next=null;await save(p);closeSheet();render();refresh(p);toast('@'+p.username+' に返信を追加しました');if(S.key)aiPlan(p)}
 }}
-function findMatch(u,name){if(u){let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p;const s=similar(u);if(s.length===1)return s[0]}}const nm=sameName(name);if(nm.length===1)return nm[0];return null}
+function findMatch(us,name){for(const u of [].concat(us||[])){if(!u)continue;let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p;const sm=similar(u);if(sm.length===1)return sm[0]}}const nm=sameName(name);if(nm.length===1)return nm[0];return null}
 
 /* customer detail */
 function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}</div>`).join('')}
