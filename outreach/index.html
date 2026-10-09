@@ -59,7 +59,7 @@ textarea{resize:vertical}
 .s-reply_comment,.s-reply_dm{color:var(--blue);border-color:rgba(114,169,230,.5)}
 .s-considering,.s-rough{color:var(--gold);border-color:var(--gold2)}
 .s-purchased{color:var(--green);border-color:rgba(92,192,140,.5)}
-.s-lost{color:#8a6763}
+.s-lost{color:#8a6763}.s-cut{color:#8a6763}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chips.wrap{flex-wrap:wrap;overflow:visible}
@@ -112,9 +112,10 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261007-6';
+const VER='20261009-1';
 const MODEL='claude-haiku-4-5-20251001';
-const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1]};
+const ST={waiting:['未返信',0],reply_comment:['コメント返信あり',1],reply_dm:['DM返信あり',2],considering:['検討中',3],rough:['ラフ依頼',4],purchased:['購入済み',5],lost:['見送り',-1],cut:['打ち切り',-1]};
+const CUTW=['変な人・怪しい','営業・勧誘','対象外(車に興味が薄い等)','その他'];
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
 const SYS="You help Takuya Tagishi, a Japanese craftsman who runs Driver's Collection (Instagram @drivers_collection_): handmade one-of-one art trading cards made from a customer's car photo (the owner can be in it too). Semi-order ¥30,000 (pick a gallery design, quick), full order ¥50,000 (one-of-a-kind design from scratch, gold authentication tag), optional light-up wall display +¥10,000. Free rough mock before purchase. Ships worldwide by EMS. He reaches out to car owners, car photographers and influencers on Instagram with comments and DMs. Always answer with one JSON object only, no other text.";
 const TPL=[
@@ -175,7 +176,7 @@ async function save(p){if(!P.includes(p))P.push(p);await DB.put('people',JSON.pa
 async function putImg(d){const id=uid();await DB.put('images',{id,d});return id}
 async function getImg(id){const r=await DB.get('images',id);return r&&r.d}
 function newPerson(n){return{id:uid(),username:n,url:'https://www.instagram.com/'+n+'/',created:new Date().toISOString(),firstDate:today(),inbound:false,genre:'',country:'',followers:'',car:'',name:'',who:'',summary:'',memo:'',lang:'',status:'waiting',profileImg:null,thumb:'',events:[],next:null,ai:''}}
-function upStatus(p,s){if(!ST[s]||p.status===s)return;if(p.status==='purchased')return;if(s==='lost'){p.status='lost';return}if(p.status==='lost'||ST[s][1]>ST[p.status][1])p.status=s}
+function upStatus(p,s){if(!ST[s]||p.status===s)return;if(p.status==='purchased')return;if(s==='lost'){p.status='lost';return}if(p.status==='lost'||p.status==='cut'||ST[s][1]>ST[p.status][1])p.status=s}
 const replied=p=>p.events.some(e=>e.kind==='reply')||['reply_comment','reply_dm','considering','rough','purchased'].includes(p.status);
 const adv=p=>['considering','rough','purchased'].includes(p.status);
 const isDue=p=>{const r=remind(p);return !!r&&new Date(r.at)<=eod()};
@@ -307,6 +308,7 @@ const OPT={semi:'セミ',full:'フル'};
 const QS=[
  {k:'c1',t:'コメント①を送る',auto:p=>p.events.some(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')||e.kind==='sent'&&e.ch==='comment'&&!e.tpl),hint:'下の「次に送る」から送るとチェックされます'},
  {k:'c2',t:'コメントの返信が来た → ②を送る',auto:p=>p.events.some(e=>e.kind==='sent'&&/^2-/.test(e.tpl||'')),hint:'返信が来たら「次に送る」から②を送る'},
+ {k:'go',t:'DMを送るか判断する',opts:[['send','DMを送る'],['cut','送らない(打ち切り)']],auto:p=>p.events.some(e=>e.kind==='sent'&&(e.tpl==='3'||e.ch==='dm')),hint:'返信の内容を見て、あなたが決める'},
  {k:'dm',t:'③DMを送る',auto:p=>p.events.some(e=>e.kind==='sent'&&(e.tpl==='3'||e.ch==='dm')),hint:'「次に送る」から③を送る'},
  {k:'dr',t:'DMの返信が来た',auto:p=>['reply_dm','considering','rough','purchased'].includes(p.status)||p.events.some(e=>e.kind==='reply'&&e.ch==='dm'),hint:'返信のスクショを追加すると自動でチェックされます'},
  {k:'mat',t:'画像・記載内容をもらった'},
@@ -317,7 +319,7 @@ const qv=(p,k)=>(p.q&&p.q[k])||null;
 function qDone(p,k){const s=QS.find(x=>x.k===k);if(qv(p,k))return qv(p,k);if(s.auto&&s.auto(p))return {v:true,at:null};return null}
 const qCur=p=>{let hi=-1;QS.forEach((s,i)=>{if(qDone(p,s.k))hi=i});return (QS.slice(hi+1)[0]||{}).k};
 const addD=(iso,d)=>{const x=new Date(iso||Date.now());x.setDate(x.getDate()+d);x.setHours(20,0,0,0);return localDT(x)};
-function remind(p){if(p.ng||p.status==='lost'||qDone(p,'buy'))return null;
+function remind(p){if(p.ng||p.status==='lost'||p.status==='cut'||qDone(p,'buy'))return null;
  if(!qDone(p,'dr')){const l=p.like&&p.like.d;if(!l)return null;return {at:p.next&&p.next.at?p.next.at:addD(l.at,3),label:'DMにいいねだけ → 「その後どうですか？」を送る',tpl:'4'}}
  const add=addD;
  const lastRep=(p.events.filter(e=>e.kind==='reply'&&e.ch==='dm').pop()||{}).at;
@@ -328,17 +330,19 @@ function remind(p){if(p.ng||p.status==='lost'||qDone(p,'buy'))return null;
  else r={at:add(lastRep,1),label:'画像・記載内容がまだ → 確認する',tpl:'5'};
  if(p.next&&p.next.at)r.at=p.next.at;return r}
 async function likeSet(p,k){p.like=p.like||{};if(p.like[k])delete p.like[k];else p.like[k]={at:new Date().toISOString()};if(k==='d')p.next=null;await save(p);render();refresh(p);toast(p.like[k]?(k==='d'?'DMいいねを記録(3日後にリマインド)':'コメントいいねを記録'):'取り消しました')}
-async function qSet(p,k,v){const cur=qv(p,k);p.q=p.q||{};if(cur&&(v===true||cur.v===v)){delete p.q[k]}else{p.q[k]={v,at:new Date().toISOString()};if(k==='req')upStatus(p,'rough');if(k==='buy')upStatus(p,'purchased')}p.next=null;await save(p);render();refresh(p)}
-function questHtml(p){const cur=qCur(p);return QS.map(s=>{const d=qDone(p,s.k),isCur=s.k===cur;
+async function qSet(p,k,v){const cur=qv(p,k);p.q=p.q||{};if(cur&&(v===true||cur.v===v)){delete p.q[k];if(k==='go'&&v==='cut'&&p.status==='cut')p.status=p.events.some(e=>e.kind==='reply'&&e.ch==='dm')?'reply_dm':p.events.some(e=>e.kind==='reply')?'reply_comment':'waiting'}else{p.q[k]={v,at:new Date().toISOString()};if(k==='go'&&v==='cut'){p.status='cut';p.next=null}if(k==='go'&&v==='send'&&p.status==='cut')p.status=hasReply(p)?'reply_comment':'waiting';if(k==='req')upStatus(p,'rough');if(k==='buy')upStatus(p,'purchased')}p.next=null;await save(p);render();refresh(p)}
+function questHtml(p){if(p.status==='cut')return `<div class=card><b>打ち切り</b>${p.cutWhy?' · '+esc(p.cutWhy):''}<div class=chips wrap style="margin-top:8px">${CUTW.map(w=>`<button class="chip ${p.cutWhy===w?'on':''}" data-cw="${p.id}|${CUTW.indexOf(w)}">${esc(w)}</button>`).join('')}</div><div class=hint>返信はあったが追わないと決めた人。リマインドには出ません。戻すには上の「状態」で選び直してください。</div></div>`;const cur=qCur(p);return QS.map(s=>{const d=qDone(p,s.k),isCur=s.k===cur;
  const mark=`<span class="qk ${d?'on':''}">${d?'✓':''}</span>`;
  const when=d&&d.at?` · ${md(d.at)}`:'';
  let ctl='';
- if(s.o)ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d&&d.v==='semi'?'qon':''}" data-q="${p.id}|${s.k}|semi">${OPT.semi}</button><button class="btn2 ${d&&d.v==='full'?'qon':''}" data-q="${p.id}|${s.k}|full">${OPT.full}${s.k==='rough'?'(温度感高い時)':''}</button></div>`;
+ if(s.opts)ctl=`<div class=row style="margin-top:8px">${s.opts.map(o=>`<button class="btn2 ${d&&d.v===o[0]?'qon':''}" data-q="${p.id}|${s.k}|${o[0]}">${o[1]}</button>`).join('')}</div>`;
+ else if(s.k==='c2')ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d?'qon':''}" data-q="${p.id}|c2|1">${d?'済み(タップで戻す)':'個別に返信した ✓'}</button></div><div class=hint>②のテンプレを使わず自由文で返した時はこちら</div>`;
+ else if(s.o)ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d&&d.v==='semi'?'qon':''}" data-q="${p.id}|${s.k}|semi">${OPT.semi}</button><button class="btn2 ${d&&d.v==='full'?'qon':''}" data-q="${p.id}|${s.k}|full">${OPT.full}${s.k==='rough'?'(温度感高い時)':''}</button></div>`;
  else if(!s.auto)ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d?'qon':''}" data-q="${p.id}|${s.k}|1">${d?'済み(タップで戻す)':'もらった ✓'}</button></div>`;
  else if(isCur&&s.hint)ctl=`<div class=hint style="margin-top:6px">${s.hint}</div>`;
  return `<div class="qs ${d?'done':''} ${isCur?'cur':''}"><div class=qh>${mark}<div class=grow><b>${s.t}</b>${d&&typeof d.v==='string'?` <span class=pill>${OPT[d.v]}</span>`:''}<span class="mute small">${when}</span></div></div>${s.note&&isCur?`<div class="mute small">${s.note}</div>`:''}${ctl}</div>`}).join('')}
 const sentSet=p=>new Set(p.events.filter(e=>e.kind==='sent'&&e.tpl).map(e=>e.tpl));
-const hasReply=p=>p.status!=='waiting'&&p.status!=='lost'||p.events.some(e=>e.kind==='reply');
+const hasReply=p=>p.status!=='waiting'&&p.status!=='lost'&&p.status!=='cut'||p.events.some(e=>e.kind==='reply');
 function nextTpls(p){const sent=sentSet(p),out=[];if(!hasReply(p))return out;const c1=p.events.filter(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')).pop();if(c1){const id='2-'+c1.tpl.slice(2);if(TPL.some(t=>t.id===id)&&!sent.has(id))out.push(id)}if(!sent.has('3'))out.push('3');return out}
 const tplRow=(id,p,fresh)=>{const t=TPL.find(x=>x.id===id),on=!fresh&&sentSet(p).has(id);return `<button class="tpl ${on?'on':''}" data-dt="${id}" data-pid="${p.id}"><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(id).replace(/\n/g,' '))}</small></span><span class=ck></span></button>`};
 function nextBox(p){const L=nextTpls(p);return L.length?L.map(id=>tplRow(id,p)).join('')+'<div class=hint style="margin-top:6px">タップ=コピー+送信済みに記録</div>':`<div class=hint>${hasReply(p)?'用意した返信はすべて送信済みです':'返信待ちです(コメントに返信が来たら ②・③ が出ます)'}</div>`}
@@ -416,12 +420,12 @@ function vRemind(){const L=P.map(p=>[p,remind(p)]).filter(x=>x[1]).sort((a,b)=>a
 function weekOf(s){const d=new Date(s+'T00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return (d.getMonth()+1)+'/'+d.getDate()+'〜'}
 function firstCh(p){const f=p.events.filter(e=>e.kind==='sent'&&ymd(new Date(e.at))===p.firstDate),c=f.some(e=>e.ch==='comment'),d=f.some(e=>e.ch==='dm');return c&&d?'コメント+DM':c?'コメントのみ':d?'DMのみ':'記録なし'}
 function grp(O,fn){const m={};O.forEach(p=>{const k=fn(p)||'不明';const v=m[k]||(m[k]={n:0,r:0,a:0,b:0,s:p.firstDate});v.n++;if(replied(p))v.r++;if(adv(p))v.a++;if(p.status==='purchased')v.b++});return Object.entries(m)}
-function vData(){const O=P.filter(p=>!p.inbound),n=O.length,r=O.filter(replied).length,a=O.filter(adv).length,rg=O.filter(p=>['rough','purchased'].includes(p.status)).length,b=O.filter(p=>p.status==='purchased').length;
+function vData(){const O=P.filter(p=>!p.inbound),n=O.length,r=O.filter(replied).length,cutR=O.filter(p=>p.status==='cut'&&replied(p)).length,a=O.filter(adv).length,rg=O.filter(p=>['rough','purchased'].includes(p.status)).length,b=O.filter(p=>p.status==='purchased').length;
  const pct=(x,y)=>y?Math.round(x/y*100)+'%':'-',c=cost();
  const tbl=(t,rs)=>`<div class=sec>${t}</div><table><tr><th></th><th>人数</th><th>返信率</th><th>検討以上</th><th>購入</th></tr>${rs.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td><td>${pct(v.r,v.n)}</td><td>${pct(v.a,v.n)}</td><td>${v.b}</td></tr>`).join('')}</table>`;
  const bySize=x=>x.sort((p,q)=>q[1].n-p[1].n);
- return `<h1>データ</h1><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
- ${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
+ return `<h1>データ</h1><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${cutR}</b><span>返信あり→打ち切り</span></div><div><b>${pct(r-cutR,n-cutR)}</b><span>返信率(打ち切り除く)</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
+ ${(()=>{const m={};O.filter(p=>p.status==='cut').forEach(p=>{const k=p.cutWhy||'理由未選択';m[k]=(m[k]||0)+1});const e=Object.entries(m);return e.length?`<div class=sec>打ち切りの理由</div><table><tr><th></th><th>人数</th></tr>${e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`:''})()}${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
  <div class=sec>データの書き出し</div>
  <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
  <div class=row style="margin-top:10px"><button class=btn2 id=xP>顧客CSV</button><button class=btn2 id=xE>やりとりCSV</button><button class=btn2 id=xB>バックアップ(画像込み)</button><label class=btn2>バックアップから復元<input type=file id=xR accept=".json,application/json" hidden></label></div>
@@ -453,12 +457,13 @@ function bindData(){const stamp=today().replace(/-/g,'');
  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
 
 /* ---------- events ---------- */
-document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-q],[data-lk],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-q],[data-lk],[data-cw],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
  if(t.id==='back')return closeSheet();
  if(t.id==='bigBtn')return openSheet('新規アプローチ',newFn);
  if(t.id==='replyBtn')return openSheet('返信を追加',replyFn(null));
  if(t.dataset.tab){view=t.dataset.tab;window.scrollTo(0,0);return render()}
  if(t.dataset.open)return openDetail(t.dataset.open);
+ if(t.dataset.cw){const [id,i]=t.dataset.cw.split('|'),p=byId(id);if(p){p.cutWhy=CUTW[+i];save(p).then(()=>{render();refresh(p)})}return}
  if(t.dataset.lk){const [id,k]=t.dataset.lk.split('|'),p=byId(id);return p&&likeSet(p,k)}
  if(t.dataset.q){const [id,k,v]=t.dataset.q.split('|'),p=byId(id);return p&&qSet(p,k,v==='1'?true:v)}
  if(t.dataset.dt&&t.dataset.pid){const p=byId(t.dataset.pid);return p&&sendTpl(p,t.dataset.dt)}
