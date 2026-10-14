@@ -114,6 +114,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 .tpl.on{border-color:var(--gold);background:rgba(214,178,94,.12)}.tpl.on .ck{background:var(--gold);border-color:var(--gold)}.tpl.on .ck::after{content:'✓'}
 .tpl b{display:block;font-size:14px;font-weight:600}.tpl small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .more{margin-top:18px;color:var(--mute);font-size:13px}.more summary{cursor:pointer;padding:6px 0}
+.pill.line{background:#06c755;color:#fff;border-color:#06c755;font-weight:800;font-size:13px;padding:2px 12px;letter-spacing:.04em}.pill.inq{color:var(--gold,#d4af5a);border-color:var(--gold,#d4af5a);font-weight:700}
 .s-ng{color:var(--red);border-color:rgba(227,102,95,.6)}
 .viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:50;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.viewer img{max-width:100%;max-height:100%}
 </style>
@@ -131,7 +132,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261014-5';
+const VER='20261014-6';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const DMNG='DM不可(フォロー必要)';
@@ -166,6 +167,7 @@ function tplCustom(){try{return JSON.parse(ls('dc_out_tpl')||'{}')}catch(e){retu
 const tplText=id=>{const c=tplCustom();if(c[id])return c[id];const t=TPL.find(x=>x.id===id);return t?t.text:''};
 const tplLabel=id=>{const t=TPL.find(x=>x.id===id);return t?t.label.split(' ')[0]:id};
 const dn=p=>p.src==='line'?p.username:'@'+p.username;
+const srcPill=p=>p.src==='line'?'<span class="pill line">LINE</span>':p.inbound?'<span class="pill inq">問い合わせ</span>':'';
 const srcLabel=p=>p.src==='line'?'LINE':p.inbound?'Instagram問い合わせ':'Instagram営業';
 function newLine(n){const p=newPerson(n);p.src='line';p.url='https://line.me/R/';p.inbound=true;return p}
 const nk=x=>String(x||'').toLowerCase().replace(/\s|　/g,'');
@@ -414,7 +416,8 @@ function nextBox(p){if(RK(p)>=3||bought(p))return '<div class=hint>この段階�
 async function dmFail(p){const i=p.events.map(e=>e.tpl).lastIndexOf('3');if(i>=0)p.events.splice(i,1);p.dmBlocked={at:new Date().toISOString()};p.next=null;await save(p);render();refresh(p);toast('DM不可を記録。②\'を送ってください')}
 async function sendTpl(p,id){const t=TPL.find(x=>x.id===id);if(!t)return;const tx=tplText(id);copy(tx);if(id==='3'&&p.dmBlocked){delete p.dmBlocked}if(t.g!=='fu'&&sentSet(p).has(id))return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:t.ch,tpl:id,text:tx});if(t.g==='c2')upStatus(p,'reply_comment');if(id==='3'||t.g==='c2n')upStatus(p,'dm_wait');if(t.g==='fu'){if(['8','9','10'].includes(id)){doneAfter(p,id)}else if(id==='4'){if(p.like)delete p.like.d;p.next=null}else p.next={at:addD(null,2),text:'',ja:''}}await save(p);render();refresh(p)}
 function detailFn(p){return b=>{const n=p.next||{};
- b.innerHTML=`<div class="item h-${p.status}" style="border:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a><div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
+ b.innerHTML=`<div class="item h-${p.status}" style="border:0">${av(p)}<div class=grow>${p.src==='line'?`<b>${esc(dn(p))}</b>`:`<a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a>`} ${srcPill(p)}<div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
+ ${p.src==='line'?`<div class=row style="margin:4px 0"><button class=btn2 data-cn="${p.id}">LINE名をコピー</button><a class=btn2 href="https://line.me/R/" target=_blank rel=noopener>LINEを開く</a></div>`:`<details class=more ${p.inbound&&!p.urlSet?'open':''}><summary>プロフィールのリンク${p.inbound&&!p.urlSet?'(未設定)':''}</summary><div class=row style="margin-top:8px"><input id=fUrl type=url autocapitalize=off placeholder="InstagramのURL または @ユーザー名" value="${p.urlSet?esc(p.url):''}" style="flex:1"><button class=btn2 id=fUrlSave>保存</button></div><div class=hint>貼ると、リマインドやここの名前から1タップでそのアカウントに飛べます。</div></details>`}
  ${p.ai?`<div class=hint>${esc(p.ai)}</div>`:''}${p.summary?`<div class=card style="margin-top:2px">${esc(p.summary)}</div>`:''}
  <div class=sec>次に送る</div>
  ${nextBox(p)}
@@ -444,6 +447,7 @@ function detailFn(p){return b=>{const n=p.next||{};
  <button class=danger id=dDel>この記録を削除</button>`;
  const g=s=>b.querySelector(s),upd=async()=>{await save(p);render()};
  b.querySelectorAll('[data-st]').forEach(x=>x.onclick=async()=>{p.status=x.dataset.st;await upd();refresh(p)});
+ const us=g('#fUrlSave');if(us)us.onclick=async()=>{const v=g('#fUrl').value.trim();if(!v)return toast('リンクかユーザー名を入れてください');let h=null,u=null;const m=/instagram\.com\/([A-Za-z0-9._]+)/i.exec(v);if(m)h=m[1];else if(/^https?:\/\//i.test(v))u=v;else{const x=v.replace(/^@/,'').replace(/\s/g,'');if(/^[A-Za-z0-9._]+$/.test(x))h=x}if(!h&&!u)return toast('読み取れませんでした。URLか@ユーザー名を入れてください');if(h){const o=P.find(x=>x!==p&&x.username===h);if(o)return toast('@'+h+' は別の記録にあります');p.username=h;p.url='https://www.instagram.com/'+h+'/'}else p.url=u;p.urlSet=true;await upd();refresh(p);toast('リンクを保存しました')};
  const setNext=async()=>{const at=g('#dAt').value,tx=g('#dTx').value;p.next=(at||tx.trim())?{at:at||nextAt(0),text:tx,ja:(tx===(n.text||''))?(n.ja||''):''}:null;await upd()};
  b.querySelectorAll('[data-undo]').forEach(x=>x.onclick=async()=>{p.events=p.events.filter(e=>e.id!==x.dataset.undo);await upd();refresh(p);toast('取り消しました')});
  g('#dAt').onchange=setNext;g('#dTx').onchange=setNext;
@@ -478,17 +482,17 @@ function vToday(){const t=today(),n=P.filter(p=>!p.inbound&&p.firstDate===t).len
  <div class=sec>直近7日(計${wk}人)</div><div class=bars>${days.map(d=>`<div class="${d.t?'today':''}" style="height:${d.n/mx*100}%"><s>${d.n||''}</s></div>`).join('')}</div><div class=barl>${days.map(d=>`<span>${d.l}</span>`).join('')}</div>`}
 function rows(){const k=q.trim().toLowerCase().replace(/^@/,'');const L=P.filter(p=>(filter==='all'||p.status===filter)&&(!k||[p.username,p.name,p.country,p.car,p.who,p.summary,p.memo].join(' ').toLowerCase().includes(k))).sort((a,b)=>last(b).localeCompare(last(a)));
  if(!L.length)return '<div class=hint>該当する記録はありません</div>';
- return L.map(p=>`<div class="item h-${p.status}" data-open="${p.id}">${av(p)}<div class=grow><b>${esc(dn(p))}</b><div>${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${progHtml(p)}${p.src==='line'?'<span class=pill>LINE</span>':p.inbound?'<span class=pill>問い合わせ</span>':''}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
+ return L.map(p=>`<div class="item h-${p.status}" data-open="${p.id}">${av(p)}<div class=grow><b>${esc(dn(p))}</b><div>${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${progHtml(p)}${srcPill(p)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
 function vList(){const cnt=s=>P.filter(p=>s==='all'||p.status===s).length;
  return `<h1>顧客リスト</h1><input id=q type=search autocapitalize=off placeholder="@ユーザー名・国・車で検索" value="${esc(q)}" style="margin-top:8px">
  <div class=chips>${['all',...Object.keys(ST)].map(s=>`<button class="chip ${filter===s?'on':''}" data-f="${s}">${s==='all'?'すべて':ST[s][0]} ${cnt(s)}</button>`).join('')}</div><div id=rows>${rows()}</div>`}
 function rcard(p){const r=remind(p),late=new Date(r.at)<new Date(),c=qCur(p);
  const qb=r.task?`<button class=btn2 data-done="${p.id}|${r.task}">完了 ✓</button>`:c==='mat'?`<button class=btn2 data-q="${p.id}|mat|1">もらった ✓</button>`:c==='req'?`<button class=btn2 data-q="${p.id}|req|semi">ラフ依頼 セミ</button><button class=btn2 data-q="${p.id}|req|full">フル</button>`:c==='rough'?`<button class=btn2 data-q="${p.id}|rough|semi">ラフ送った(セミ)</button><button class=btn2 data-q="${p.id}|rough|full">フル</button>`:'';
- return `<div class="card h-${p.status}"><div class="small mute">${TIERL[r.tier]||''}</div><div class=item style="border:0;padding:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a><div class="small ${late?'due':'soon'}">${mdhm(r.at)}${late?'(期限)':''} ${stPill(p.status)}</div></div><button class=btn2 data-open="${p.id}">開く</button></div>
+ return `<div class="card h-${p.status}"><div class="small mute">${TIERL[r.tier]||''}</div><div class=item style="border:0;padding:0">${av(p)}<div class=grow>${p.src==='line'?`<b>${esc(dn(p))}</b>`:`<a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a>`} ${srcPill(p)}<div class="small ${late?'due':'soon'}">${mdhm(r.at)}${late?'(期限)':''} ${stPill(p.status)}</div></div><button class=btn2 data-open="${p.id}">開く</button></div>
  <div class=msg style="margin-top:8px">${esc(r.label)}</div>
- ${p.summary?`<div class="mute small" style="margin-top:6px">${esc(p.summary)}</div>`:''}
+ ${p.inbound&&p.src!=='line'&&!p.urlSet?'<div class="warn small">リンク未設定。「開く」でプロフィールのリンクを入れると、ここから1タップで飛べます。</div>':''}${p.summary?`<div class="mute small" style="margin-top:6px">${esc(p.summary)}</div>`:''}
  ${r.tpl?tplRow(r.tpl,p,1):''}
- <div class=row style="margin-top:10px"><a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>${p.src==='line'?'LINEを開く':'Instagramへ'}</a>${qb}</div></div>`}
+ <div class=row style="margin-top:10px">${p.src==='line'?`<button class=btn2 data-cn="${p.id}">LINE名をコピー</button><a class=btn2 href="https://line.me/R/" target=_blank rel=noopener>LINEを開く</a>`:`<a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>Instagramへ</a>`}${qb}</div></div>`}
 function vRemind(){const L=P.map(p=>[p,remind(p)]).filter(x=>x[1]).sort((a,b)=>(a[1].tier-b[1].tier)||a[1].at.localeCompare(b[1].at)),e=eod();
  if(!L.length)return '<h1>リマインド</h1><div class=hint>追客の対象が、ここに出ます</div>';
  const a=L.filter(x=>new Date(x[1].at)<=e).map(x=>x[0]),b=L.filter(x=>new Date(x[1].at)>e).map(x=>x[0]);
@@ -503,10 +507,12 @@ function vData(){const mr=p=>{let m=-1;(p.hist||[]).forEach(h=>{if(ST[h.s]&&ST[h
  const bySize=x=>x.sort((p,q)=>q[1].n-p[1].n);
  const FS=[['コメント送信',p=>true],['返信あり',p=>mr(p)>=1],['DM送信',p=>mr(p)>=2],['DMやり取り',p=>mr(p)>=3],['ラフ作成',p=>mr(p)>=4],['購入検討(ラフ送付)',p=>mr(p)>=5],['購入',p=>mr(p)>=6||bought(p)],['納品',p=>mr(p)>=8],['リピート',p=>(p.buys||[]).length>=2||mr(p)>=9]],FC=FS.map(f=>O.filter(f[1]).length);
  let neck=-1,nv=2;for(let k=1;k<FC.length;k++){if(FC[k-1]>=3){const v=FC[k]/FC[k-1];if(v<nv){nv=v;neck=k}}}
- const fun=`<div class=sec>段階ごとの人数と進む率</div>${FS.map((f,k)=>`<div class=fn><div class=t><span>${f[0]}</span><b>${FC[k]}人</b></div><div class=bar><i style="width:${n?Math.round(FC[k]/n*100):0}%"></i></div>${k?`<div class="c ${k===neck?'neck':''}">前の段階から ${FC[k-1]?Math.round(FC[k]/FC[k-1]*100):0}% が進んだ${k===neck?' ← いま一番のネック':''}</div>`:''}</div>`).join('')}`;
+ const I=P.filter(p=>p.inbound),IS=[['問い合わせ・LINE',p=>true],['ラフ作成',p=>mr(p)>=4],['購入検討(ラフ送付)',p=>mr(p)>=5],['購入',p=>mr(p)>=6||bought(p)],['納品',p=>mr(p)>=8],['リピート',p=>(p.buys||[]).length>=2||mr(p)>=9]],IC=IS.map(f=>I.filter(f[1]).length);
+ const fun2=I.length?`<div class=sec>問い合わせ・LINE経由の段階</div>${IS.map((f,k)=>`<div class=fn><div class=t><span>${f[0]}</span><b>${IC[k]}人</b></div><div class=bar><i style="width:${I.length?Math.round(IC[k]/I.length*100):0}%"></i></div>${k?`<div class=c>前の段階から ${IC[k-1]?Math.round(IC[k]/IC[k-1]*100):0}% が進んだ</div>`:''}</div>`).join('')}`:'';
+ const fun=`<div class=sec>段階ごとの人数と進む率(コメント営業)</div>${FS.map((f,k)=>`<div class=fn><div class=t><span>${f[0]}</span><b>${FC[k]}人</b></div><div class=bar><i style="width:${n?Math.round(FC[k]/n*100):0}%"></i></div>${k?`<div class="c ${k===neck?'neck':''}">前の段階から ${FC[k-1]?Math.round(FC[k]/FC[k-1]*100):0}% が進んだ${k===neck?' ← いま一番のネック':''}</div>`:''}</div>`).join('')}`;
  const byr=P.filter(p=>(p.buys||[]).length),rev=byr.reduce((a,p)=>a+buyTotal(p),0),rep=byr.filter(p=>p.buys.length>1).length;
  const sales=`<div class=sec>売上・リピート</div><div class=kpi><div><b>${yen(rev)}</b><span>売上合計</span></div><div><b>${byr.length}</b><span>購入者</span></div><div><b>${byr.length?Math.round(rep/byr.length*100)+'%':'-'}</b><span>リピート率(${rep})</span></div></div>`;
- return `<h1>データ</h1>${fun}${sales}<div class=sec>全体</div><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${cutAll}</b><span>返信あり→打ち切り</span></div><div><b>${O.filter(p=>p.dmBlocked).length}</b><span>DM不可</span></div><div><b>${pct(r-cutR,n-cutR)}</b><span>返信率(変な人を除く)</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
+ return `<h1>データ</h1>${fun}${fun2}${sales}<div class=sec>全体</div><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${cutAll}</b><span>返信あり→打ち切り</span></div><div><b>${O.filter(p=>p.dmBlocked).length}</b><span>DM不可</span></div><div><b>${pct(r-cutR,n-cutR)}</b><span>返信率(変な人を除く)</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
  ${(()=>{const m={};O.filter(p=>p.status==='cut').forEach(p=>{const k=p.cutWhy||'理由未選択';m[k]=(m[k]||0)+1});const e=Object.entries(m);return e.length?`<div class=sec>打ち切りの理由</div><table><tr><th></th><th>人数</th></tr>${e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`:''})()}${P.length?tbl('流入元別',bySize(grp(P,srcLabel))):''}${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
  <div class=sec>データの書き出し</div>
  <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
@@ -539,13 +545,14 @@ function bindData(){const stamp=today().replace(/-/g,'');
  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
 
 /* ---------- events ---------- */
-document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-q],[data-lk],[data-cw],[data-fail],[data-done],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-q],[data-lk],[data-cw],[data-fail],[data-cn],[data-done],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
  if(t.id==='back')return closeSheet();
  if(t.id==='bigBtn')return openSheet('新規アプローチ',newFn);
  if(t.id==='replyBtn')return openSheet('返信を追加',replyFn(null));
  if(t.dataset.tab){view=t.dataset.tab;window.scrollTo(0,0);return render()}
  if(t.dataset.open)return openDetail(t.dataset.open);
  if(t.dataset.done){const [id,tid]=t.dataset.done.split('|'),p=byId(id),tk=p&&(p.after||[]).find(x=>x.id===tid);if(tk){if(tk.done){tk.done=false}else finishTask(p,tk);save(p).then(()=>{render();refresh(p)})}return}
+ if(t.dataset.cn){const p=byId(t.dataset.cn);if(p){copy(p.username);toast('LINE名をコピーしました: '+p.username)}return}
  if(t.dataset.fail){const p=byId(t.dataset.fail);return p&&dmFail(p)}
  if(t.dataset.cw){const [id,i]=t.dataset.cw.split('|'),p=byId(id);if(p){p.cutWhy=CUTW[+i];save(p).then(()=>{render();refresh(p)})}return}
  if(t.dataset.lk){const [id,k]=t.dataset.lk.split('|'),p=byId(id);return p&&likeSet(p,k)}
