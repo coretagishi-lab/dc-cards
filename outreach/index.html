@@ -132,7 +132,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261014-7';
+const VER='20261014-8';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const DMNG='DM不可(フォロー必要)';
@@ -353,7 +353,7 @@ function findMatch(us,name){for(const u of [].concat(us||[])){if(!u)continue;let
 function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${p.src==='line'?'LINE':e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${(e.imgs||(e.img?[e.img]:[])).map(i=>`<img class=shot data-imgid="${i}" alt="">`).join('')}${e.kind==='sent'&&e.tpl?`<button class=btn2 data-undo="${e.id}" style="margin-top:6px">取り消す</button>`:''}</div>`).join('')}
 
 /* ---------- quest ---------- */
-const OPT={semi:'セミ',full:'フル',rough:'ラフ希望',question:'質問・相談',send:'DMを送る',cut:'打ち切り'};
+const OPT={semi:'セミ',full:'フル',rough:'ラフ希望',question:'質問・相談',send:'DMを送る',cut:'打ち切り',frame:'額縁'};
 const QS=[
  {k:'c1',t:'コメント①を送る',auto:p=>p.events.some(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')||e.kind==='sent'&&e.ch==='comment'&&!e.tpl),hint:'下の「次に送る」から送るとチェックされます'},
  {k:'c2',t:'②のコメントを送る(③のDMのあと)',auto:p=>p.events.some(e=>e.kind==='sent'&&/^2(n)?-/.test(e.tpl||'')),hint:'先に③のDMを送り、送れたら②、送れなかったら②\'(DM不可版)を送る'},
@@ -404,12 +404,16 @@ function remind(p){if(p.ng||p.status==='cut')return null;
  if(p.next&&p.next.at)r.at=p.next.at;return r}
 async function likeSet(p,k){p.like=p.like||{};if(p.like[k])delete p.like[k];else p.like[k]={at:new Date().toISOString()};if(k==='d')p.next=null;await save(p);render();refresh(p);toast(p.like[k]?(k==='d'?'DMいいねを記録(3日後にリマインド)':'コメントいいねを記録'):'取り消しました')}
 async function qSet(p,k,v){const cur=qv(p,k);p.q=p.q||{};if(cur&&(v===true||cur.v===v)){delete p.q[k];if(k==='go'&&v==='cut'&&p.status==='cut')p.status=p.events.some(e=>e.kind==='reply'&&e.ch==='dm')?'reply_dm':p.events.some(e=>e.kind==='reply')?'reply_comment':'waiting'}else{p.q[k]={v,at:new Date().toISOString()};if(k==='go'&&v==='cut'){p.status='cut';p.next=null}if(k==='go'&&v==='send'&&p.status==='cut')p.status=hasReply(p)?'reply_comment':'waiting';if(k==='req')upStatus(p,'rough');if(k==='rough')upStatus(p,'considering');if(k==='buy')upStatus(p,'purchased')}p.next=null;await save(p);render();refresh(p)}
+const buyForm=p=>`${['semi','full','frame'].map(k=>`<div class=item style="padding:6px 0"><div class=grow>${KN[k]} <span class=mute>${yen(PRICE[k])}</span></div><button class=btn2 data-sp="${k}|-1">−</button><b id=sp-${k} style="min-width:28px;text-align:center">${k==='semi'?1:0}</b><button class=btn2 data-sp="${k}|1">＋</button></div>`).join('')}
+ <div class=row><div style="flex:1"><label class=lb>金額(割引などは直接直す)</label><input id=bAmt inputmode=numeric value="30000"></div><div style="flex:1"><label class=lb>購入日</label><input id=bDate type=date value="${ymd(new Date())}"></div></div>
+ <div class=row style="margin-top:8px"><button class=btn id=bRec>購入を記録</button></div>`;
 function questHtml(p){if(p.status==='cut')return `<div class=card><b>打ち切り</b>${p.cutWhy?' · '+esc(p.cutWhy):''}<div class=chips wrap style="margin-top:8px">${CUTW.map(w=>`<button class="chip ${p.cutWhy===w?'on':''}" data-cw="${p.id}|${CUTW.indexOf(w)}">${esc(w)}</button>`).join('')}</div><div class=hint>返信はあったが追わないと決めた人。リマインドには出ません。戻すには上の「状態」で選び直してください。</div></div>`;const cur=qCur(p);return qsOf(p).map(s=>{const d=qDone(p,s.k),isCur=s.k===cur;
  const mark=`<span class="qk ${d?'on':''}">${d?'✓':''}</span>`;
  const when=d&&d.at?` · ${md(d.at)}`:'';
  let ctl='';
  if(s.opts)ctl=`<div class=row style="margin-top:8px">${s.opts.map(o=>`<button class="btn2 ${d&&d.v===o[0]?'qon':''}" data-q="${p.id}|${s.k}|${o[0]}">${o[1]}</button>`).join('')}</div>`;
  else if(s.k==='c2')ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d?'qon':''}" data-q="${p.id}|c2|1">${d?'済み(タップで戻す)':'個別に返信した ✓'}</button></div><div class=hint>②のテンプレを使わず自由文で返した時はこちら</div>`;
+ else if(s.k==='buy')ctl=`${(p.buys||[]).map(x=>`<div class="small mute" style="margin-top:6px">✓ ${md(x.at)} ${esc(bLabel(x))} ${yen(x.amount)}</div>`).join('')}<div style="margin-top:8px">${buyForm(p)}</div>`;
  else if(s.o)ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d&&d.v==='semi'?'qon':''}" data-q="${p.id}|${s.k}|semi">${OPT.semi}</button><button class="btn2 ${d&&d.v==='full'?'qon':''}" data-q="${p.id}|${s.k}|full">${OPT.full}${s.k==='rough'?'(温度感高い時)':''}</button></div>`;
  else if(!s.auto)ctl=`<div class=row style="margin-top:8px"><button class="btn2 ${d?'qon':''}" data-q="${p.id}|${s.k}|1">${d?'済み(タップで戻す)':(s.btn||'もらった ✓')}</button></div>`;
  else if(isCur&&s.hint)ctl=`<div class=hint style="margin-top:6px">${s.hint}</div>`;
@@ -434,9 +438,7 @@ function detailFn(p){return b=>{const n=p.next||{};
  <details class=more><summary>ほかのテンプレを送る</summary>${TPL.map(t=>tplRow(t.id,p)).join('')}</details>
  <details class=more ${(p.buys&&p.buys.length)?'open':''}><summary>購入・納品${p.buys&&p.buys.length?' ('+p.buys.length+'回 '+yen(buyTotal(p))+')':''}</summary>
   ${(p.buys||[]).map(x=>`<div class=item style="padding:6px 0"><div class=grow>${md(x.at)} ${esc(bLabel(x))} ${yen(x.amount)}</div><button class=btn2 data-delbuy="${x.id}">削除</button></div>`).join('')}
-  ${['semi','full','frame'].map(k=>`<div class=item style="padding:6px 0"><div class=grow>${KN[k]} <span class=mute>${yen(PRICE[k])}</span></div><button class=btn2 data-sp="${k}|-1">−</button><b id=sp-${k} style="min-width:28px;text-align:center">${k==='semi'?1:0}</b><button class=btn2 data-sp="${k}|1">＋</button></div>`).join('')}
-  <div class=row><div style="flex:1"><label class=lb>金額(割引などは直接直す)</label><input id=bAmt inputmode=numeric value="30000"></div><div style="flex:1"><label class=lb>購入日</label><input id=bDate type=date value="${ymd(new Date())}"></div></div>
-  <div class=row><button class=btn2 id=bRec>購入を記録</button>${p.buys&&p.buys.length?'<button class=btn2 id=bShip>発送した(納品日)</button>':''}</div>
+  ${p.buys&&p.buys.length?'<div class=row><button class=btn2 id=bShip>発送した(納品日)</button></div>':'<div class=hint>購入内容は、上の進行クエスト「購入」で記録します</div>'}
   ${(p.after||[]).length?`<div class=sec>購入後の連絡</div>${p.after.map(t=>`<div class=item style="padding:6px 0"><div class=grow><span class=${t.done?'mute':''}>${md(t.at)} ${esc(t.label)}</span></div><button class="btn2 ${t.done?'qon':''}" data-done="${p.id}|${t.id}">${t.done?'済み':'完了 ✓'}</button></div>`).join('')}`:''}
  </details>
  <div class=sec>状態</div><div class="chips wrap">${Object.keys(ST).map(s=>`<button class="chip ${p.status===s?'on':''}" data-st="${s}">${ST[s][0]}</button>`).join('')}</div>
