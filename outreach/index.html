@@ -61,6 +61,23 @@ textarea{resize:vertical}
 .s-purchased{color:var(--green);border-color:rgba(92,192,140,.5)}
 .s-lost{color:#8a6763}.s-cut{color:#8a6763}.s-dm_wait{color:var(--blue);border-color:rgba(114,169,230,.5)}.s-making,.s-shipped,.s-repeat{color:var(--green);border-color:rgba(92,192,140,.5)}
 .prog{display:inline-flex;gap:2px;margin-left:4px;vertical-align:middle}.prog i{width:8px;height:4px;border-radius:2px;background:var(--line)}.prog i.on{background:var(--gold)}
+.s-rough{color:#4aa3ff;border-color:#4aa3ff;background:rgba(74,163,255,.12)}
+.s-considering{color:#3ddc84;border-color:#3ddc84;background:rgba(61,220,132,.14);box-shadow:0 0 8px rgba(61,220,132,.5)}
+.s-purchased{color:#fff;border-color:#ff4d4d;background:#c62828;font-weight:700;animation:pu 1.4s ease-in-out infinite}
+.s-making{color:#2a1a00;border-color:#ffd54a;background:linear-gradient(90deg,#b8860b,#ffd54a,#b8860b);font-weight:700;box-shadow:0 0 10px rgba(255,213,74,.6)}
+.s-shipped{color:#2a1a00;border-color:#fff3b0;background:linear-gradient(100deg,#b8860b 20%,#fff6c4 50%,#b8860b 80%);background-size:200% 100%;font-weight:800;animation:sh 2.2s linear infinite;box-shadow:0 0 12px rgba(255,236,150,.8)}
+.s-repeat{color:#111;border-color:#fff;background:linear-gradient(90deg,#ff5f6d,#ffc371,#5cff9d,#4aa3ff,#b46bff,#ff5f6d);background-size:200% 100%;font-weight:800;animation:rb 3s linear infinite;box-shadow:0 0 14px rgba(255,255,255,.7)}
+@keyframes pu{0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,.5)}50%{box-shadow:0 0 14px 3px rgba(255,77,77,.95)}}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes rb{0%{background-position:0 0;filter:hue-rotate(0)}100%{background-position:200% 0;filter:hue-rotate(360deg)}}
+.item.h-rough{box-shadow:inset 3px 0 0 #4aa3ff}.item.h-considering{box-shadow:inset 3px 0 0 #3ddc84}.item.h-purchased{box-shadow:inset 3px 0 0 #ff4d4d;background:linear-gradient(90deg,rgba(255,77,77,.12),transparent 60%)}
+.item.h-making{box-shadow:inset 4px 0 0 #ffd54a;background:linear-gradient(90deg,rgba(255,213,74,.16),transparent 65%)}
+.item.h-shipped{box-shadow:inset 4px 0 0 #fff3b0;background:linear-gradient(90deg,rgba(255,236,150,.2),transparent 70%)}
+.item.h-repeat{box-shadow:inset 5px 0 0 #b46bff;background:linear-gradient(90deg,rgba(180,107,255,.18),rgba(92,255,157,.08) 50%,transparent 80%)}
+.card.h-purchased{border-color:#ff4d4d}.card.h-making,.card.h-shipped{border-color:#ffd54a}.card.h-repeat{border-color:#b46bff;box-shadow:0 0 14px rgba(180,107,255,.45)}
+.h-purchased .av{box-shadow:0 0 0 2px #ff4d4d,0 0 10px #ff4d4d}.h-making .av,.h-shipped .av{box-shadow:0 0 0 2px #ffd54a,0 0 12px #ffd54a}.h-repeat .av{box-shadow:0 0 0 2px #b46bff,0 0 14px #5cff9d}
+.prog.r4 i.on{background:#4aa3ff}.prog.r5 i.on{background:#3ddc84}.prog.r6 i.on{background:#ff4d4d}.prog.r7 i.on,.prog.r8 i.on{background:#ffd54a}.prog.r9 i.on{background:linear-gradient(90deg,#ff5f6d,#5cff9d,#b46bff)}
+@media(prefers-reduced-motion:reduce){.s-purchased,.s-shipped,.s-repeat{animation:none}}
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--gold)}.fn{margin-top:10px}.fn .t{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}.fn .c{font-size:12px;color:var(--mute);margin:2px 0 0 10px}.fn .c.neck{color:var(--red);font-weight:700}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
@@ -114,7 +131,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261014-4';
+const VER='20261014-5';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const DMNG='DM不可(フォロー必要)';
@@ -148,8 +165,13 @@ const TPL=[
 function tplCustom(){try{return JSON.parse(ls('dc_out_tpl')||'{}')}catch(e){return {}}}
 const tplText=id=>{const c=tplCustom();if(c[id])return c[id];const t=TPL.find(x=>x.id===id);return t?t.text:''};
 const tplLabel=id=>{const t=TPL.find(x=>x.id===id);return t?t.label.split(' ')[0]:id};
+const dn=p=>p.src==='line'?p.username:'@'+p.username;
+const srcLabel=p=>p.src==='line'?'LINE':p.inbound?'Instagram問い合わせ':'Instagram営業';
+function newLine(n){const p=newPerson(n);p.src='line';p.url='https://line.me/R/';p.inbound=true;return p}
+const nk=x=>String(x||'').toLowerCase().replace(/\s|　/g,'');
+const lineMatch=n=>{const k=nk(n);if(!k)return null;const L=P.filter(x=>x.src==='line'&&nk(x.username)===k);return L.length===1?L[0]:null};
 const OWN='drivers_collection_';
-const P_REPLY='Screenshot from Instagram: either a comment thread or a DM thread. The sender of the screenshot is the account "drivers_collection_" (his messages are "me"; never return this account as the other person).\nCOMMENT THREADS: a reply is ONLY a comment indented one level below a comment written by drivers_collection_ (usually starting with @drivers_collection_). Ignore every other comment: other people\'s top-level comments, replies under other people\'s comments, the post caption and the post author\'s caption text. Use only drivers_collection_\'s own comment plus the indented replies directly under it. If the post owner (shown at the top of the caption) wrote the indented reply, then the post owner is the person.\nDM THREADS: the person on the other side of the chat.\nReturn JSON: {"username":"the OTHER person\'s Instagram handle, exactly as shown, without @ (the author of the indented reply, or the person on the other side of the DM; never drivers_collection_)","others":["only handles that wrote a counted reply to drivers_collection_, without @; empty if only one"],"name":"their display name if shown, else empty","channel":"dm|comment","messages":[{"from":"them|me","text":"..."}]}\nmessages: only drivers_collection_\'s comment (from me) and the counted replies (from them), oldest first, at most 12, original language.';
+const P_REPLY='One or more screenshots of ONE conversation, given in order. Consecutive screenshots may overlap: output every message only ONCE. The app is either Instagram (comment thread or DM) or LINE (official-account chat).\nINSTAGRAM: the sender of the screenshots is the account "drivers_collection_" (his messages are "me"; never return this account as the other person). COMMENT THREADS: a reply is ONLY a comment indented one level below a comment written by drivers_collection_ (usually starting with @drivers_collection_). Ignore every other comment: other people\'s top-level comments, replies under other people\'s comments, the post caption. If the post owner (shown at the top of the caption) wrote the indented reply, the post owner is the person. DM THREADS: the person on the other side of the chat.\nLINE: "me" = the shop\'s messages (right-aligned bubbles, usually green); "them" = the customer (left-aligned, with the icon). username = the customer display name shown in the chat header.\nReturn JSON: {"app":"instagram|line","username":"the OTHER person\'s Instagram handle exactly as shown, without @ (never drivers_collection_); for LINE the display name","others":["only Instagram handles that wrote a counted reply to drivers_collection_, without @; empty if only one"],"name":"their display name if shown, else empty","channel":"dm|comment","messages":[{"from":"them|me","text":"..."}]}\nmessages: only the counted messages in order, at most 30, original language.';
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -196,7 +218,7 @@ const isDue=p=>{const r=remind(p);return !!r&&new Date(r.at)<=eod()};
 const last=p=>p.events.length?p.events[p.events.length-1].at:p.created;
 const lastCh=p=>{for(let i=p.events.length-1;i>=0;i--)if(p.events[i].kind==='reply')return p.events[i].ch;return 'dm'};
 const av=p=>p.thumb?`<img class=av src="${p.thumb}" alt="">`:`<div class=av>${esc((p.username[0]||'?').toUpperCase())}</div>`;
-const progHtml=p=>{const r=RK(p);return r<0?'':'<span class=prog>'+Array.from({length:10},(_,i)=>`<i class="${i<=r?'on':''}"></i>`).join('')+'</span>'};
+const progHtml=p=>{const r=RK(p);return r<0?'':`<span class="prog r${r}">`+Array.from({length:10},(_,i)=>`<i class="${i<=r?'on':''}"></i>`).join('')+'</span>'};
 const stPill=s=>`<span class="pill s-${s}">${ST[s][0]}</span>`;
 
 /* ---------- images ---------- */
@@ -246,7 +268,7 @@ const stack=[];
 function openSheet(title,fn,id){const d=document.createElement('div');d.className='sheetBody';stack.forEach(s=>{s.el.hidden=true});$('#sheet').appendChild(d);stack.push({title,fn,id,el:d});$('#sheet').hidden=false;document.body.classList.add('lock');$('#sheetTitle').textContent=title;fn(d);loadImgs(d);$('#sheet').scrollTop=0}
 function closeSheet(){const s=stack.pop();if(s)s.el.remove();const t=stack[stack.length-1];if(!t){$('#sheet').hidden=true;document.body.classList.remove('lock');return}t.el.hidden=false;$('#sheetTitle').textContent=t.title;if(t.el._check)t.el._check()}
 function refresh(p){stack.forEach(s=>{if(s.id===p.id){s.fn(s.el);loadImgs(s.el)}})}
-function openDetail(id){const p=byId(id);if(p)openSheet('@'+p.username,detailFn(p),p.id)}
+function openDetail(id){const p=byId(id);if(p)openSheet(dn(p),detailFn(p),p.id)}
 
 /* new approach */
 function sentLog(p){return p.events.filter(e=>e.kind==='sent').map(e=>(e.tpl?tplLabel(e.tpl):(e.ch==='dm'?'DM':'コメント'))+'('+md(e.at)+')').join(' → ')}
@@ -291,31 +313,42 @@ function newFn(b,again){let img=null,idName='';const on=new Set();
   if(S.key&&img)aiProfile(p,!isNew)}}
 
 /* reply screenshot */
-function replyFn(pre){return b=>{let img=null,j=null,ch='dm';
- b.innerHTML=`<div class=hint>${pre?'@'+esc(pre.username)+' の記録に追加します':'スクショに写っているIDから、過去の記録を自動で探します'}</div>
- <label class=pick style="margin-top:10px"><input type=file accept="image/*" hidden><span>＋ 返信のスクショを選ぶ</span><img hidden alt=""></label><div id=rOut></div>`;
- const out=b.querySelector('#rOut');
- pick(b.querySelector('.pick input'),async r=>{img=r;j=null;out.innerHTML='<div class=hint>読み取り中…</div>';
-  if(S.key){try{j=await claude([imgPart(r.full),{type:'text',text:P_REPLY}],900)}catch(e){toast('読み取り失敗: '+e.message)}}
-  ch=j&&j.channel==='comment'?'comment':'dm';show()});
- function show(){const cands=j?[j.username,...(Array.isArray(j.others)?j.others:[])].map(clean).filter(x=>x&&!x.startsWith('drivers_collection')):[],u=cands[0]||'',m=pre||findMatch(cands,j&&j.name),msgs=j&&Array.isArray(j.messages)?j.messages:[];
+const msgKey=t=>String(t||'').replace(/\s|[。、，．,.!！?？…~〜ー\-"'「」『』()（）:：]/g,'').toLowerCase();
+function dice(a,b){if(a.length<2||b.length<2)return a===b?1:0;const g=x=>{const m=new Map();for(let i=0;i<x.length-1;i++){const k=x.slice(i,i+2);m.set(k,(m.get(k)||0)+1)}return m},A=g(a),B=g(b);let n=0;A.forEach((v,k)=>{if(B.has(k))n+=Math.min(v,B.get(k))});return 2*n/(a.length+b.length-2)}
+function dupText(a,b){const x=msgKey(a),y=msgKey(b);if(!x||!y)return false;if(x===y)return true;if(Math.min(x.length,y.length)>=10&&(x.includes(y)||y.includes(x)))return true;return dice(x,y)>=0.85}
+function newMsgs(p,msgs){const pool={them:[],me:[]};p.events.forEach(e=>{if(e.msgs&&e.msgs.length)e.msgs.forEach(x=>pool[x.from==='me'?'me':'them'].push(x.text));else if(e.kind==='sent')pool.me.push(e.text||'');else if(e.kind==='reply'&&e.text)e.text.split('\n').forEach(l=>pool.them.push(l.replace(/^(自分|相手): /,'')))});return msgs.filter(x=>!pool[x.from==='me'?'me':'them'].some(t=>dupText(t,x.text)))}
+function replyFn(pre){return b=>{let imgs=[],j=null,ch='dm';
+ b.innerHTML=`<div class=hint>${pre?esc(dn(pre))+' の記録に追加します':'スクショに写っているIDや名前から、過去の記録を自動で探します。長いやりとりは、複数枚まとめて選べます(最大4枚)'}</div>
+ <label class=pick style="margin-top:10px"><input type=file accept="image/*" multiple hidden><span>＋ 返信のスクショを選ぶ(複数可)</span><img hidden alt=""></label><div id=rOut></div>`;
+ const out=b.querySelector('#rOut'),inp=b.querySelector('.pick input');
+ inp.onchange=async()=>{const fs=[...(inp.files||[])].slice(0,4);if(!fs.length)return;out.innerHTML='<div class=hint>読み取り中…</div>';
+  try{imgs=[];for(const f of fs)imgs.push(await compress(f))}catch(e){toast(e.message);return}
+  inp.value='';const im=b.querySelector('.pick img');if(im){im.src=imgs[0].full;im.hidden=false}const sp=b.querySelector('.pick span');if(sp)sp.textContent=imgs.length+'枚を選択中(タップで変更)';j=null;
+  if(S.key){try{j=await claude([...imgs.map(i=>imgPart(i.full)),{type:'text',text:P_REPLY}],1500)}catch(e){toast('読み取り失敗: '+e.message)}}
+  ch=j&&j.channel==='comment'?'comment':'dm';show()};
+ function show(){const line=!!(j&&j.app==='line'),cands=!line&&j?[j.username,...(Array.isArray(j.others)?j.others:[])].map(clean).filter(x=>x&&!x.startsWith('drivers_collection')):[],u=line?String(j.username||'').trim():(cands[0]||''),m=pre||(line?lineMatch(u):findMatch(cands,j&&j.name)),msgs=j&&Array.isArray(j.messages)?j.messages:[];if(line)ch='dm';
+  const fresh=m?newMsgs(m,msgs):msgs,dupN=msgs.length-fresh.length;
   out.innerHTML=`${!S.key?'<div class=warn>APIキー未設定のため自動読み取りはオフです。下から相手を選んでください。</div>':''}
-  ${msgs.length?`<div class=card>${msgs.map(x=>`<div class="tl ${x.from==='me'?'':'them'}"><div class="small mute">${x.from==='me'?'自分':'相手'}</div><div class=msg>${esc(x.text)}</div></div>`).join('')}</div>`:''}
-  <div class=chips><button class="chip ${ch==='dm'?'on':''}" data-ch=dm>DM</button><button class="chip ${ch==='comment'?'on':''}" data-ch=comment>コメント</button></div>
-  ${m?`<div class=ok>✓ @${esc(m.username)} の記録と一致(${ST[m.status][0]})</div><button class=btn data-add="${m.id}">この人に追加</button>`:`<div class=warn>${u?'@'+esc(u)+' は記録に':'相手が'}見つかりません</div>${u?`<button class="btn ghost" id=rNew>@${esc(u)} を新規登録して追加</button>`:''}`}
-  ${pre?'':`<label class=lb>${m?'違う人なら検索':'記録から探す'}</label><input id=rQ type=search autocapitalize=off placeholder="@ユーザー名"><div id=rList></div>`}`;
-  const rq=out.querySelector('#rQ');if(rq)rq.oninput=()=>{const k=clean(rq.value);out.querySelector('#rList').innerHTML=k?P.filter(p=>p.username.includes(k)||(p.name||'').toLowerCase().includes(k)).slice(0,8).map(p=>`<div class=item>${av(p)}<div class=grow>@${esc(p.username)}<br>${stPill(p.status)}</div><button class=btn2 data-add="${p.id}">追加</button></div>`).join('')||'<div class=hint>該当なし</div>':''};
-  const nb=out.querySelector('#rNew');if(nb)nb.onclick=async()=>{const p=newPerson(u);p.inbound=true;if(j&&j.name)p.name=j.name;await add(p)};
+  ${line?'<div class=hint>LINEのやりとりとして読み取りました</div>':''}
+  ${msgs.length?`<div class=card>${msgs.map(x=>`<div class="tl ${x.from==='me'?'':'them'}"><div class="small mute">${x.from==='me'?'自分':'相手'}${m&&!fresh.includes(x)?' · 記録済み(追加しません)':''}</div><div class=msg>${esc(x.text)}</div></div>`).join('')}</div>`:''}
+  ${line?'':`<div class=chips><button class="chip ${ch==='dm'?'on':''}" data-ch=dm>DM</button><button class="chip ${ch==='comment'?'on':''}" data-ch=comment>コメント</button></div>`}
+  ${m?`<div class=ok>✓ ${esc(dn(m))} の記録と一致(${ST[m.status][0]})${dupN?` · 記録済み${dupN}件は重複しません`:''}</div><button class=btn data-add="${m.id}">この人に追加</button>`:`<div class=warn>${u?esc(line?u:'@'+u)+' は記録に':'相手が'}見つかりません</div>${u?`<button class="btn ghost" id=rNew>${esc(line?u:'@'+u)} を${line?'LINEの':''}新規登録して追加</button>`:''}`}
+  ${pre?'':`<label class=lb>${m?'違う人なら検索':'記録から探す'}</label><input id=rQ type=search autocapitalize=off placeholder="@ユーザー名 / LINE名"><div id=rList></div>`}`;
+  const rq=out.querySelector('#rQ');if(rq)rq.oninput=()=>{const k=clean(rq.value);out.querySelector('#rList').innerHTML=k?P.filter(p=>clean(p.username).includes(k)||(p.name||'').toLowerCase().includes(k)).slice(0,8).map(p=>`<div class=item>${av(p)}<div class=grow>${esc(dn(p))}<br>${stPill(p.status)}</div><button class=btn2 data-add="${p.id}">追加</button></div>`).join('')||'<div class=hint>該当なし</div>':''};
+  const nb=out.querySelector('#rNew');if(nb)nb.onclick=async()=>{if(!confirm((line?u:'@'+u)+' は記録にありません。新規登録して追加しますか?'))return;const p=line?newLine(u):newPerson(u);p.inbound=true;if(j&&j.name&&!line)p.name=j.name;await add(p)};
  }
  out.onclick=e=>{const c=e.target.closest('[data-ch]');if(c){ch=c.dataset.ch;out.querySelectorAll('[data-ch]').forEach(x=>x.classList.toggle('on',x===c));return}const a=e.target.closest('[data-add]');if(a){a.disabled=true;add(byId(a.dataset.add))}};
- async function add(p){if(!p||!img)return;const id=await putImg(img.full),msgs=j&&Array.isArray(j.messages)?j.messages:[];
-  p.events.push({id:uid(),at:new Date().toISOString(),kind:'reply',ch,text:msgs.map(x=>(x.from==='me'?'自分: ':'相手: ')+x.text).join('\n'),msgs,img:id});
-  upStatus(p,ch==='dm'?'reply_dm':'reply_comment');p.next=null;await save(p);closeSheet();render();refresh(p);toast('@'+p.username+' に返信を追加しました');if(!pre)openDetail(p.id);if(S.key)aiPlan(p)}
+ async function add(p){if(!p||!imgs.length)return;const all=j&&Array.isArray(j.messages)?j.messages:[],fresh=all.length?newMsgs(p,all):[],isNew=!P.includes(p);
+  if(all.length&&!fresh.length&&!isNew){toast('すべて記録済みのやりとりでした(二重には追加しません)');closeSheet();if(!pre)openDetail(p.id);return}
+  const ids=[];for(const i of imgs)ids.push(await putImg(i.full));const at=new Date().toISOString(),them=fresh.filter(x=>x.from!=='me');
+  if(!all.length||them.length||isNew)p.events.push({id:uid(),at,kind:'reply',ch,text:fresh.map(x=>(x.from==='me'?'自分: ':'相手: ')+x.text).join('\n'),msgs:fresh,img:ids[0],imgs:ids});
+  else fresh.forEach(x=>p.events.push({id:uid(),at,kind:'sent',ch,text:x.text,img:ids[0],imgs:ids}));
+  if(!all.length||them.length||isNew)upStatus(p,ch==='dm'?'reply_dm':'reply_comment');p.next=null;await save(p);closeSheet();render();refresh(p);toast(dn(p)+' に追加しました'+(all.length-fresh.length?`(重複${all.length-fresh.length}件は除外)`:''));if(!pre)openDetail(p.id);if(S.key&&p.src!=='line')aiPlan(p)}
 }}
 function findMatch(us,name){for(const u of [].concat(us||[])){if(!u)continue;let p=P.find(x=>x.username===u);if(p)return p;if(u.length>=5){p=P.find(x=>x.username.startsWith(u)||u.startsWith(x.username));if(p)return p;const sm=similar(u);if(sm.length===1)return sm[0]}}const nm=sameName(name);if(nm.length===1)return nm[0];return null}
 
 /* customer detail */
-function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${e.img?`<img class=shot data-imgid="${e.img}" alt="">`:''}${e.kind==='sent'&&e.tpl?`<button class=btn2 data-undo="${e.id}" style="margin-top:6px">取り消す</button>`:''}</div>`).join('')}
+function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${p.src==='line'?'LINE':e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${(e.imgs||(e.img?[e.img]:[])).map(i=>`<img class=shot data-imgid="${i}" alt="">`).join('')}${e.kind==='sent'&&e.tpl?`<button class=btn2 data-undo="${e.id}" style="margin-top:6px">取り消す</button>`:''}</div>`).join('')}
 
 /* ---------- quest ---------- */
 const OPT={semi:'セミ',full:'フル'};
@@ -354,6 +387,7 @@ function remind(p){if(p.ng||p.status==='cut')return null;
  else if(q)r={at:add(q.at,1),label:'ラフ依頼あり → ラフを作って送る(1日あけて)',tpl:'6',tier:1};
  else if(m)r={at:add(m.at,2),label:'材料はもらった → ラフ依頼の意思を確認',tier:2};
  else r={at:add(lastRep,1),label:'画像・記載内容がまだ → 確認する',tpl:'5',tier:2};
+ if(p.inbound&&!m&&!q&&!h){const le=p.events[p.events.length-1];r=le&&le.kind==='sent'?{at:add(le.at,3),label:'問い合わせの返信が止まっている → 追客',tier:1}:{at:add(null,0),label:'問い合わせに返信する',tier:1}}
  if(RK(p)>=4)r.tier=1;
  if(p.next&&p.next.at)r.at=p.next.at;return r}
 async function likeSet(p,k){p.like=p.like||{};if(p.like[k])delete p.like[k];else p.like[k]={at:new Date().toISOString()};if(k==='d')p.next=null;await save(p);render();refresh(p);toast(p.like[k]?(k==='d'?'DMいいねを記録(3日後にリマインド)':'コメントいいねを記録'):'取り消しました')}
@@ -380,7 +414,7 @@ function nextBox(p){if(RK(p)>=3||bought(p))return '<div class=hint>この段階�
 async function dmFail(p){const i=p.events.map(e=>e.tpl).lastIndexOf('3');if(i>=0)p.events.splice(i,1);p.dmBlocked={at:new Date().toISOString()};p.next=null;await save(p);render();refresh(p);toast('DM不可を記録。②\'を送ってください')}
 async function sendTpl(p,id){const t=TPL.find(x=>x.id===id);if(!t)return;const tx=tplText(id);copy(tx);if(id==='3'&&p.dmBlocked){delete p.dmBlocked}if(t.g!=='fu'&&sentSet(p).has(id))return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:t.ch,tpl:id,text:tx});if(t.g==='c2')upStatus(p,'reply_comment');if(id==='3'||t.g==='c2n')upStatus(p,'dm_wait');if(t.g==='fu'){if(['8','9','10'].includes(id)){doneAfter(p,id)}else if(id==='4'){if(p.like)delete p.like.d;p.next=null}else p.next={at:addD(null,2),text:'',ja:''}}await save(p);render();refresh(p)}
 function detailFn(p){return b=>{const n=p.next||{};
- b.innerHTML=`<div class=item style="border:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
+ b.innerHTML=`<div class="item h-${p.status}" style="border:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a><div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
  ${p.ai?`<div class=hint>${esc(p.ai)}</div>`:''}${p.summary?`<div class=card style="margin-top:2px">${esc(p.summary)}</div>`:''}
  <div class=sec>次に送る</div>
  ${nextBox(p)}
@@ -428,7 +462,7 @@ function detailFn(p){return b=>{const n=p.next||{};
  pick(g('#fImg'),async r=>{p.profileImg=await putImg(r.full);p.thumb=r.thumb;await upd();refresh(p);if(S.key)aiProfile(p,true)});
  g('#dProf').onclick=()=>aiProfile(p,true);
  g('#dNg').onclick=async()=>{p.ng=!p.ng;if(p.ng)p.next=null;await upd();refresh(p);toast(p.ng?'連絡NGにしました':'解除しました')};
- g('#dDel').onclick=async()=>{if(!confirm('@'+p.username+' の記録を削除します。よろしいですか?'))return;for(const id of [p.profileImg,...p.events.map(e=>e.img)])if(id)await DB.del('images',id);await DB.del('people',p.id);P=P.filter(x=>x!==p);closeSheet();render();toast('削除しました')};
+ g('#dDel').onclick=async()=>{if(!confirm(dn(p)+' の記録を削除します。よろしいですか?'))return;for(const id of [p.profileImg,...p.events.flatMap(e=>e.imgs||[e.img])])if(id)await DB.del('images',id);await DB.del('people',p.id);P=P.filter(x=>x!==p);closeSheet();render();toast('削除しました')};
 }}
 
 /* ---------- views ---------- */
@@ -444,17 +478,17 @@ function vToday(){const t=today(),n=P.filter(p=>!p.inbound&&p.firstDate===t).len
  <div class=sec>直近7日(計${wk}人)</div><div class=bars>${days.map(d=>`<div class="${d.t?'today':''}" style="height:${d.n/mx*100}%"><s>${d.n||''}</s></div>`).join('')}</div><div class=barl>${days.map(d=>`<span>${d.l}</span>`).join('')}</div>`}
 function rows(){const k=q.trim().toLowerCase().replace(/^@/,'');const L=P.filter(p=>(filter==='all'||p.status===filter)&&(!k||[p.username,p.name,p.country,p.car,p.who,p.summary,p.memo].join(' ').toLowerCase().includes(k))).sort((a,b)=>last(b).localeCompare(last(a)));
  if(!L.length)return '<div class=hint>該当する記録はありません</div>';
- return L.map(p=>`<div class=item data-open="${p.id}">${av(p)}<div class=grow><b>@${esc(p.username)}</b><div>${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${progHtml(p)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
+ return L.map(p=>`<div class="item h-${p.status}" data-open="${p.id}">${av(p)}<div class=grow><b>${esc(dn(p))}</b><div>${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${progHtml(p)}${p.src==='line'?'<span class=pill>LINE</span>':p.inbound?'<span class=pill>問い合わせ</span>':''}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
 function vList(){const cnt=s=>P.filter(p=>s==='all'||p.status===s).length;
  return `<h1>顧客リスト</h1><input id=q type=search autocapitalize=off placeholder="@ユーザー名・国・車で検索" value="${esc(q)}" style="margin-top:8px">
  <div class=chips>${['all',...Object.keys(ST)].map(s=>`<button class="chip ${filter===s?'on':''}" data-f="${s}">${s==='all'?'すべて':ST[s][0]} ${cnt(s)}</button>`).join('')}</div><div id=rows>${rows()}</div>`}
 function rcard(p){const r=remind(p),late=new Date(r.at)<new Date(),c=qCur(p);
  const qb=r.task?`<button class=btn2 data-done="${p.id}|${r.task}">完了 ✓</button>`:c==='mat'?`<button class=btn2 data-q="${p.id}|mat|1">もらった ✓</button>`:c==='req'?`<button class=btn2 data-q="${p.id}|req|semi">ラフ依頼 セミ</button><button class=btn2 data-q="${p.id}|req|full">フル</button>`:c==='rough'?`<button class=btn2 data-q="${p.id}|rough|semi">ラフ送った(セミ)</button><button class=btn2 data-q="${p.id}|rough|full">フル</button>`:'';
- return `<div class=card><div class="small mute">${TIERL[r.tier]||''}</div><div class=item style="border:0;padding:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>@${esc(p.username)}</b> ↗</a><div class="small ${late?'due':'soon'}">${mdhm(r.at)}${late?'(期限)':''} ${stPill(p.status)}</div></div><button class=btn2 data-open="${p.id}">開く</button></div>
+ return `<div class="card h-${p.status}"><div class="small mute">${TIERL[r.tier]||''}</div><div class=item style="border:0;padding:0">${av(p)}<div class=grow><a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a><div class="small ${late?'due':'soon'}">${mdhm(r.at)}${late?'(期限)':''} ${stPill(p.status)}</div></div><button class=btn2 data-open="${p.id}">開く</button></div>
  <div class=msg style="margin-top:8px">${esc(r.label)}</div>
  ${p.summary?`<div class="mute small" style="margin-top:6px">${esc(p.summary)}</div>`:''}
  ${r.tpl?tplRow(r.tpl,p,1):''}
- <div class=row style="margin-top:10px"><a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>Instagramへ</a>${qb}</div></div>`}
+ <div class=row style="margin-top:10px"><a class=btn2 href="${esc(p.url)}" target=_blank rel=noopener>${p.src==='line'?'LINEを開く':'Instagramへ'}</a>${qb}</div></div>`}
 function vRemind(){const L=P.map(p=>[p,remind(p)]).filter(x=>x[1]).sort((a,b)=>(a[1].tier-b[1].tier)||a[1].at.localeCompare(b[1].at)),e=eod();
  if(!L.length)return '<h1>リマインド</h1><div class=hint>追客の対象が、ここに出ます</div>';
  const a=L.filter(x=>new Date(x[1].at)<=e).map(x=>x[0]),b=L.filter(x=>new Date(x[1].at)>e).map(x=>x[0]);
@@ -473,7 +507,7 @@ function vData(){const mr=p=>{let m=-1;(p.hist||[]).forEach(h=>{if(ST[h.s]&&ST[h
  const byr=P.filter(p=>(p.buys||[]).length),rev=byr.reduce((a,p)=>a+buyTotal(p),0),rep=byr.filter(p=>p.buys.length>1).length;
  const sales=`<div class=sec>売上・リピート</div><div class=kpi><div><b>${yen(rev)}</b><span>売上合計</span></div><div><b>${byr.length}</b><span>購入者</span></div><div><b>${byr.length?Math.round(rep/byr.length*100)+'%':'-'}</b><span>リピート率(${rep})</span></div></div>`;
  return `<h1>データ</h1>${fun}${sales}<div class=sec>全体</div><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${cutAll}</b><span>返信あり→打ち切り</span></div><div><b>${O.filter(p=>p.dmBlocked).length}</b><span>DM不可</span></div><div><b>${pct(r-cutR,n-cutR)}</b><span>返信率(変な人を除く)</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
- ${(()=>{const m={};O.filter(p=>p.status==='cut').forEach(p=>{const k=p.cutWhy||'理由未選択';m[k]=(m[k]||0)+1});const e=Object.entries(m);return e.length?`<div class=sec>打ち切りの理由</div><table><tr><th></th><th>人数</th></tr>${e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`:''})()}${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
+ ${(()=>{const m={};O.filter(p=>p.status==='cut').forEach(p=>{const k=p.cutWhy||'理由未選択';m[k]=(m[k]||0)+1});const e=Object.entries(m);return e.length?`<div class=sec>打ち切りの理由</div><table><tr><th></th><th>人数</th></tr>${e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`:''})()}${P.length?tbl('流入元別',bySize(grp(P,srcLabel))):''}${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
  <div class=sec>データの書き出し</div>
  <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
  <div class=row style="margin-top:10px"><button class=btn2 id=xP>顧客CSV</button><button class=btn2 id=xE>やりとりCSV</button><button class=btn2 id=xB>バックアップ(画像込み)</button><label class=btn2>バックアップから復元<input type=file id=xR accept=".json,application/json" hidden></label></div>
