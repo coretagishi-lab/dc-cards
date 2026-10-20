@@ -132,7 +132,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="toast" class="toast"></div>
 <script>
 'use strict';
-const VER='20261014-8';
+const VER='20261020-1';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const DMNG='DM不可(フォロー必要)';
@@ -140,6 +140,9 @@ const CUTW=['無反応(7日)','コメントにいいねのみ','変な人・怪�
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
 const SYS="You help Takuya Tagishi, a Japanese craftsman who runs Driver's Collection (Instagram @drivers_collection_): handmade one-of-one art trading cards made from a customer's car photo (the owner can be in it too). Semi-order ¥30,000 (pick a gallery design, quick), full order ¥50,000 (one-of-a-kind design from scratch, gold authentication tag), optional light-up wall display +¥10,000. Free rough mock before purchase. Ships worldwide by EMS. He reaches out to car owners, car photographers and influencers on Instagram with comments and DMs. Always answer with one JSON object only, no other text.";
 const TPL=[
+ {id:'0-1',g:'c0',ch:'comment',label:'⓪-1 無料モニター募集(かっこいい編)',text:'めちゃめちゃかっこいいですね！！\n愛車の写真を世界に1枚のトレカにする活動をしていて、いま無料でトレカのデザインを作らせていただいてます🙏\nもしご興味あれば、このコメントにいいねか返信をいただけたら嬉しいです！'},
+ {id:'0-2',g:'c0',ch:'comment',label:'⓪-2 無料モニター募集(写真編)',text:'この写真、最高です✨\n実は愛車を世界に1枚のトレカアートにする活動をしていて、この写真でぜひ1枚、無料でデザインを作らせていただきたいです！\nご興味あれば、いいねか返信をいただけたら詳しくDMでお送りします🙌'},
+ {id:'0d',g:'dm0',ch:'dm',label:'⓪ DM(リアクションのお礼・無料で作ります)',text:'Driver\'s Collectionです！コメントへのリアクションありがとうございました🙏\n\nさっそくですが、愛車のトレカデザインを無料で作らせていただきます！\nデザインのご希望があればそれに合わせて作りますし、特になければこちらのおまかせで仕上げます。\n\nよろしければ、使ってほしいお車の写真を1〜3枚ほど、このDMに送っていただけますか？'},
  {id:'1-1',g:'c1',ch:'comment',label:'①-1 機材編',text:'めちゃくちゃカッコよく撮れてますね！！\n何か機材を使って撮ってるんですか？'},
  {id:'1-2',g:'c1',ch:'comment',label:'①-2 アプリ編',text:'この色味、すごく好きです！\n編集はどんなアプリでやってるんですか？'},
  {id:'1-3',g:'c1',ch:'comment',label:'①-3 場所編',text:'撮影場所の雰囲気が最高ですね✨\nもし聞いて大丈夫でしたら、どちらで撮影されたんですか？'},
@@ -280,7 +283,7 @@ function newFn(b,again){let img=null,idName='';const on=new Set();
  const grpHtml=(g,title)=>`<div class=sec>${title}</div>`+TPL.filter(t=>t.g===g).map(t=>`<button class=tpl data-t="${t.id}"><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(t.id).replace(/\n/g,' '))}</small></span><span class=ck></span></button>`).join('');
  b.innerHTML=`<div class="mute small right">今日 ${tdy} / ${S.goal} 人</div>
  <label class=lb>プロフィールURL または @ID</label><div class=row><input id=nU inputmode=url autocapitalize=off autocorrect=off spellcheck=false autocomplete=off placeholder="instagram.com/…"><button class=btn2 id=nPaste>貼り付け</button></div><div id=nId></div><div id=nDup></div>
- ${grpHtml('c1','① 最初のコメント')}${grpHtml('c2','② コメント返信(相手から返信が来た後)')}${grpHtml('dm','③ DM')}
+ ${grpHtml('c0','⓪ 無料モニター募集のコメント(いいね・返信をもらう)')}${grpHtml('dm0','⓪ DM(リアクションをくれた人へ)')}${grpHtml('c1','① 最初のコメント')}${grpHtml('c2','② コメント返信(相手から返信が来た後)')}${grpHtml('dm','③ DM')}
  <details class=more><summary>スクショ・自由入力(任意)</summary>
  <label class=lb>プロフィールのスクショ(ID・ジャンル・国・車をAIが読み取り)</label><label class=pick><input type=file accept="image/*" hidden><span>＋ 画像を選ぶ</span><img hidden alt=""></label>
  <label class=lb>テンプレ以外のコメント</label><textarea id=nC rows=2></textarea>
@@ -308,7 +311,7 @@ function newFn(b,again){let img=null,idName='';const on=new Set();
   this.disabled=true;let p=P.find(x=>x.username===n);const isNew=!p;if(isNew)p=newPerson(n);if(idName&&!p.name)p.name=idName;
   if(img){p.profileImg=await putImg(img.full);p.thumb=img.thumb}
   const at=new Date().toISOString();
-  TPL.filter(t=>on.has(t.id)).forEach(t=>{p.events.push({id:uid(),at,kind:'sent',ch:t.ch,tpl:t.id,text:tplText(t.id)});if(t.g==='c2')upStatus(p,'reply_comment');if(t.id==='3'||t.g==='c2n')upStatus(p,'dm_wait')});
+  TPL.filter(t=>on.has(t.id)).forEach(t=>{p.events.push({id:uid(),at,kind:'sent',ch:t.ch,tpl:t.id,text:tplText(t.id)});if(t.g==='c2')upStatus(p,'reply_comment');if(t.id==='3'||t.id==='0d'||t.g==='c2n')upStatus(p,'dm_wait')});
   if(c)p.events.push({id:uid(),at,kind:'sent',ch:'comment',text:c});if(d){p.events.push({id:uid(),at,kind:'sent',ch:'dm',text:d});upStatus(p,'dm_wait')}
   await save(p);render();toast(isNew?'+1 保存しました':'@'+n+' に記録しました');
   lastSaved=n;newFn(b,true);document.getElementById('sheet').scrollTop=0;
@@ -353,7 +356,7 @@ function findMatch(us,name){for(const u of [].concat(us||[])){if(!u)continue;let
 function tl(p){if(!p.events.length)return '<div class=hint>まだありません</div>';return p.events.slice().reverse().map(e=>`<div class="tl ${e.kind==='reply'?'them':''}"><div class="small mute">${mdhm(e.at)} · ${e.kind==='reply'?'返信':'送信'}(${p.src==='line'?'LINE':e.ch==='dm'?'DM':'コメント'})${e.tpl?' · '+esc(tplLabel(e.tpl)):''}</div>${e.text?`<div class=msg>${esc(e.text)}</div>`:''}${(e.imgs||(e.img?[e.img]:[])).map(i=>`<img class=shot data-imgid="${i}" alt="">`).join('')}${e.kind==='sent'&&e.tpl?`<button class=btn2 data-undo="${e.id}" style="margin-top:6px">取り消す</button>`:''}</div>`).join('')}
 
 /* ---------- quest ---------- */
-const OPT={semi:'セミ',full:'フル',rough:'ラフ希望',question:'質問・相談',send:'DMを送る',cut:'打ち切り',frame:'額縁'};
+const OPT={like:'いいね',reply:'返信',semi:'セミ',full:'フル',rough:'ラフ希望',question:'質問・相談',send:'DMを送る',cut:'打ち切り',frame:'額縁'};
 const QS=[
  {k:'c1',t:'コメント①を送る',auto:p=>p.events.some(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')||e.kind==='sent'&&e.ch==='comment'&&!e.tpl),hint:'下の「次に送る」から送るとチェックされます'},
  {k:'c2',t:'②のコメントを送る(③のDMのあと)',auto:p=>p.events.some(e=>e.kind==='sent'&&/^2(n)?-/.test(e.tpl||'')),hint:'先に③のDMを送り、送れたら②、送れなかったら②\'(DM不可版)を送る'},
@@ -367,9 +370,13 @@ const QS=[
 const QX={intent:{k:'intent',t:'問い合わせの内容',opts:[['rough','ラフを作りたい'],['question','質問・相談']],hint:'まず、ラフ希望か質問かを選ぶ。選ぶと次の道筋が出ます'},
  ans:{k:'ans',t:'質問に回答した',btn:'回答した ✓',hint:'質問に答える。答えたら、次はラフの提案へ'},
  prop:{k:'prop',t:'ラフ(無料・購入前提)を提案した',btn:'提案した ✓',hint:'質問だけで終わらせず、ラフの提案までつなげる'}};
-const qsOf=p=>{if(!p.inbound)return QS;const it=(p.q&&p.q.intent)||null,g=k=>QS.find(x=>x.k===k);return [QX.intent,...(it&&it.v==='question'?[QX.ans,QX.prop]:[]),g('mat'),g('req'),g('rough'),g('buy')]};
+const isZ=p=>!p.inbound&&p.events.some(e=>e.kind==='sent'&&/^0(-|d$)/.test(e.tpl||''));
+const QZ=[{k:'z0',t:'⓪の募集コメントを送る',auto:p=>p.events.some(e=>e.kind==='sent'&&/^0-/.test(e.tpl||'')),hint:'⓪のコメントを送るとチェックされます'},
+ {k:'zr',t:'リアクションが来た',opts:[['like','いいね'],['reply','返信']],auto:p=>!!(p.like&&p.like.c)||p.events.some(e=>e.kind==='reply'),hint:'コメントにいいね、または返信が来たら選ぶ。選ぶと⓪のDMが出ます'},
+ {k:'zd',t:'⓪のDMを送る',auto:p=>sentSet(p).has('0d')||p.events.some(e=>e.kind==='sent'&&e.ch==='dm'),hint:'「次に送る」から⓪のDMを送る'}];
+const qsOf=p=>{if(isZ(p)){const g=k=>QS.find(x=>x.k===k);return [...QZ,g('dr'),g('mat'),g('req'),g('rough'),g('buy')]}if(!p.inbound)return QS;const it=(p.q&&p.q.intent)||null,g=k=>QS.find(x=>x.k===k);return [QX.intent,...(it&&it.v==='question'?[QX.ans,QX.prop]:[]),g('mat'),g('req'),g('rough'),g('buy')]};
 const qv=(p,k)=>(p.q&&p.q[k])||null;
-function qDone(p,k){const s=QS.find(x=>x.k===k)||QX[k];if(qv(p,k))return qv(p,k);if(s&&s.auto&&s.auto(p))return {v:true,at:null};return null}
+function qDone(p,k){const s=QS.find(x=>x.k===k)||QZ.find(x=>x.k===k)||QX[k];if(qv(p,k))return qv(p,k);if(s&&s.auto&&s.auto(p))return {v:true,at:null};return null}
 const qCur=p=>{const L=qsOf(p);let hi=-1;L.forEach((s,i)=>{if(qDone(p,s.k))hi=i});return (L.slice(hi+1)[0]||{}).k};
 const addD=(iso,d)=>{const x=new Date(iso||Date.now());x.setDate(x.getDate()+d);x.setHours(20,0,0,0);return localDT(x)};
 const AFTER=[{key:'arrive',off:3,label:'到着確認',tpl:'8'},{key:'thanks',off:8,label:'感想確認(飾った写真・動画をもらえたら次回¥5,000割引クーポン)',tpl:'9'},{key:'m1',off:30,label:'1か月後: その後どうですか／紹介をお願いする',tpl:'10'},{key:'m3',off:90,label:'3か月後: 近況・紹介の相談',tpl:'10'},{key:'m6',off:180,label:'半年後: 近況・紹介・アンバサダーのお誘い',tpl:'10'}];
@@ -388,6 +395,7 @@ function remind(p){if(p.ng||p.status==='cut')return null;
  const pend=(p.after||[]).filter(x=>!x.done).sort((a,b)=>a.at.localeCompare(b.at))[0];
  if(pend)return {at:pend.at,label:pend.label,tpl:pend.tpl,tier:0,task:pend.id};
  if(bought(p))return null;
+ if(isZ(p)&&!qDone(p,'dr')&&qDone(p,'zr')&&!qDone(p,'zd'))return {at:addD(null,0),label:'リアクションあり → ⓪のDMを送る(無料で作ります)',tpl:'0d',tier:2};
  if(!p.inbound&&!qDone(p,'dr')){const l=p.like&&p.like.d;if(!l)return null;return {at:p.next&&p.next.at?p.next.at:addD(l.at,3),label:'DMにいいねだけ → 「その後どうですか？」を送る',tpl:'4',tier:3}}
  const add=addD;
  const lastRep=(p.events.filter(e=>e.kind==='reply'&&e.ch==='dm').pop()||{}).at;
@@ -402,8 +410,8 @@ function remind(p){if(p.ng||p.status==='cut')return null;
   else r=st?{at:add(le.at,3),label:'ラフの話が止まっている → 追客',tier:1}:{at:add(null,0),label:'ラフ希望 → 返信して、素材(画像・記載内容)をもらう',tier:1}}
  if(RK(p)>=4)r.tier=1;
  if(p.next&&p.next.at)r.at=p.next.at;return r}
-async function likeSet(p,k){p.like=p.like||{};if(p.like[k])delete p.like[k];else p.like[k]={at:new Date().toISOString()};if(k==='d')p.next=null;await save(p);render();refresh(p);toast(p.like[k]?(k==='d'?'DMいいねを記録(3日後にリマインド)':'コメントいいねを記録'):'取り消しました')}
-async function qSet(p,k,v){const cur=qv(p,k);p.q=p.q||{};if(cur&&(v===true||cur.v===v)){delete p.q[k];if(k==='go'&&v==='cut'&&p.status==='cut')p.status=p.events.some(e=>e.kind==='reply'&&e.ch==='dm')?'reply_dm':p.events.some(e=>e.kind==='reply')?'reply_comment':'waiting'}else{p.q[k]={v,at:new Date().toISOString()};if(k==='go'&&v==='cut'){p.status='cut';p.next=null}if(k==='go'&&v==='send'&&p.status==='cut')p.status=hasReply(p)?'reply_comment':'waiting';if(k==='req')upStatus(p,'rough');if(k==='rough')upStatus(p,'considering');if(k==='buy')upStatus(p,'purchased')}p.next=null;await save(p);render();refresh(p)}
+async function likeSet(p,k){p.like=p.like||{};if(p.like[k])delete p.like[k];else{p.like[k]={at:new Date().toISOString()};if(k==='c'&&isZ(p)){p.q=p.q||{};if(!p.q.zr)p.q.zr={v:'like',at:p.like.c.at};upStatus(p,'reply_comment')}}if(k==='d')p.next=null;await save(p);render();refresh(p);toast(p.like[k]?(k==='d'?'DMいいねを記録(3日後にリマインド)':'コメントいいねを記録'):'取り消しました')}
+async function qSet(p,k,v){const cur=qv(p,k);p.q=p.q||{};if(cur&&(v===true||cur.v===v)){delete p.q[k];if(k==='go'&&v==='cut'&&p.status==='cut')p.status=p.events.some(e=>e.kind==='reply'&&e.ch==='dm')?'reply_dm':p.events.some(e=>e.kind==='reply')?'reply_comment':'waiting'}else{p.q[k]={v,at:new Date().toISOString()};if(k==='go'&&v==='cut'){p.status='cut';p.next=null}if(k==='go'&&v==='send'&&p.status==='cut')p.status=hasReply(p)?'reply_comment':'waiting';if(k==='zr')upStatus(p,'reply_comment');if(k==='req')upStatus(p,'rough');if(k==='rough')upStatus(p,'considering');if(k==='buy')upStatus(p,'purchased')}p.next=null;await save(p);render();refresh(p)}
 const buyForm=p=>`${['semi','full','frame'].map(k=>`<div class=item style="padding:6px 0"><div class=grow>${KN[k]} <span class=mute>${yen(PRICE[k])}</span></div><button class=btn2 data-sp="${k}|-1">−</button><b id=sp-${k} style="min-width:28px;text-align:center">${k==='semi'?1:0}</b><button class=btn2 data-sp="${k}|1">＋</button></div>`).join('')}
  <div class=row><div style="flex:1"><label class=lb>金額(割引などは直接直す)</label><input id=bAmt inputmode=numeric value="30000"></div><div style="flex:1"><label class=lb>購入日</label><input id=bDate type=date value="${ymd(new Date())}"></div></div>
  <div class=row style="margin-top:8px"><button class=btn id=bRec>購入を記録</button></div>`;
@@ -421,14 +429,14 @@ function questHtml(p){if(p.status==='cut')return `<div class=card><b>打ち切�
 const dmBlockedOn=p=>!!p.dmBlocked;
 const sentSet=p=>new Set(p.events.filter(e=>e.kind==='sent'&&e.tpl).map(e=>e.tpl));
 const hasReply=p=>p.status!=='waiting'&&p.status!=='lost'&&p.status!=='cut'||p.events.some(e=>e.kind==='reply');
-function nextTpls(p){const sent=sentSet(p);if(!hasReply(p))return [];const c1=p.events.filter(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')).pop(),n=c1?c1.tpl.slice(2):'',id2='2-'+n,id2n='2n-'+n,has2=sent.has(id2)||sent.has(id2n);
+function nextTpls(p){const sent=sentSet(p);if(isZ(p)){if(!qDone(p,'zr'))return [];return qDone(p,'zd')?[]:['0d']}if(!hasReply(p))return [];const c1=p.events.filter(e=>e.kind==='sent'&&/^1-/.test(e.tpl||'')).pop(),n=c1?c1.tpl.slice(2):'',id2='2-'+n,id2n='2n-'+n,has2=sent.has(id2)||sent.has(id2n);
  if(p.dmBlocked)return (n&&!has2&&TPL.some(t=>t.id===id2n))?[id2n]:[];
  if(!sent.has('3'))return ['3'];
  return (n&&!has2&&TPL.some(t=>t.id===id2))?[id2]:[]}
 const tplRow=(id,p,fresh)=>{const t=TPL.find(x=>x.id===id),on=!fresh&&sentSet(p).has(id);return `<button class="tpl ${on?'on':''}" data-dt="${id}" data-pid="${p.id}"><span class=grow><b>${esc(t.label)}</b><small>${esc(tplText(id).replace(/\n/g,' '))}</small></span><span class=ck></span></button>`};
-function nextBox(p){if(RK(p)>=3||bought(p))return '<div class=hint>この段階は、リマインドと下の「購入・納品」から進めます。</div>';const L=nextTpls(p),s3=sentSet(p).has('3');return (p.dmBlocked?`<div class=warn>DM不可。②'(DM不可版)のコメントを送ってください。相手からDMが来たら返信のスクショを追加します。</div>`:'')+(s3&&L.length&&!p.dmBlocked?`<div class=hint>③のDMが送れたら、②のコメントへ。送れなかったら下のボタン。</div><button class=btn2 data-fail="${p.id}" style="margin:6px 0">③は送れなかった(DM不可)</button>`:'')+(L.length?L.map(id=>tplRow(id,p)).join('')+'<div class=hint style="margin-top:6px">タップ=コピー+送信済みに記録</div>':`<div class=hint>${hasReply(p)?'用意した返信はすべて送信済みです':'返信待ちです(コメントに返信が来たら ③・② が出ます)'}</div>`)}
+function nextBox(p){if(RK(p)>=3||bought(p))return '<div class=hint>この段階は、リマインドと下の「購入・納品」から進めます。</div>';const L=nextTpls(p),s3=sentSet(p).has('3');return (p.dmBlocked?`<div class=warn>DM不可。②'(DM不可版)のコメントを送ってください。相手からDMが来たら返信のスクショを追加します。</div>`:'')+(s3&&L.length&&!p.dmBlocked?`<div class=hint>③のDMが送れたら、②のコメントへ。送れなかったら下のボタン。</div><button class=btn2 data-fail="${p.id}" style="margin:6px 0">③は送れなかった(DM不可)</button>`:'')+(L.length?L.map(id=>tplRow(id,p)).join('')+'<div class=hint style="margin-top:6px">タップ=コピー+送信済みに記録</div>':`<div class=hint>${isZ(p)&&!qDone(p,'zr')?'リアクション待ちです(いいね・返信が来たら、下の進行クエストで「リアクションが来た」を選ぶと⓪のDMが出ます)':hasReply(p)?'用意した返信はすべて送信済みです':'返信待ちです(コメントに返信が来たら ③・② が出ます)'}</div>`)}
 async function dmFail(p){const i=p.events.map(e=>e.tpl).lastIndexOf('3');if(i>=0)p.events.splice(i,1);p.dmBlocked={at:new Date().toISOString()};p.next=null;await save(p);render();refresh(p);toast('DM不可を記録。②\'を送ってください')}
-async function sendTpl(p,id){const t=TPL.find(x=>x.id===id);if(!t)return;const tx=tplText(id);copy(tx);if(id==='3'&&p.dmBlocked){delete p.dmBlocked}if(t.g!=='fu'&&sentSet(p).has(id))return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:t.ch,tpl:id,text:tx});if(t.g==='c2')upStatus(p,'reply_comment');if(id==='3'||t.g==='c2n')upStatus(p,'dm_wait');if(t.g==='fu'){if(['8','9','10'].includes(id)){doneAfter(p,id)}else if(id==='4'){if(p.like)delete p.like.d;p.next=null}else p.next={at:addD(null,2),text:'',ja:''}}await save(p);render();refresh(p)}
+async function sendTpl(p,id){const t=TPL.find(x=>x.id===id);if(!t)return;const tx=tplText(id);copy(tx);if(id==='3'&&p.dmBlocked){delete p.dmBlocked}if(t.g!=='fu'&&sentSet(p).has(id))return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:t.ch,tpl:id,text:tx});if(t.g==='c2')upStatus(p,'reply_comment');if(id==='3'||id==='0d'||t.g==='c2n')upStatus(p,'dm_wait');if(t.g==='fu'){if(['8','9','10'].includes(id)){doneAfter(p,id)}else if(id==='4'){if(p.like)delete p.like.d;p.next=null}else p.next={at:addD(null,2),text:'',ja:''}}await save(p);render();refresh(p)}
 function detailFn(p){return b=>{const n=p.next||{};
  b.innerHTML=`<div class="item h-${p.status}" style="border:0">${av(p)}<div class=grow>${p.src==='line'?`<b>${esc(dn(p))}</b>`:`<a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a>`} ${srcPill(p)}<div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>
  ${p.src==='line'?`<div class=row style="margin:4px 0"><button class=btn2 data-cn="${p.id}">LINE名をコピー</button><a class=btn2 href="https://line.me/R/" target=_blank rel=noopener>LINEを開く</a></div>`:`<details class=more ${p.inbound&&!p.urlSet?'open':''}><summary>プロフィールのリンク${p.inbound&&!p.urlSet?'(未設定)':''}</summary><div class=row style="margin-top:8px"><input id=fUrl type=url autocapitalize=off placeholder="InstagramのURL または @ユーザー名" value="${p.urlSet?esc(p.url):''}" style="flex:1"><button class=btn2 id=fUrlSave>保存</button></div><div class=hint>貼ると、リマインドやここの名前から1タップでそのアカウントに飛べます。</div></details>`}
@@ -530,7 +538,7 @@ function vData(){const mr=p=>{let m=-1;(p.hist||[]).forEach(h=>{if(ST[h.s]&&ST[h
  const rt=['rough','question',null].map(k=>{const L=I.filter(p=>{const v=qv(p,'intent');return k?(v&&v.v===k):!v});return [k?OPT[k]:'未選択',L]}).filter(x=>x[1].length),route=rt.length?`<div class=sec>問い合わせの内容別</div><table><tr><th></th><th>人数</th><th>ラフ以上</th><th>購入</th></tr>${rt.map(([k,L])=>`<tr><td>${k}</td><td>${L.length}</td><td>${L.filter(p=>mr(p)>=4).length}</td><td>${L.filter(p=>mr(p)>=6||bought(p)).length}</td></tr>`).join('')}</table><div class=hint>質問の人はラフまで、ラフの人は購入まで進めるのが目標です</div>`:'';
  const sales=route+`<div class=sec>売上・リピート</div><div class=kpi><div><b>${yen(rev)}</b><span>売上合計</span></div><div><b>${byr.length}</b><span>購入者</span></div><div><b>${byr.length?Math.round(rep/byr.length*100)+'%':'-'}</b><span>リピート率(${rep})</span></div></div>${items}`;
  return `<h1>データ</h1>${fun}${fun2}${sales}<div class=sec>全体</div><div class=kpi><div><b>${n}</b><span>アプローチ</span></div><div><b>${pct(r,n)}</b><span>返信率(${r})</span></div><div><b>${pct(a,n)}</b><span>検討以上(${a})</span></div><div><b>${cutAll}</b><span>返信あり→打ち切り</span></div><div><b>${O.filter(p=>p.dmBlocked).length}</b><span>DM不可</span></div><div><b>${pct(r-cutR,n-cutR)}</b><span>返信率(変な人を除く)</span></div><div><b>${rg}</b><span>ラフ依頼以上</span></div><div><b>${b}</b><span>購入</span></div><div><b>${pct(b,n)}</b><span>購入率</span></div></div>
- ${(()=>{const m={};O.filter(p=>p.status==='cut').forEach(p=>{const k=p.cutWhy||'理由未選択';m[k]=(m[k]||0)+1});const e=Object.entries(m);return e.length?`<div class=sec>打ち切りの理由</div><table><tr><th></th><th>人数</th></tr>${e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`:''})()}${P.length?tbl('流入元別',bySize(grp(P,srcLabel))):''}${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
+ ${(()=>{const m={};O.filter(p=>p.status==='cut').forEach(p=>{const k=p.cutWhy||'理由未選択';m[k]=(m[k]||0)+1});const e=Object.entries(m);return e.length?`<div class=sec>打ち切りの理由</div><table><tr><th></th><th>人数</th></tr>${e.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join('')}</table>`:''})()}${n?tbl('最初の声かけ別(⓪と①の比較)',bySize(grp(O,p=>isZ(p)?'⓪ 無料モニター募集':'① 質問コメント'))):''}${P.length?tbl('流入元別',bySize(grp(P,srcLabel))):''}${n?tbl('ジャンル別',bySize(grp(O,p=>GENRE[p.genre]||p.genre)))+tbl('国別',bySize(grp(O,p=>p.country)).slice(0,10))+tbl('最初のコメントの型',bySize(grp(O,p=>{const e=p.events.find(e=>e.tpl&&e.tpl[0]==='1');return e?tplLabel(e.tpl):'テンプレ以外'})))+tbl('最初の連絡手段',bySize(grp(O,firstCh)))+tbl('週別',grp(O,p=>weekOf(p.firstDate)).sort((x,y)=>y[1].s.localeCompare(x[1].s)).slice(0,8)):''}
  <div class=sec>データの書き出し</div>
  <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
  <div class=row style="margin-top:10px"><button class=btn2 id=xP>顧客CSV</button><button class=btn2 id=xE>やりとりCSV</button><button class=btn2 id=xB>バックアップ(画像込み)</button><label class=btn2>バックアップから復元<input type=file id=xR accept=".json,application/json" hidden></label></div>
