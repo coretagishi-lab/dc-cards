@@ -130,9 +130,10 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <div id="sheet" class="sheet" hidden><div class="sheetHead"><button id="back">‹ 戻る</button><b id="sheetTitle"></b></div></div>
 <div id="viewer" class="viewer" hidden><img alt=""></div>
 <div id="toast" class="toast"></div>
+<script src="supabase.js"></script>
 <script>
 'use strict';
-const VER='20261020-1';
+const VER='20261020-2';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const DMNG='DM不可(フォロー必要)';
@@ -209,10 +210,47 @@ const DB={db:null,
  all(st){return this.tx(st,'readonly',s=>s.getAll())},get(st,id){return this.tx(st,'readonly',s=>s.get(id))},
  put(st,v){return this.tx(st,'readwrite',s=>s.put(v))},del(st,id){return this.tx(st,'readwrite',s=>s.delete(id))},clear(st){return this.tx(st,'readwrite',s=>s.clear())}};
 let P=[],view='today',filter='all',q='';
+/* ---------- クラウド保存（ぺたろぐと同じアカウント）: スマホをなくしても、別の端末でも同じ記録 ---------- */
+const Cloud={sb:null,user:null,busy:false,err:'',pulled:0,
+ pend:new Set((()=>{try{return JSON.parse(ls('dc_out_pend')||'[]')}catch(e){return []}})()),
+ ipend:new Set((()=>{try{return JSON.parse(ls('dc_out_ipend')||'[]')}catch(e){return []}})()),
+ init(){try{if(window.supabase)this.sb=supabase.createClient('https://xwhmmgqmiefnhcdpbuoz.supabase.co','sb_publishable_ms34cIpwJimlU2tbgklmsw_t0vqQXSb',{auth:{persistSession:true,storageKey:'dcout-auth'}})}catch(e){}},
+ async session(){if(!this.sb)return null;try{const {data}=await this.sb.auth.getSession();this.user=data.session?data.session.user:null}catch(e){this.user=null}return this.user},
+ keep(){ls('dc_out_pend',JSON.stringify([...this.pend]));ls('dc_out_ipend',JSON.stringify([...this.ipend]))},
+ mark(id){this.pend.add(id);this.keep();this.later()},markImg(id){this.ipend.add(id);this.keep();this.later()},
+ later(){clearTimeout(this.t);this.t=setTimeout(()=>this.flush(),1500)},
+ async flush(){if(!this.user||this.busy||!navigator.onLine)return;this.busy=true;this.err='';
+  try{const ids=[...this.pend],now=new Date().toISOString();
+   for(let i=0;i<ids.length;i+=40){const part=ids.slice(i,i+40),rows=part.map(id=>{const p=byId(id);return p?{user_id:this.user.id,id,data:JSON.parse(JSON.stringify(p)),mt:p.mt||0,deleted:false,updated_at:now}:{user_id:this.user.id,id,data:{},mt:Date.now(),deleted:true,updated_at:now}});
+    const {error}=await this.sb.from('dcout_people').upsert(rows);if(error)throw error;part.forEach(x=>this.pend.delete(x));this.keep()}
+   for(const id of [...this.ipend]){const r=await DB.get('images',id);if(r&&r.d){const b=await (await fetch(r.d)).blob();const {error}=await this.sb.storage.from('dcout').upload(this.user.id+'/'+id,b,{upsert:true,contentType:b.type||'image/jpeg'});if(error)throw error}this.ipend.delete(id);this.keep()}
+   ls('dc_out_synced',new Date().toISOString())}catch(e){this.err=String(e.message||e)}finally{this.busy=false;this.paint()}},
+ async pull(){const {data,error}=await this.sb.from('dcout_people').select('id,data,mt,deleted');if(error)throw error;
+  const local=new Map(P.map(p=>[p.id,p]));let ch=0;
+  for(const r of data){const l=local.get(r.id);
+   if(r.deleted){if(l&&(l.mt||0)<=r.mt){await DB.del('people',r.id);P=P.filter(x=>x.id!==r.id);ch++}continue}
+   if(!l||(l.mt||0)<r.mt){await DB.put('people',r.data);if(l)P[P.indexOf(l)]=r.data;else P.push(r.data);ch++}
+   else if((l.mt||0)>r.mt)this.pend.add(r.id)}
+  const remote=new Set(data.map(r=>r.id));for(const p of P)if(!remote.has(p.id))this.pend.add(p.id);
+  this.keep();this.pulled=Date.now();return ch},
+ async getImg(id){if(!this.user)return null;try{const {data,error}=await this.sb.storage.from('dcout').download(this.user.id+'/'+id);if(error||!data)return null;const d=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(data)});await DB.put('images',{id,d});return d}catch(e){return null}},
+ async start(){try{const n=await this.pull();if(!ls('dc_out_imgs_up')){(await DB.all('images')).forEach(x=>this.ipend.add(x.id));this.keep();ls('dc_out_imgs_up','1')}if(n)render()}catch(e){this.err=String(e.message||e)}this.flush();Activity.start()},
+ async login(email,pw){const {data,error}=await this.sb.auth.signInWithPassword({email,password:pw});if(error)throw error;this.user=data.user;await this.start()},
+ async logout(){await this.sb.auth.signOut();this.user=null;render()},
+ paint(){const e=document.getElementById('cloudSt');if(e)e.innerHTML=this.status()},
+ status(){if(!this.user)return '';const n=this.pend.size+this.ipend.size,t=ls('dc_out_synced');return (this.err?`<span style="color:#e5483b">保存に失敗: ${esc(this.err)}</span><br>`:'')+(n?`未送信 ${n}件(つながると自動で送ります)`:'✓ すべてクラウドに保存済み')+(t?`<br>最後に保存: ${mdhm(t)}`:'')}};
+/* 使った時間をDESKに記録（開いている間、1分ごと） */
+const Activity={on:false,row:null,last:0,start(){if(this.on||!Cloud.user)return;this.on=true;
+ const tick=async()=>{if(!Cloud.user||document.hidden)return;const now=new Date().toISOString();try{
+  if(!this.row||Date.now()-this.last>3*60000){const {data}=await Cloud.sb.from('desk_activity').insert({user_id:Cloud.user.id,app:'ドラコレ営業',started_at:now,ended_at:now}).select('id').single();this.row=data&&data.id}
+  else await Cloud.sb.from('desk_activity').update({ended_at:now}).eq('id',this.row)}catch(e){}this.last=Date.now()};
+ tick();setInterval(tick,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()})}};
+addEventListener('online',()=>Cloud.flush());
+document.addEventListener('visibilitychange',async()=>{if(document.hidden||!Cloud.user)return;Cloud.flush();if(Date.now()-Cloud.pulled>120000){try{if(await Cloud.pull())render()}catch(e){}}});
 const byId=id=>P.find(p=>p.id===id);
-async function save(p){if(!P.includes(p))P.push(p);if(!p.hist)p.hist=[];const lh=p.hist[p.hist.length-1];if(p.status&&(!lh||lh.s!==p.status))p.hist.push({s:p.status,at:new Date().toISOString()});await DB.put('people',JSON.parse(JSON.stringify(p)))}
-async function putImg(d){const id=uid();await DB.put('images',{id,d});return id}
-async function getImg(id){const r=await DB.get('images',id);return r&&r.d}
+async function save(p){if(!P.includes(p))P.push(p);p.mt=Date.now();if(!p.hist)p.hist=[];const lh=p.hist[p.hist.length-1];if(p.status&&(!lh||lh.s!==p.status))p.hist.push({s:p.status,at:new Date().toISOString()});await DB.put('people',JSON.parse(JSON.stringify(p)));Cloud.mark(p.id)}
+async function putImg(d){const id=uid();await DB.put('images',{id,d});Cloud.markImg(id);return id}
+async function getImg(id){const r=await DB.get('images',id);return r&&r.d?r.d:Cloud.getImg(id)}
 function newPerson(n){return{id:uid(),username:n,url:'https://www.instagram.com/'+n+'/',created:new Date().toISOString(),firstDate:today(),inbound:false,genre:'',country:'',followers:'',car:'',name:'',who:'',summary:'',memo:'',lang:'',status:'waiting',profileImg:null,thumb:'',events:[],next:null,ai:''}}
 function upStatus(p,s){if(s==='lost')s='cut';if(!ST[s]||p.status===s)return;if(s==='cut'){p.status='cut';return}if(p.status==='cut'||!ST[p.status]||ST[s][1]>ST[p.status][1])p.status=s}
 const replied=p=>p.events.some(e=>e.kind==='reply')||['reply_comment','reply_dm','considering','rough','purchased','making','shipped','repeat'].includes(p.status);
@@ -488,14 +526,14 @@ function detailFn(p){return b=>{const n=p.next||{};
  pick(g('#fImg'),async r=>{p.profileImg=await putImg(r.full);p.thumb=r.thumb;await upd();refresh(p);if(S.key)aiProfile(p,true)});
  g('#dProf').onclick=()=>aiProfile(p,true);
  g('#dNg').onclick=async()=>{p.ng=!p.ng;if(p.ng)p.next=null;await upd();refresh(p);toast(p.ng?'連絡NGにしました':'解除しました')};
- g('#dDel').onclick=async()=>{if(!confirm(dn(p)+' の記録を削除します。よろしいですか?'))return;for(const id of [p.profileImg,...p.events.flatMap(e=>e.imgs||[e.img])])if(id)await DB.del('images',id);await DB.del('people',p.id);P=P.filter(x=>x!==p);closeSheet();render();toast('削除しました')};
+ g('#dDel').onclick=async()=>{if(!confirm(dn(p)+' の記録を削除します。よろしいですか?'))return;for(const id of [p.profileImg,...p.events.flatMap(e=>e.imgs||[e.img])])if(id)await DB.del('images',id);await DB.del('people',p.id);P=P.filter(x=>x!==p);Cloud.mark(p.id);closeSheet();render();toast('削除しました')};
 }}
 
 /* ---------- views ---------- */
 function vToday(){const t=today(),n=P.filter(p=>!p.inbound&&p.firstDate===t).length,g=S.goal,pc=Math.min(100,n/g*100);
  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=ymd(d);return{l:i===6?'今日':(d.getMonth()+1)+'/'+d.getDate(),n:P.filter(p=>!p.inbound&&p.firstDate===k).length,t:i===6}});
  const mx=Math.max(g,...days.map(d=>d.n)),wk=days.reduce((a,d)=>a+d.n,0),due=P.filter(isDue).length;
- return `<h1>DRIVER'S COLLECTION ─ 営業記録</h1><div class="mute small">${t.replace(/-/g,'/')}</div>
+ return `<h1>DRIVER'S COLLECTION ─ 営業記録</h1><div class="mute small">${t.replace(/-/g,'/')}</div>${Cloud.user?'':'<div class=warn style="margin-top:8px">記録がこのスマホの中にだけあります。「データ」→「クラウド保存」でログインしてください。</div>'}
  <button class=counter id=bigBtn style="--p:${pc}%"><span><b class=n>${n}</b><i class=g>/ ${g} 人</i><i class=plus>＋ 新規アプローチ</i></span></button>
  ${n>=g?'<div class="ok center">今日の目標達成 🎉</div>':''}
  <button class="btn ghost" id=replyBtn>返信のスクショを貼る</button>
@@ -543,6 +581,7 @@ function vData(){const mr=p=>{let m=-1;(p.hist||[]).forEach(h=>{if(ST[h.s]&&ST[h
  <button class="btn ghost" id=xCopy>分析用にまとめてコピー(Claudeに貼る用)</button>
  <div class=row style="margin-top:10px"><button class=btn2 id=xP>顧客CSV</button><button class=btn2 id=xE>やりとりCSV</button><button class=btn2 id=xB>バックアップ(画像込み)</button><label class=btn2>バックアップから復元<input type=file id=xR accept=".json,application/json" hidden></label></div>
  <div class=sec>テンプレート(書き換えると保存されます)</div>${TPL.map(t=>`<label class=lb>${esc(t.label)}</label><textarea data-tpl="${t.id}" rows=3>${esc(tplText(t.id))}</textarea>`).join('')}
+ <div class=sec>クラウド保存</div>${Cloud.user?`<div class=card><b>✓ ログイン中</b> <span class=mute>${esc(Cloud.user.email||'')}</span><div class=hint id=cloudSt>${Cloud.status()}</div><div class=row style="margin-top:8px"><button class=btn2 id=cNow>今すぐ保存</button><button class=btn2 id=cOut>ログアウト</button></div></div>`:`<div class=warn>いまは、このスマホの中にだけ保存されています。ログインすると、記録と画像がクラウドに保存され、スマホをなくしても別の端末で続きから使えます。</div><label class=lb>メールアドレス(ぺたろぐと同じ)</label><input id=cEm type=email autocomplete=username autocapitalize=off><label class=lb>パスワード</label><input id=cPw type=password autocomplete=current-password><button class=btn id=cIn style="margin-top:10px">ログインしてクラウドに保存</button>`}
  <div class=sec>設定</div>
  <label class=lb>1日の目標人数</label><input id=sGoal type=number inputmode=numeric min=1 value="${S.goal}">
  <label class=lb>Anthropic APIキー(この端末の中にだけ保存)</label><input id=sKey type=password autocomplete=off autocapitalize=off placeholder="sk-ant-…" value="${esc(S.key)}">
@@ -563,9 +602,10 @@ function bindData(){const stamp=today().replace(/-/g,'');
  $('#xP').onclick=()=>saveFile(`顧客_${stamp}.csv`,'﻿'+csv(peopleRows()),'text/csv');
  $('#xE').onclick=()=>saveFile(`やりとり_${stamp}.csv`,'﻿'+csv(eventRows()),'text/csv');
  $('#xB').onclick=async()=>{toast('バックアップを作成中…');const imgs=await DB.all('images');saveFile(`営業記録バックアップ_${stamp}.json`,JSON.stringify({v:1,at:new Date().toISOString(),people:P,images:imgs}),'application/json')};
- $('#xR').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.people))throw new Error('形式が違います');if(!confirm(`${d.people.length}件の記録で、今のデータを置き換えます。よろしいですか?`))return;await DB.clear('people');await DB.clear('images');for(const x of d.images||[])await DB.put('images',x);for(const p of d.people)await DB.put('people',p);P=await DB.all('people');render();toast('復元しました')}catch(err){toast('復元できません: '+err.message)}};
+ $('#xR').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.people))throw new Error('形式が違います');if(!confirm(`${d.people.length}件の記録で、今のデータを置き換えます。よろしいですか?`))return;await DB.clear('people');await DB.clear('images');for(const x of d.images||[])await DB.put('images',x);for(const p of d.people)await DB.put('people',p);P=await DB.all('people');P.forEach(p=>{p.mt=Date.now();Cloud.pend.add(p.id)});(d.images||[]).forEach(x=>Cloud.ipend.add(x.id));Cloud.keep();Cloud.later();render();toast('復元しました')}catch(err){toast('復元できません: '+err.message)}};
  document.querySelectorAll('[data-tpl]').forEach(x=>x.onchange=()=>{const c=tplCustom(),t=TPL.find(y=>y.id===x.dataset.tpl);if(x.value.trim()&&x.value!==t.text)c[t.id]=x.value;else delete c[t.id];ls('dc_out_tpl',JSON.stringify(c));toast('テンプレートを保存しました')});
  $('#sGoal').onchange=e=>{S.goal=Math.max(1,parseInt(e.target.value)||10);toast('目標を保存しました')};
+ {const ci=$('#cIn');if(ci)ci.onclick=async()=>{ci.disabled=true;ci.textContent='ログイン中…';try{await Cloud.login($('#cEm').value.trim(),$('#cPw').value);toast('ログインしました。クラウドに保存します');render()}catch(e){toast('ログインできませんでした');ci.disabled=false;ci.textContent='ログインしてクラウドに保存'}};const cn=$('#cNow');if(cn)cn.onclick=()=>{Cloud.flush();toast('保存しています')};const co=$('#cOut');if(co)co.onclick=()=>{if(confirm('ログアウトしますか？(この端末の記録は残ります)'))Cloud.logout()}}
  $('#sKey').onchange=e=>{S.key=e.target.value.trim();render();toast(S.key?'APIキーを保存しました':'APIキーを消しました')};
  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
 
@@ -594,6 +634,7 @@ async function normalize(){const now=Date.now();for(const p of P){let ch=false;
  if(p.status==='waiting'&&!replied(p)){const f=p.events.find(e=>e.kind==='sent');if(f&&now-new Date(f.at).getTime()>=7*864e5){p.status='cut';p.cutWhy=(p.like&&p.like.c)?'コメントにいいねのみ':'無反応(7日)';p.next=null;ch=true}}
  if(ch)await save(p)}}
 (async()=>{try{await DB.open();P=await DB.all('people');await normalize()}catch(e){toast('保存領域を開けません: '+e.message)}
+ try{Cloud.init();if(await Cloud.session())await Cloud.start()}catch(e){}
  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
  render()})();
 </script>
