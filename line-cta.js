@@ -108,7 +108,7 @@
     } catch (_) {}
   }
 
-  function ctaUrl() { return EN ? IG_DM_URL : lineUrl(); }
+  function ctaUrl() { return IG_DM_URL; }   // 2026-11: 問い合わせは日本語・英語ともInstagram DMに統一
 
   function open(message, place) {
     var url = ctaUrl();
@@ -125,18 +125,18 @@
     a.href = ctaUrl();
     a.target = '_blank';
     a.rel = 'noopener';
-    a.innerHTML = '<span class="dcR-ico' + (EN ? ' dcR-ico--ig' : '') + '">' + (EN ? IG_SVG : LINE_SVG) + '</span><span>' + label + '</span>';
+    a.innerHTML = '<span class="dcR-ico' + (EN ? ' dcR-ico--ig' : '') + '">' + IG_SVG + '</span><span>' + label + '</span>';
     a.addEventListener('click', function () { copy(message); track('dc_rough_' + place); });
     return a;
   }
 
   // ---------- copy ----------
   var MSG_ROUGH = EN ? 'Hi! I\'d like a free rough design. I\'ll send a photo of my car.' : '無料ラフをお願いします。愛車の写真を送ります。';
-  var MSG_SEMI = EN ? 'Hi! I\'d like a free rough for a Semi Order. I\'ll send a photo of my car.' : 'セミオーダーの無料ラフをお願いします。愛車の写真を送ります。';
-  var MSG_FULL = EN ? 'Hi! I\'d like to talk about a Full Order.' : 'フルオーダーについて相談したいです。';
+  var MSG_SEMI = EN ? 'Hi! I\'d like a free rough for a Semi Order. I\'ll send a photo of my car.' : '過去のデザインで無料ラフをお願いします。愛車の写真を送ります。';
+  var MSG_FULL = EN ? 'Hi! I\'d like to talk about a Full Order.' : 'オーダーメイドについて相談したいです。';
   var STEPS = EN
     ? '<ol class="dcR-steps"><li><b>STEP 1</b>Send a photo<br>of your car by DM</li><li><b>STEP 2</b>Get your<br>free rough</li><li><b>STEP 3</b>Order if<br>you love it</li></ol>'
-    : '<ol class="dcR-steps"><li><b>STEP 1</b>愛車の写真を<br>LINEで送る</li><li><b>STEP 2</b>あなたの車の<br>ラフが届く</li><li><b>STEP 3</b>気に入ったら<br>ご注文</li></ol>';
+    : '<ol class="dcR-steps"><li><b>STEP 1</b>愛車の写真を<br>DMで送る</li><li><b>STEP 2</b>あなたの車の<br>ラフが届く</li><li><b>STEP 3</b>気に入ったら<br>ご注文</li></ol>';
   var T = EN ? {
     galleryH: 'What would your car look like<br>as one of these?',
     galleryP: 'Pick any design from the gallery and we\'ll make<br>a free rough with your car. Just send one photo.',
@@ -146,10 +146,10 @@
     semiH: 'A free rough before you buy',
     semiP: 'Pick a design and we\'ll show you a rough with your car first. Order only if you love it.',
     fullH: 'Let\'s talk first',
-    fullP: 'Full Order designs are created together with you after you order. Share your ideas by DM — it\'s free. Want a feel for it first? We can also make a free rough with a gallery design.',
+    fullP: 'We first make a free rough of your car with a gallery design. Order once you like it, and we finish the design together with you. It can be based on a past design or made from scratch.',
     fullBtn: 'Talk to us by DM (free)',
     stickyMain: 'Get a free rough of your car', stickyFull: 'Talk to us by DM (free)', stickySub: 'Questions? DM us on Instagram',
-    alt: 'Living in Japan? Chat with us on LINE',
+    alt: '',
     ship: 'Outside Japan, we ship by EMS \u2014 shipping is shown at checkout. In the US? DM us first for a total including import duties.'
   } : {
     galleryH: 'あなたの愛車だと、<br>どんな一枚になる？',
@@ -159,10 +159,10 @@
     productsP: '仕上がりを見てから決められます。<br>ご質問だけでもお気軽にどうぞ。',
     semiH: 'ご購入前に、無料でラフをお作りします',
     semiP: 'お好きな掲載デザインで、あなたの愛車のラフを先にお見せします。仕上がりを見てからご購入いただけます。',
-    fullH: 'まずはLINEでご相談ください',
-    fullP: 'フルオーダーのデザインは、ご注文後の打ち合わせで一緒に作り上げます。イメージのご相談は無料です。掲載デザインで仕上がりの雰囲気を先に見たい方には、無料ラフもお作りします。',
-    fullBtn: 'LINEで無料相談・ラフ依頼',
-    stickyMain: '愛車のラフを無料で見る', stickyFull: 'LINEで相談する（無料）', stickySub: 'ご質問だけでも、お気軽にLINEへ',
+    fullH: 'まずはDMでご相談ください',
+    fullP: '掲載デザインで、あなたの愛車の無料ラフを先にお作りします。イメージを確認してからご購入いただき、デザインはご購入後の打ち合わせで一緒に仕上げます。過去のデザインをもとにすることも、ゼロから作ることもできます。',
+    fullBtn: 'DMで無料相談・ラフ依頼',
+    stickyMain: '愛車のラフを無料で見る', stickyFull: 'DMで相談する（無料）', stickySub: 'ご質問だけでも、お気軽にInstagramのDMへ',
     alt: '', ship: ''
   };
 
@@ -197,8 +197,8 @@
     wrap.innerHTML = '<div class="dcR-box">' + badge + html + '</div>';
     var box = wrap.firstChild;
     box.appendChild(link('dcR-btn', label, msg, kind));
-    if (EN) {
-      // people living in Japan often use LINE; keep that door open
+    if (EN && T.alt) {
+      // (2026-11: LINE is no longer offered; T.alt is empty)
       var alt = document.createElement('a');
       alt.className = 'dcR-alt';
       alt.href = lineUrl(); alt.target = '_blank'; alt.rel = 'noopener';
@@ -292,7 +292,7 @@
     var h1 = document.querySelector('#mainContent h1.itemTitle');
     var t = h1 ? h1.textContent.trim() : '';
     if (t.indexOf('セミオーダー') === 0 || t.indexOf('Semi Order') === 0) return 'semi';
-    if (t.indexOf('フルオーダー') === 0 || t.indexOf('Full Order') === 0) return 'full';
+    if (t.indexOf('フルオーダー') === 0 || t.indexOf('Full Order') === 0 || t.indexOf('オーダーメイド') >= 0 || t.indexOf('Custom Order') === 0) return 'full';
     return '';
   }
 

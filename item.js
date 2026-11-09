@@ -23,15 +23,15 @@
   }
   var EN = dcLang() === 'en';
 
-  var LABELS = { 'フルオーダー': 'Full Order', 'セミオーダー': 'Semi Order' };
+  var LABELS = { 'フルオーダー': 'Custom Order', 'セミオーダー': 'Semi Order' };
   var SUBS = EN
-    ? { 'フルオーダー': 'Designed from scratch, only for your car.', 'セミオーダー': 'Our designs, made with your car.' }
-    : { 'フルオーダー': 'あなたの愛車のためだけに、ゼロから。', 'セミオーダー': '掲載デザインを、あなたの愛車で。' };
+    ? { 'フルオーダー': 'One of one, made only for your car.', 'セミオーダー': 'Our designs, made with your car.' }
+    : { 'フルオーダー': 'あなたの愛車だけの、世界に一枚。', 'セミオーダー': '掲載デザインを、あなたの愛車で。' };
   var ROOT = (document.currentScript && document.currentScript.src) ? document.currentScript.src.replace(/[^/]*(\?.*)?$/, '') : 'https://coretagishi-lab.github.io/dc-cards/';
   var TRUST = [
     ['<path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.4 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z"/>', EN ? 'One of one<br>fully handmade' : '一点物<br>完全ハンドメイド'],
     ['<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', EN ? 'Ready in<br>about a month' : '納期<br>約1ヶ月'],
-    ['<path d="M4.5 6.5h15v9h-8l-4 3v-3h-3z"/><path d="M8.5 10.5h7M8.5 13h4"/>', EN ? 'Design check<br>by DM' : '公式LINEで<br>デザイン確認']
+    ['<path d="M4.5 6.5h15v9h-8l-4 3v-3h-3z"/><path d="M8.5 10.5h7M8.5 13h4"/>', EN ? 'Design check<br>by DM' : 'DMで<br>デザイン確認']
   ];
 
   // English descriptions (the BASE description stays Japanese; EN visitors see these instead)
@@ -48,7 +48,7 @@
     'フルオーダー': {
       lead: ['Your car, turned into a trading card artwork that exists only once in the world.', 'This is not a template. We design your card from scratch, just for your car.', 'If you have a look in mind, we\'ll get as close to it as we can. If not, you can leave everything to us.', 'Every card is finished by hand by our craftsmen.'],
       secs: [
-        ['After you order', ['Send us photos of your car and your ideas by ' + IG + ', or by LINE if you live in Japan. Tell us the colors and mood you have in mind.']],
+        ['After you order', ['Send us photos of your car and your ideas by ' + IG + '. Tell us the colors and mood you have in mind.']],
         ['About the design', ['The gold frame is shared by every Driver\'s Collection card and can\'t be changed. The typeface is up to you.', 'We can\'t create designs that use other people\'s trademarks or copyrighted works, such as anime characters, unless you already have permission to use the material (for example, an itasha livery). If there is a design you really want, ask us by DM first.']],
         EN_COMMON[0],
         ['The certification tag', ['The certification tag at the top of the card is gold, a mark reserved for Full Order clients only.']]
@@ -57,7 +57,7 @@
     'セミオーダー': {
       lead: ['Your car, as a one-of-one card in the design you choose.', 'Pick any design from our gallery or our Instagram, and we\'ll make it with your car.', 'Semi Orders are handmade by our craftsmen just like Full Orders. The finish quality is exactly the same.'],
       secs: [
-        ['After you order', ['Send us photos of your car and the design you chose by ' + IG + ', or by LINE if you live in Japan. Pick from the designs in our gallery or on our Instagram.']],
+        ['After you order', ['Send us photos of your car and the design you chose by ' + IG + '. Pick from the designs in our gallery or on our Instagram.']],
         ['About the design', ['We build your card on the design you picked.', 'The gold frame is shared by every card and can\'t be changed. Changing the typeface is available with Full Order only.', 'Want a design made from scratch? Choose Full Order.']],
         EN_COMMON[0],
         ['The certification tag', ['The certification tag at the top of the card is silver. Gold is reserved for Full Orders.']]
@@ -192,7 +192,7 @@
   // ---------- semi order: choose the design ----------
   // Writes the choice into BASE's option field whose label contains 「デザイン」 (text or pulldown),
   // so the order shows which design was picked. ?design=<slug> (from the 3D gallery) pre-selects it.
-  var LINE_CHOICE = EN ? 'Decide by DM' : 'LINEで相談して決める';
+  var LINE_CHOICE = EN ? 'Decide by DM' : 'DMで相談して決める';
   var LINE_CHOICE_LABEL = EN ? 'Not sure?<br>Decide with us by DM' : LINE_CHOICE;
   function designHTML(label) {
     var m = /^No\.?\s*(\d+)$/i.exec(label || '');
@@ -277,7 +277,7 @@
         }).join('') +
         '<button type="button" class="dcPick-item dcPick-item--line" role="radio" aria-checked="false" data-slug="__line">' +
         '<span class="dcPick-img"><span class="dcPick-q">?</span></span><span class="dcPick-name">' + LINE_CHOICE_LABEL + '</span></button></div>' +
-        (field ? '' : '<p class="dcPick-note">' + (EN ? 'After ordering, please tell us the design number by DM.' : 'ご注文後、公式LINEで選んだデザイン名をお知らせください。') + '</p>');
+        (field ? '' : '<p class="dcPick-note">' + (EN ? 'After ordering, please tell us the design number by DM.' : 'ご注文後、DMで選んだデザイン名をお知らせください。') + '</p>');
 
       var anchor = purchase.querySelector('#purchase_form');
       if (anchor) anchor.parentNode.insertBefore(box, anchor);
@@ -322,6 +322,7 @@
     var title = h1 ? h1.textContent.trim() : '';
     var key = null;
     Object.keys(LABELS).forEach(function (k) { if (!key && title.indexOf(k) === 0) key = k; });
+    if (!key && (title.indexOf('オーダーメイド') >= 0 || title.indexOf('Custom Order') === 0)) key = 'フルオーダー';   // 2026-11: セミ廃止、オーダーメイド一本
 
     if (key) document.body.setAttribute('data-dc-kind', key === 'セミオーダー' ? 'semi' : 'full');
     if (h1) {
@@ -345,7 +346,7 @@
     var report = document.getElementById('reportBtn');
     if (report) main.appendChild(report);
 
-    if (key === 'セミオーダー' && purchase) designPicker(purchase);
+    if (key && purchase) designPicker(purchase);   // フルでも過去デザインをもとに作れる（任意）
     if (EN && purchase) { enForm(purchase); setTimeout(function () { enForm(purchase); }, 1500); }
 
     if (key && purchase) {

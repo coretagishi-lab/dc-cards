@@ -197,7 +197,7 @@
     return true;
   }
   function enProducts() {
-    var map = { 'フルオーダー': 'Full Order', 'セミオーダー': 'Semi Order' };
+    var map = { 'フルオーダー': 'Custom Order', 'セミオーダー': 'Semi Order', '世界に一枚のオーダーメイド': 'One-of-One Custom Order' };
     Array.prototype.forEach.call(document.querySelectorAll('#mainContent .item .itemTitle h2'), function (h) {
       var t = h.textContent.trim();
       if (map[t]) h.textContent = map[t];

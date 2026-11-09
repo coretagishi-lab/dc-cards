@@ -42,21 +42,21 @@
     steps: [
       ['Send us a photo of your car', 'By Instagram DM. One photo is enough.'],
       ['Get a free rough design', 'Pick any design from the gallery and see it with your car \u2014 no obligation.'],
-      ['Place your order', 'Semi Order: the design you picked. Full Order: designed from scratch with you after you order.'],
-      ['Handmade in Japan', 'You check the final design first, then our craftsmen make it card by card.'],
+      ['Place your order', 'Order once you like it. Your card can be based on a past design or made from scratch.'],
+      ['Finish the design together', 'After you order, we decide the colors and mood with you, then our craftsmen make it by hand.'],
       ['Shipped to your door', 'In a Driver\'s Collection gift box. Tracked EMS outside Japan.']
     ],
     note: 'About one month from your order. Outside Japan, EMS shipping is shown at checkout.<br>In the US? DM us first for a total including import duties.'
   } : {
     heading: 'ご注文の流れ', sub: 'FLOW',
     steps: [
-      ['写真を送る', '愛車の写真を1枚、公式LINEで送るだけ。'],
-      ['無料ラフが届く', '掲載デザインで、あなたの愛車のラフをお作りします。'],
-      ['ご購入', '仕上がりを見て、気に入ったらご購入ください。フルオーダーは、ご購入後の打ち合わせでゼロからデザインします。'],
-      ['職人が制作', '完成デザインをご確認いただいたうえで、職人が一枚ずつ手作業で仕上げます。'],
-      ['お届け', '専用の化粧箱に入れて発送。発送時にLINEでお知らせします。']
+      ['写真を送る', '愛車の写真を1枚、InstagramのDMで送るだけ。'],
+      ['無料ラフでイメージ確認', '掲載デザインで、あなたの愛車のラフを無料でお作りします。'],
+      ['ご購入', '気に入ったらご購入ください。過去のデザインをもとにすることも、ゼロから作ることもできます。'],
+      ['打ち合わせでデザイン確定', 'ご購入後の打ち合わせで色や雰囲気を決め、完成デザインをご確認いただいたうえで、職人が一枚ずつ手作業で仕上げます。'],
+      ['お届け', '専用の化粧箱に入れて発送。発送時にDMでお知らせします。']
     ],
-    note: '納期の目安はご購入から約1ヶ月です。お急ぎの場合はLINEでご相談ください。'
+    note: '納期の目安はご購入から約1ヶ月です。お急ぎの場合はDMでご相談ください。'
   };
 
   var SERIF = EN ? '"Cormorant Garamond","Times New Roman",serif' : '"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif';
