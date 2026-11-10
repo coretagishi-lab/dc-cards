@@ -133,7 +133,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <script src="supabase.js"></script>
 <script>
 'use strict';
-const VER='20261109-3';
+const VER='20261110-1';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const ST2=[['img','画像待ち','reply_dm'],['info','内容待ち','reply_dm'],['rough','ラフ作成中','rough'],['post','投稿待ち','considering'],['posted','投稿済み(終了)','repeat'],['pay','支払い待ち','considering'],['make','作品作成中','making'],['shipped','発送済み(終了)','shipped']];
@@ -144,7 +144,7 @@ const CUTW=['無反応(7日)','コメントにいいねのみ','変な人・怪�
 const GENRE={owner:'オーナー',photographer:'フォトグラファー',influencer:'インフルエンサー',shop:'ショップ',media:'メディア',other:'その他'};
 const SYS="You help Takuya Tagishi, a Japanese craftsman who runs Driver's Collection (Instagram @drivers_collection_): handmade one-of-one art trading cards made from a customer's car photo (the owner can be in it too). One-of-one custom order ¥50,000 (can be based on a past gallery design or made from scratch), optional light-up wall display +¥10,000. Free rough mock before purchase. Ships worldwide by EMS. He reaches out to car owners, car photographers and influencers on Instagram with comments and DMs. Always answer with one JSON object only, no other text.";
 const TPL=[
- {id:'m-first',g:'m2',ch:'dm',to:'img',label:'最初のDM(写真をお願い)',text:'Driver\'s Collectionです！\nコメントへのリアクションありがとうございました🙏\n\nこの度はご協力、本当にありがとうございます！\nさっそくですが、愛車のトレカデザインデータを無料で作らせていただきます！\n\nよろしければ、使ってほしいお車の写真を1〜3枚ほど、このDMに送付お願い致します！\n\n※参考作品として動画等に掲載させて頂く場合がございますので、ご了承頂けますと幸いです。'},
+ {id:'m-first',g:'m2',ch:'dm',to:'img',label:'最初のDM(写真をお願い)',text:'Driver\'s Collectionです！\nコメントにリアクションいただき、ありがとうございました🙏\n\nさっそくですが、愛車のトレカデザインを無料でお作りします！\n使ってほしいお車の写真を、1〜3枚ほどこのDMに送っていただけますか？\n\n※完成したデザインは、作品例としてこちらのアカウントの投稿や動画で紹介させていただくことがあります。\n※無料なのはデザインデータの作成までです。実物のカードとしてお手元に届けたい場合は、別途ご購入という形になります。'},
  {id:'m-info',g:'m2',ch:'dm',to:'info',label:'記載内容を聞く(写真をもらったら)',text:'ありがとうございます🙇‍♂️\n\nお手隙の際に、カードに記載するお車の情報を教えて頂けますと幸いです！\n\nわかる所だけで大丈夫ですので、下をコピーして、お使いください！\n\n━━━━━✂︎━━━━━\n【車名】\n（例）NISSAN GT-R R35\n→\n\n【エンジン】\n（例）V6ツインターボ\n→\n\n【ボディカラー】\n（例）ブリリアントホワイトパール\n→\n\n【ラッピング・ステッカー】\n（例）ブラックのセンターストライプ\n→\n\n【ホイール】\n（例）RAYS TE37／グロスブラック\n→\n\n【ウイング・エアロ】\n（例）カーボンGTウイング\n→\n\n【フロント（ライト・バンパー）】\n（例）カーボンリップ付き\n→\n\n【ルーフ】\n（例）ハードトップ／オープン\n→\n\n【チーム名・称号】\n（例）APEX CREW\n→\n\n【ドライバー名】\n（ニックネーム・イニシャルOK）\n→\n\n【キャッチコピー】\n（例）NO LIMITS／おまかせOK\n→\n\n【購入日・納車日・記念日】\n（載せたい方のみ）\n→\n\n【ナンバープレート】\nそのまま／隠す\n→\n\n【デザイン希望】\n例)和柄、オレンジメイン、など…\n→\n※希望がない場合は全てお任せでも大丈夫です！\n\n━━━━━✂︎━━━━━\n\n📝 わからない項目があれば\n正確な車種名とカスタム内容だけ\n教えてください！\nこちらでお調べして記載します。\n\n💬 他にも載せたいことがあれば\nお気軽にご相談ください。\n\nよろしくお願いします🙇‍♂️\nDriver\'s Collection'},
  {id:'m-data',g:'m2',ch:'dm',to:'post',label:'データ送付後(購入・ステッカーの案内)',text:'気に入って頂けて良かったです！\n\n改めましてこの度はご協力ありがとうございました！\n今回はデータ版までとなりますが、リールに登場する本物のトレカアートもご購入可能ですので、ご興味ありましたらお声がけください✨\n\nまた、タグ付けフィード投稿で宣伝協力頂けた方に、ノーマルステッカーをプレゼントさせて頂いてるのですか、ご参加いかがでしょうか？'},
  {id:'m-post',g:'m2',ch:'dm',to:'post',label:'投稿のお願い(ステッカーに進んだら)',text:'はい！大丈夫です！\n\n投稿の際に少しだけお願いがありまして……\n①タグ付け（@drivers_collection_）をお願いします！\n②「無料で作ってもらった」等の表現は控えて頂けますと幸いです💦\n\n②の理由としては、こちらからDMさせて頂いた方限定の特別特典となるためです。ご協力いただけますと助かります🙇‍♂️'},
