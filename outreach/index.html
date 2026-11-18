@@ -84,6 +84,8 @@ textarea{resize:vertical}
 .chips.wrap{flex-wrap:wrap;overflow:visible}
 .chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:99px;padding:7px 12px;font:inherit;font-size:13px}
 .chip.on{background:var(--gold);color:#17130a;border-color:var(--gold);font-weight:700}
+.rk{display:inline-block;min-width:20px;text-align:center;font-size:11px;font-weight:800;padding:1px 6px;border-radius:6px;margin:2px 4px 0 0;color:#111}.rk-A{background:#e5483b;color:#fff}.rk-B{background:#f0a020}.rk-C{background:#e8d44d}.rk-D{background:#5aa9e6}.rk-F{background:#8a8a8a;color:#fff}.rkp{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;margin:2px 4px 0 0;border:1px dashed #f0a020;color:#f0a020}
+.fuwa{border:1px dashed #f0a020;border-radius:12px;padding:10px;margin:6px 0}
 .msg{white-space:pre-wrap;word-break:break-word}
 .clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .tl{border-left:2px solid var(--line);padding:2px 0 2px 12px;margin:10px 0 10px 2px}
@@ -133,7 +135,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 4px;b
 <script src="supabase.js"></script>
 <script>
 'use strict';
-const VER='20261110-1';
+const VER='20261118-1';
 const MODEL='claude-haiku-4-5-20251001';
 const ST={waiting:['コメント返信待ち',0],reply_comment:['コメント返信あり',1],dm_wait:['DM返信待ち',2],reply_dm:['DMやり取り中',3],rough:['ラフ作成中',4],considering:['購入検討中',5],purchased:['購入',6],making:['本デザイン作成中',7],shipped:['発送済み',8],repeat:['事例・リピート',9],cut:['打ち切り',-1]};
 const ST2=[['img','画像待ち','reply_dm'],['info','内容待ち','reply_dm'],['rough','ラフ作成中','rough'],['post','投稿待ち','considering'],['posted','投稿済み(終了)','repeat'],['pay','支払い待ち','considering'],['make','作品作成中','making'],['shipped','発送済み(終了)','shipped']];
@@ -221,7 +223,7 @@ const DB={db:null,
  tx(st,mode,fn){return new Promise((res,rej)=>{const t=this.db.transaction(st,mode),s=t.objectStore(st);let out;const q=fn(s);if(q)q.onsuccess=()=>{out=q.result};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})},
  all(st){return this.tx(st,'readonly',s=>s.getAll())},get(st,id){return this.tx(st,'readonly',s=>s.get(id))},
  put(st,v){return this.tx(st,'readwrite',s=>s.put(v))},del(st,id){return this.tx(st,'readwrite',s=>s.delete(id))},clear(st){return this.tx(st,'readwrite',s=>s.clear())}};
-let P=[],view='today',filter='all',q='';
+let P=[],view='today',filter='all',q='',rfil=ls('dc_out_rfil')||'all',rsort=ls('dc_out_rsort')||'new';
 /* ---------- クラウド保存（ぺたろぐと同じアカウント）: スマホをなくしても、別の端末でも同じ記録 ---------- */
 const Cloud={sb:null,user:null,busy:false,err:'',pulled:0,
  pend:new Set((()=>{try{return JSON.parse(ls('dc_out_pend')||'[]')}catch(e){return []}})()),
@@ -246,7 +248,7 @@ const Cloud={sb:null,user:null,busy:false,err:'',pulled:0,
   const remote=new Set(data.map(r=>r.id));for(const p of P)if(!remote.has(p.id))this.pend.add(p.id);
   this.keep();this.pulled=Date.now();return ch},
  async getImg(id){if(!this.user)return null;try{const {data,error}=await this.sb.storage.from('dcout').download(this.user.id+'/'+id);if(error||!data)return null;const d=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(data)});await DB.put('images',{id,d});return d}catch(e){return null}},
- async start(){try{const n=await this.pull();if(!ls('dc_out_imgs_up')){(await DB.all('images')).forEach(x=>this.ipend.add(x.id));this.keep();ls('dc_out_imgs_up','1')}if(n)render()}catch(e){this.err=String(e.message||e)}this.flush();Activity.start()},
+ async start(){try{Rank.load().then(render).catch(e=>{this.err='ランク: '+(e.message||e)});const n=await this.pull();if(!ls('dc_out_imgs_up')){(await DB.all('images')).forEach(x=>this.ipend.add(x.id));this.keep();ls('dc_out_imgs_up','1')}if(n)render()}catch(e){this.err=String(e.message||e)}this.flush();Activity.start()},
  async login(email,pw){const {data,error}=await this.sb.auth.signInWithPassword({email,password:pw});if(error)throw error;this.user=data.user;await this.start()},
  async logout(){await this.sb.auth.signOut();this.user=null;render()},
  paint(){const e=document.getElementById('cloudSt');if(e)e.innerHTML=this.status()},
@@ -258,8 +260,31 @@ const Activity={on:false,row:null,last:0,start(){if(this.on||!Cloud.user)return;
   else await Cloud.sb.from('desk_activity').update({ended_at:now}).eq('id',this.row)}catch(e){}this.last=Date.now()};
  tick();setInterval(tick,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()})}};
 addEventListener('online',()=>Cloud.flush());
-document.addEventListener('visibilitychange',async()=>{if(document.hidden||!Cloud.user)return;Cloud.flush();if(Date.now()-Cloud.pulled>120000){try{if(await Cloud.pull())render()}catch(e){}}});
+document.addEventListener('visibilitychange',async()=>{if(document.hidden||!Cloud.user)return;Cloud.flush();if(Date.now()-Cloud.pulled>120000){try{await Rank.load().catch(()=>{});await Cloud.pull();render()}catch(e){}}});
 const byId=id=>P.find(p=>p.id===id);
+/* ---------- ランク(A/B/C/D/F)：本人が確定。ふわは関数 dcout-rank から「提案」だけ書く。履歴は dcout_rank_log に追記 ---------- */
+const RANKS=[['A','振込待ち'],['B','購入検討中'],['C','ラフ作成中'],['D','DMでやり取りあり'],['F','その他']],RKL=Object.fromEntries(RANKS);
+const Rank={log:[],cur:new Map(),pend:new Map(),loaded:false,
+ nk:u=>String(u||'').trim().replace(/^@/,'').toLowerCase(),
+ pidOf(r){if(r.person_id)return r.person_id;const p=P.find(x=>this.nk(x.username)===this.nk(r.username));return p?p.id:'?'+this.nk(r.username)},
+ calc(){const cur=new Map(),pend=new Map(),closed=new Set(this.log.filter(r=>r.ref_id).map(r=>r.ref_id));
+  for(const r of this.log){const pid=this.pidOf(r);if(r.kind==='確定')cur.set(pid,r);if(r.kind==='提案'&&!closed.has(r.id))pend.set(pid,r)}
+  for(const [pid,r] of pend){const c=cur.get(pid);if(c&&c.at>r.at)pend.delete(pid)}this.cur=cur;this.pend=pend},
+ async load(){if(!Cloud.user)return;const {data,error}=await Cloud.sb.from('dcout_rank_log').select('*').order('at');if(error)throw error;this.log=data||[];this.loaded=true;this.calc()},
+ of(p){const r=this.cur.get(p.id);return r?r.to_rank:''},prop(p){return this.pend.get(p.id)||null},
+ async write(p,to,kind,ref,note){if(!Cloud.user){alert('ランクはクラウド保存(ログイン)が必要です。「データ」タブでログインしてください');return}
+  const row={user_id:Cloud.user.id,person_id:p.id,username:p.username||'',from_rank:this.of(p)||null,to_rank:to,by_who:'本人',kind,ref_id:ref||null,note:note||null};
+  const {data,error}=await Cloud.sb.from('dcout_rank_log').insert(row).select('*').single();if(error){alert('ランクの保存に失敗しました: '+error.message);return}
+  this.log.push(data);this.calc();render();refresh(p)},
+ set(p,to){const pr=this.prop(p);if(this.of(p)===to&&!pr)return;return this.write(p,to,'確定',pr&&pr.to_rank===to?pr.id:null,pr&&pr.to_rank===to?'ふわの提案を確定':'')},
+ accept(p){const pr=this.prop(p);if(pr)return this.write(p,pr.to_rank,'確定',pr.id,'ふわの提案を確定')},
+ reject(p){const pr=this.prop(p);if(pr)return this.write(p,pr.to_rank,'却下',pr.id,'ふわの提案を見送り')},
+ hist(p){return this.log.filter(r=>this.pidOf(r)===p.id).slice().reverse()}};
+const rkPill=p=>{const r=Rank.of(p),pr=Rank.prop(p);return (r?`<span class="rk rk-${r}" title="${RKL[r]}">${r}</span>`:'')+(pr?`<span class=rkp>ふわ提案→${pr.to_rank}</span>`:'')};
+const rankHtml=p=>{const r=Rank.of(p),pr=Rank.prop(p),h=Rank.hist(p);
+ return `<div class="mute small" style="margin-top:6px">ランク(本人が決める)</div><div class="chips wrap" style="margin:4px 0">${RANKS.map(([k,l])=>`<button class="chip ${r===k?'on':''}" data-rk="${p.id}|${k}">${k} ${l}</button>`).join('')}</div>
+ ${pr?`<div class=fuwa><b>ふわの提案：</b>${r||'未設定'} → ${pr.to_rank} ${RKL[pr.to_rank]}${pr.note?`<div class="small mute">${esc(pr.note)}</div>`:''}<div class=row style="margin-top:6px"><button class="btn2 qon" data-rka="${p.id}">この提案で確定</button><button class=btn2 data-rkn="${p.id}">見送る</button></div></div>`:''}
+ ${h.length?`<details class=more><summary>ランクの履歴(${h.length})</summary>${h.map(x=>`<div class=small style="padding:3px 0">${mdhm(x.at)} ${esc(x.by_who)}・${x.kind}：${x.from_rank||'未設定'} → ${x.to_rank}${x.note?` <span class=mute>${esc(x.note)}</span>`:''}</div>`).join('')}</details>`:''}`};
 async function save(p){if(!P.includes(p))P.push(p);p.mt=Date.now();if(!p.hist)p.hist=[];const lh=p.hist[p.hist.length-1];if(p.status&&(!lh||lh.s!==p.status))p.hist.push({s:p.status,at:new Date().toISOString()});await DB.put('people',JSON.parse(JSON.stringify(p)));Cloud.mark(p.id)}
 async function putImg(d){const id=uid();await DB.put('images',{id,d});Cloud.markImg(id);return id}
 async function getImg(id){const r=await DB.get('images',id);return r&&r.d?r.d:Cloud.getImg(id)}
@@ -488,7 +513,7 @@ function nextBox(p){if(RK(p)>=3||bought(p))return '<div class=hint>この段階�
 async function dmFail(p){const i=p.events.map(e=>e.tpl).lastIndexOf('3');if(i>=0)p.events.splice(i,1);p.dmBlocked={at:new Date().toISOString()};p.next=null;await save(p);render();refresh(p);toast('DM不可を記録。②\'を送ってください')}
 async function sendTpl(p,id){const t=TPL.find(x=>x.id===id);if(!t)return;const tx=tplText(id);copy(tx);if(t.g==='m2'){p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:'dm',tpl:id,text:tx});if(t.to){p.st2=t.to;const m=ST2.find(x=>x[0]===t.to);if(m)p.status=m[2]}await save(p);render();refresh(p);return}if(id==='3'&&p.dmBlocked){delete p.dmBlocked}if(t.g!=='fu'&&sentSet(p).has(id))return;p.events.push({id:uid(),at:new Date().toISOString(),kind:'sent',ch:t.ch,tpl:id,text:tx});if(t.g==='c2')upStatus(p,'reply_comment');if(id==='3'||id==='0d'||t.g==='c2n')upStatus(p,'dm_wait');if(t.g==='fu'){if(['8','9','10'].includes(id)){doneAfter(p,id)}else if(id==='4'){if(p.like)delete p.like.d;p.next=null}else p.next={at:addD(null,2),text:'',ja:''}}await save(p);render();refresh(p)}
 function detailFn(p){return b=>{const n=p.next||{};
- b.innerHTML=`<div class="item h-${p.status}" style="border:0">${av(p)}<div class=grow>${p.src==='line'?`<b>${esc(dn(p))}</b>`:`<a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a>`} ${srcPill(p)}<div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>${st2Html(p)}
+ b.innerHTML=`<div class="item h-${p.status}" style="border:0">${av(p)}<div class=grow>${p.src==='line'?`<b>${esc(dn(p))}</b>`:`<a href="${esc(p.url)}" target=_blank rel=noopener><b>${esc(dn(p))}</b> ↗</a>`} ${srcPill(p)}<div class="mute small">${esc(p.name||'')} ${p.inbound?'· 相手から連絡':'· 初回 '+md(p.created)}${p.who?'<br>'+esc(p.who):''}</div></div></div>${rankHtml(p)}${st2Html(p)}
 
  <div class=sec>送る文(タップでコピー)</div>
  ${TPL.filter(t=>t.g==='m2').map(t=>tplRow(t.id,p)).join('')}<div class=hint style="margin-top:6px">タップ=コピー+送信済みに記録。状態も自動で進みます。</div>
@@ -551,11 +576,14 @@ function vToday(){const t=today(),n=P.filter(p=>!p.inbound&&p.firstDate===t).len
  ${due?`<button class=card data-tab=remind>⏰ 今日までのリマインド <b>${due}件</b> →</button>`:''}
  ${S.key?'':'<div class=hint>「データ」タブでAPIキーを入れると、スクショの自動読み取りと文面の提案が使えます。</div>'}
  <div class=sec>直近7日(計${wk}人)</div><div class=bars>${days.map(d=>`<div class="${d.t?'today':''}" style="height:${d.n/mx*100}%"><s>${d.n||''}</s></div>`).join('')}</div><div class=barl>${days.map(d=>`<span>${d.l}</span>`).join('')}</div>`}
-function rows(){const k=q.trim().toLowerCase().replace(/^@/,'');const L=P.filter(p=>(filter==='all'||p.status===filter)&&(!k||[p.username,p.name,p.country,p.car,p.who,p.summary,p.memo].join(' ').toLowerCase().includes(k))).sort((a,b)=>last(b).localeCompare(last(a)));
+const rkOk=p=>rfil==='all'||(rfil==='none'?!Rank.of(p):rfil==='prop'?!!Rank.prop(p):Rank.of(p)===rfil),rkOrd=p=>{const r=Rank.of(p);return r?'ABCDF'.indexOf(r):9};
+function rows(){const k=q.trim().toLowerCase().replace(/^@/,'');const L=P.filter(p=>(filter==='all'||p.status===filter)&&rkOk(p)&&(!k||[p.username,p.name,p.country,p.car,p.who,p.summary,p.memo].join(' ').toLowerCase().includes(k))).sort((a,b)=>(rsort==='rank'?rkOrd(a)-rkOrd(b):0)||last(b).localeCompare(last(a)));
  if(!L.length)return '<div class=hint>該当する記録はありません</div>';
- return L.map(p=>`<div class="item h-${p.status}" data-open="${p.id}">${av(p)}<div class=grow><b>${esc(dn(p))}</b><div>${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${progHtml(p)}${srcPill(p)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
+ return L.map(p=>`<div class="item h-${p.status}" data-open="${p.id}">${av(p)}<div class=grow><b>${esc(dn(p))}</b><div>${rkPill(p)}${p.ng?'<span class="pill s-ng">連絡NG</span>':''}${stPill(p.status)}${progHtml(p)}${srcPill(p)}${p.genre?`<span class=pill>${GENRE[p.genre]||esc(p.genre)}</span>`:''}${p.country?`<span class=pill>${esc(p.country)}</span>`:''}</div>${p.summary||p.who?`<div class="mute small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.summary||p.who)}</div>`:''}</div><div class="mute small right">${md(last(p))}${p.next&&p.next.at?`<br><span class="${isDue(p)?'due':''}">⏰${md(p.next.at)}</span>`:''}</div></div>`).join('')}
 function vList(){const cnt=s=>P.filter(p=>s==='all'||p.status===s).length;
  return `<h1>顧客リスト</h1><input id=q type=search autocapitalize=off placeholder="@ユーザー名・国・車で検索" value="${esc(q)}" style="margin-top:8px">
+ <div class=chips>${[['new','新しい順'],['rank','ランク順']].map(([k,l])=>`<button class="chip ${rsort===k?'on':''}" data-rs="${k}">${l}</button>`).join('')}</div>
+ <div class=chips>${[['all','ランク:すべて'],...RANKS.map(([k,l])=>[k,k+' '+l]),['none','未設定'],['prop','ふわの提案あり']].map(([k,l])=>`<button class="chip ${rfil===k?'on':''}" data-rf="${k}">${l} ${P.filter(p=>k==='all'||(k==='none'?!Rank.of(p):k==='prop'?!!Rank.prop(p):Rank.of(p)===k)).length}</button>`).join('')}</div>
  <div class=chips>${['all',...Object.keys(ST)].map(s=>`<button class="chip ${filter===s?'on':''}" data-f="${s}">${s==='all'?'すべて':ST[s][0]} ${cnt(s)}</button>`).join('')}</div><div id=rows>${rows()}</div>`}
 function rcard(p){const r=remind(p),late=new Date(r.at)<new Date(),c=qCur(p);
  const qb=r.task?`<button class=btn2 data-done="${p.id}|${r.task}">完了 ✓</button>`:c==='mat'?`<button class=btn2 data-q="${p.id}|mat|1">もらった ✓</button>`:c==='req'?`<button class=btn2 data-q="${p.id}|req|semi">ラフ依頼 セミ</button><button class=btn2 data-q="${p.id}|req|full">フル</button>`:c==='rough'?`<button class=btn2 data-q="${p.id}|rough|semi">ラフ送った(セミ)</button><button class=btn2 data-q="${p.id}|rough|full">フル</button>`:'';
@@ -628,8 +656,13 @@ function bindData(){const stamp=today().replace(/-/g,'');
  if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(x=>{const s=$('#stor');if(s)s.textContent=` 使用量 約${(x.usage/1e6).toFixed(1)}MB`}).catch(()=>{})}
 
 /* ---------- events ---------- */
-document.addEventListener('click',e=>{const t=e.target.closest('[data-s2],[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-q],[data-lk],[data-cw],[data-fail],[data-cn],[data-done],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
+document.addEventListener('click',e=>{const t=e.target.closest('[data-rk],[data-rka],[data-rkn],[data-rf],[data-rs],[data-s2],[data-tab],[data-open],[data-copyid],[data-sentid],[data-dt],[data-q],[data-lk],[data-cw],[data-fail],[data-cn],[data-done],[data-f],#bigBtn,#replyBtn,#back');if(!t)return;
  if(t.id==='back')return closeSheet();
+ if(t.dataset.rk){const [i,k]=t.dataset.rk.split('|'),p=byId(i);if(p)Rank.set(p,k);return}
+ if(t.dataset.rka){const p=byId(t.dataset.rka);if(p)Rank.accept(p);return}
+ if(t.dataset.rkn){const p=byId(t.dataset.rkn);if(p)Rank.reject(p);return}
+ if(t.dataset.rf){rfil=t.dataset.rf;ls('dc_out_rfil',rfil);return render()}
+ if(t.dataset.rs){rsort=t.dataset.rs;ls('dc_out_rsort',rsort);return render()}
  if(t.dataset.s2){const [i,k]=t.dataset.s2.split('|'),p=byId(i);if(p)setSt2(p,k);return}
  if(t.id==='bigBtn')return openSheet('新規アプローチ',newFn);
  if(t.id==='replyBtn')return openSheet('返信を追加',replyFn(null));
