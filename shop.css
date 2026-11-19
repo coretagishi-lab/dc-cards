@@ -73,3 +73,12 @@ body#shopDetailPage .dcAfterBuy{margin:14px 0 0;font-size:12.5px;line-height:1.8
 #mainFooter ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px}
 #mainFooter a{color:#958c7a;text-decoration:none}
 #mainFooter .copy{margin:12px 0 0;color:#5f584b}
+
+/* トップの送料・配送方法 */
+body#shopTopPage .dcShip{margin:28px 0 0;padding:18px 16px;border:1px solid #2a251d;border-radius:8px;font-size:13.5px;line-height:1.8;color:#c9c1b0}
+body#shopTopPage .dcShip h3{margin:0 0 6px;font-size:15px;color:#ebd28f;font-family:var(--sans);font-weight:700;letter-spacing:.08em}
+body#shopTopPage .dcShip p{margin:0}
+body#shopTopPage .dcShip b{color:#ebd28f}
+body#shopTopPage .dcShip ul{margin:6px 0 10px;padding-left:1.2em}
+body#shopTopPage .dcShip-note{font-size:12.5px;color:#958c7a}
+body#shopDetailPage #itemAttention .attention + .attention{margin-top:6px}

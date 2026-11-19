@@ -46,7 +46,7 @@
       ['Finish the design together', 'After you order, we decide the colors and mood with you, then our craftsmen make it by hand.'],
       ['Shipped to your door', 'In a Driver\'s Collection gift box. Tracked EMS outside Japan.']
     ],
-    note: 'About one month from your order. Outside Japan, EMS shipping is shown at checkout.<br>In the US? DM us first for a total including import duties.'
+    note: 'About one month from your order.<br>Shipping outside Japan depends on the country \u2014 DM us before ordering and we\'ll quote it.'
   } : {
     heading: 'ご注文の流れ', sub: 'FLOW',
     steps: [
