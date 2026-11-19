@@ -46,8 +46,9 @@
           </select>
         </div>
       </div>
-      <div class="purchaseButton"><a class="purchaseButton__btn" id="dcBuy" href="https://buy.stripe.com/5kQ28s4BH2II9pb1br1VK00">カードで購入する</a></div>
-      <p class="dcAfterBuy">デザインはご購入後に一緒に決めていきます。<br>決済後は Instagram の DM（@drivers_collection_）へご連絡ください。<br>銀行振込・PayPay をご希望の方も DM でお知らせください。</p>
+      <label class="dcAgree"><input type="checkbox" id="dcAgree"> <span data-agree-ja><a href="policy.html" target="_blank" rel="noopener">購入ポリシー</a>（オーダーメイド品のため、返品・キャンセルはお受けできません）に同意します</span><span data-agree-en hidden>I agree to the <a href="policy.html?lang=en" target="_blank" rel="noopener">Purchase Policy</a> (made to order, so no returns or cancellations).</span></label>
+      <div class="purchaseButton"><a class="purchaseButton__btn purchaseButton__btn--disabled" aria-disabled="true" id="dcBuy" href="https://buy.stripe.com/5kQ28s4BH2II9pb1br1VK00">カードで購入する</a></div>
+      <p class="dcAfterBuy">デザインはご購入後に一緒に決めていきます。<br>決済後は Instagram の DM（@drivers_collection_）へご連絡ください。<br>お支払い方法：<span data-paymethods>クレジットカード</span>（決済は Stripe）</p>
     </form>
   </div>
 
@@ -58,6 +59,7 @@
   <ul>
     <li><a href="law.html">特定商取引法に基づく表記</a></li>
     <li><a href="privacy.html">プライバシーポリシー</a></li>
+    <li><a href="policy.html">購入ポリシー</a></li>
     <li><a href="https://www.instagram.com/drivers_collection_/">Instagram</a></li>
   </ul>
   <p class="copy">© Driver's Collection</p>
@@ -79,6 +81,22 @@
   // ディスプレイの有無で価格と決済リンクを切り替える（リンクは shop-config.js）
   function sync() { var k = sel.value; buy.href = (C.stripe && C.stripe[k]) || buy.href; price.textContent = PRICE[k]; document.querySelectorAll('[data-ship]').forEach(function (e) { e.textContent = SHIP[k]; }); }
   sel.addEventListener('change', sync); sync();
+  // 購入ポリシーに同意するまで購入ボタンは押せない（ディスプレイの選択とは無関係）
+  var agree = document.getElementById('dcAgree');
+  function gate() { var ok = agree.checked; buy.classList.toggle('purchaseButton__btn--disabled', !ok); buy.setAttribute('aria-disabled', ok ? 'false' : 'true'); }
+  buy.addEventListener('click', function (e) { if (!agree.checked) { e.preventDefault(); agree.focus(); document.querySelector('.dcAgree').classList.add('dcAgree--need'); } });
+  agree.addEventListener('change', function () { gate(); document.querySelector('.dcAgree').classList.remove('dcAgree--need'); }); gate();
+  // 支払い方法の表記（shop-config.js）
+  var P = C.payMethods || [];
+  if (P.length) document.querySelectorAll('[data-paymethods]').forEach(function (e) { e.textContent = P.map(function (m) { return m.ja; }).join('・'); });
+  // 英語表示のとき（サイト共通の言語の決まり）
+  var en = false;
+  try { var q = /[?&]lang=(en|ja)(&|$)/.exec(location.search), s = localStorage.getItem('dc_lang'), c = /(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie || ''); en = (q ? q[1] : (s === 'en' || s === 'ja') ? s : c ? c[1] : (/^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en')) === 'en'; } catch (_) {}
+  if (en) {
+    document.querySelector('[data-agree-ja]').hidden = true; document.querySelector('[data-agree-en]').hidden = false;
+    buy.textContent = 'Buy with card';
+    document.querySelector('.dcAfterBuy').innerHTML = 'We decide the design together after your purchase.<br>After paying, please message us on Instagram (@drivers_collection_).<br>Payment: ' + (P.length ? P.map(function (m) { return m.en; }).join(', ') : 'credit card') + ' (by Stripe)';
+  }
 })();
 </script>
 <script src="item.js" defer></script>

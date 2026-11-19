@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>購入ポリシー｜Driver's Collection</title>
+<link rel="stylesheet" href="shop.css">
+<style>
+  .lang{display:flex;gap:6px;justify-content:flex-end;margin:16px 0 0}
+  .lang a{padding:3px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);text-decoration:none;font-size:12px}
+  .lang a.on{background:var(--gold);color:#17130a;border-color:var(--gold);font-weight:700}
+  .doc h2{font-family:var(--sans);font-size:16px;margin:28px 0 6px;color:var(--gold-hi)}
+  .doc p,.doc li{font-size:14px;line-height:1.9;color:#d8d0bf}
+  .doc ul{padding-left:1.2em;margin:6px 0}
+  .doc .key{padding:12px 14px;border:1px solid rgba(201,162,74,.55);border-radius:10px;background:rgba(201,162,74,.07)}
+  .doc .upd{font-size:12px;color:var(--muted)}
+  [data-l]{display:none}
+  html[data-lang="ja"] [data-l="ja"],html[data-lang="en"] [data-l="en"]{display:block}
+</style>
+<script>
+// 言語はサイト共通の決まり（?lang= ＞ 前回選んだ言語 ＞ スマホの言語）
+(function () {
+  var l = 'ja';
+  try {
+    var q = /[?&]lang=(en|ja)(&|$)/.exec(location.search), s = localStorage.getItem('dc_lang'), c = /(?:^|;\s*)dc_lang=(en|ja)/.exec(document.cookie || '');
+    l = q ? q[1] : (s === 'en' || s === 'ja') ? s : c ? c[1] : (/^ja\b/i.test(navigator.language || 'ja') ? 'ja' : 'en');
+    if (q) localStorage.setItem('dc_lang', l);
+  } catch (e) {}
+  document.documentElement.setAttribute('data-lang', l);
+  document.documentElement.lang = l;
+})();
+</script>
+</head>
+<body>
+<header class="bar"><div class="wrap"><a class="logo" href="./">Driver's Collection</a></div></header>
+<main class="wrap doc">
+  <div class="lang"><a href="?lang=ja" data-set="ja">日本語</a><a href="?lang=en" data-set="en">English</a></div>
+
+  <!-- ===================== 日本語 ===================== -->
+  <article data-l="ja">
+    <h1>購入ポリシー</h1>
+    <p>Driver's Collection（以下「当店」）の商品をご購入いただく前に、必ずお読みください。ご購入（決済の完了）をもって、本ポリシーに同意いただいたものとします。</p>
+    <p class="key">当店の商品は、お客様の愛車にあわせて一枚ずつ制作するオーダーメイド品です。<b>お客様のご都合による返品・交換・キャンセルはお受けできません。</b>ただし、商品に欠陥・破損があった場合や、ご注文と異なる商品が届いた場合は、下記「4. 返品・交換」のとおり対応いたします。</p>
+
+    <h2>1. 商品の性質</h2>
+    <p>当店の商品は、お客様の愛車の写真とご要望をもとに、職人が一枚ずつ手作業で制作する完全オーダーメイドの一点物です。既製品ではないため、同じものを再度ご用意することはできません。</p>
+
+    <h2>2. ご注文の確定</h2>
+    <p>商品ページからのお支払い（決済）が完了した時点で、ご注文が確定します。確定後、Instagram の DM（@drivers_collection_）にご連絡ください。デザインの打ち合わせを始めます。</p>
+
+    <h2>3. キャンセル</h2>
+    <ul>
+      <li>デザインの打ち合わせを開始した後は、ご注文のキャンセルはお受けできません。</li>
+      <li>制作を開始した後のキャンセルは、理由の如何を問わずお受けできません。</li>
+      <li>打ち合わせ開始前のキャンセルをご希望の場合は、すみやかに DM でご連絡ください。</li>
+    </ul>
+
+    <h2>4. 返品・交換</h2>
+    <ul>
+      <li>オーダーメイド品のため、お客様のご都合による返品・交換は一切お受けしておりません（イメージ違い・ご不要になった場合なども含みます）。</li>
+      <li><b>ただし、次の場合はこの限りではありません。</b>商品に欠陥・破損があった場合、またはご注文と異なる商品が届いた場合は、<b>商品の到着後7日以内</b>に Instagram の DM でご連絡ください。状況を確認のうえ、修理・作り直し・返金など適切に対応いたします。</li>
+      <li>ご連絡の際は、商品と梱包の状態が分かる写真をお送りください。</li>
+    </ul>
+
+    <h2>5. デザインの確認</h2>
+    <ul>
+      <li>ご購入後、DM で愛車の写真とご要望をお聞きし、デザインを作成します。</li>
+      <li>制作に入る前に、完成デザインを画像でご確認いただけます。修正のご希望があれば、DM でお知らせください。ご希望に沿って調整します。</li>
+      <li>お客様がデザインを承認された後は、デザインの変更・作り直しはお受けできません。承認前に、文字（車名・名前など）の綴りや内容を必ずご確認ください。</li>
+      <li>金のフレームは Driver's Collection 共通の仕様のため、変更できません。</li>
+    </ul>
+
+    <h2>6. 色味・風合い</h2>
+    <p>手作業で仕上げるため、一点ごとに風合い（箔の出方・質感など）が異なります。また、お使いの画面の設定や環境によって、画面で見る色味と実物の色味が異なる場合があります。これらの違いは商品の欠陥には当たりません。</p>
+
+    <h2>7. お写真のご提供</h2>
+    <ul>
+      <li>制作に使うお写真は、お客様ご自身が権利を持つもの、または使用の許諾を得たものに限ります。</li>
+      <li>第三者の商標や著作権に関わるデザイン（既存の作品・アニメのキャラクターなど）はお受けできません。使用の許諾を得た素材（痛車のデザインなど）は対応できます。</li>
+      <li>ナンバープレートの消去、映り込みの消去、画質の補正などは当店で対応します。</li>
+      <li>ご提供いただいたお写真の権利に関して第三者との間で問題が生じた場合、当店は責任を負いかねます。</li>
+    </ul>
+
+    <h2>8. 納期</h2>
+    <p>納期の目安は、ご注文の確定から約1ヶ月です（デザイン確定まで約10日・制作に約2週間・発送準備に1〜3日）。デザインの打ち合わせの進み方や制作の状況により前後する場合があります。お急ぎの場合は、ご購入前に DM でご相談ください。</p>
+
+    <h2>9. 配送</h2>
+    <ul>
+      <li>日本国内への送料は無料です。</li>
+      <li>配送方法：カードのみ＝レターパック／光る額縁ディスプレイ付き＝ヤマト宅急便 80サイズ。</li>
+      <li>海外への送料はお届け先の国によって異なります。ご希望の場合は、ご購入前に DM でご相談ください（送料をお見積もりします）。海外での関税・輸入税などがかかる場合は、お客様のご負担となります。</li>
+      <li>発送時に DM でお知らせします。配送中の事故・破損があった場合は、DM でご連絡いただければ対応いたします。</li>
+      <li>お届け先の誤りや長期不在などでお届けできなかった場合、再送の送料はお客様のご負担となる場合があります。</li>
+    </ul>
+
+    <h2>10. お支払い</h2>
+    <ul>
+      <li>お支払い方法：<span data-paymethods>クレジットカード</span>（決済は Stripe）。</li>
+      <li>お支払い時期：ご購入手続きの完了時。</li>
+      <li>表示価格はすべて税込です。カード情報は Stripe が処理し、当店がカード番号を受け取ったり保存したりすることはありません。</li>
+    </ul>
+
+    <h2>11. 作品の掲載</h2>
+    <p>完成した作品を、参考作品として当店の Instagram の投稿や動画などで紹介させていただく場合があります。ナンバープレートなどは消去したうえで掲載します。掲載を希望されない場合は、DM でお知らせください。</p>
+
+    <h2>12. 個人情報</h2>
+    <p>お預かりした個人情報は、<a href="privacy.html">プライバシーポリシー</a>に従って取り扱います。</p>
+
+    <h2>13. 準拠法・その他</h2>
+    <ul>
+      <li>本ポリシーは日本法に準拠します。</li>
+      <li>本ポリシーの内容は、予告なく変更する場合があります。変更後の内容は、このページに掲載した時点から適用されます。</li>
+      <li>販売業者などの表示は<a href="law.html">特定商取引法に基づく表記</a>をご覧ください。</li>
+      <li>ご不明な点は、ご購入前に Instagram の DM（<a href="https://ig.me/m/drivers_collection_">@drivers_collection_</a>）でお問い合わせください。</li>
+    </ul>
+    <p class="upd">制定：2026年11月19日</p>
+  </article>
+
+  <!-- ===================== English ===================== -->
+  <article data-l="en" lang="en">
+    <h1>Purchase Policy</h1>
+    <p>Please read this policy before buying from Driver's Collection ("we"). By completing payment, you agree to this policy.</p>
+    <p class="key">Every card is made to order, one at a time, for your own car. <b>We cannot accept returns, exchanges or cancellations for personal reasons.</b> However, if your item is defective or damaged, or you received something different from what you ordered, we will take care of it as described in "4. Returns and exchanges" below.</p>
+
+    <h2>1. About our products</h2>
+    <p>Each card is a fully custom, one-of-one piece, made by hand by our craftsmen from the photos of your car and your requests. Because it is not a ready-made product, the same item cannot be supplied again.</p>
+
+    <h2>2. When your order is confirmed</h2>
+    <p>Your order is confirmed when payment on the product page is complete. After that, please message us on Instagram (@drivers_collection_) and we will start working on your design together.</p>
+
+    <h2>3. Cancellations</h2>
+    <ul>
+      <li>Once we have started discussing your design, the order cannot be cancelled.</li>
+      <li>Once production has started, the order cannot be cancelled for any reason.</li>
+      <li>If you wish to cancel before the design discussion starts, please contact us by DM as soon as possible.</li>
+    </ul>
+
+    <h2>4. Returns and exchanges</h2>
+    <ul>
+      <li>As each item is made to order, we do not accept returns or exchanges for personal reasons (including "not what I imagined" or "no longer needed").</li>
+      <li><b>This does not apply in the following cases.</b> If your item is defective or damaged, or you received something different from what you ordered, please contact us by Instagram DM <b>within 7 days of delivery</b>. We will check the situation and respond appropriately, such as by repairing, remaking or refunding.</li>
+      <li>When contacting us, please send photos showing the condition of the item and its packaging.</li>
+    </ul>
+
+    <h2>5. Design approval</h2>
+    <ul>
+      <li>After your purchase, we ask for photos of your car and your requests by DM and create the design.</li>
+      <li>Before production, you can check the finished design as an image. If you would like changes, tell us by DM and we will adjust it.</li>
+      <li>Once you approve the design, it cannot be changed or remade. Please check the spelling and content of all text (car name, your name, etc.) before approving.</li>
+      <li>The gold frame is shared by every Driver's Collection card and cannot be changed.</li>
+    </ul>
+
+    <h2>6. Colors and finish</h2>
+    <p>Because every card is finished by hand, each one differs slightly in finish (how the foil appears, texture, etc.). Colors on your screen may also look different from the actual item depending on your display. These differences are not defects.</p>
+
+    <h2>7. Your photos</h2>
+    <ul>
+      <li>Photos used for your card must be ones you own the rights to, or ones you have permission to use.</li>
+      <li>We cannot create designs that use other people's trademarks or copyrighted works (such as existing artworks or anime characters). Material you have permission to use (for example, an itasha livery) is fine.</li>
+      <li>We take care of removing number plates and reflections and improving image quality.</li>
+      <li>We are not responsible for any dispute with a third party over the rights to photos you provide.</li>
+    </ul>
+
+    <h2>8. Delivery time</h2>
+    <p>About one month from order confirmation (design: about 10 days / making: about 2 weeks / shipping prep: 1–3 days). This may vary with how the design discussion goes and our production schedule. If you are in a hurry, please ask us by DM before you buy.</p>
+
+    <h2>9. Shipping</h2>
+    <ul>
+      <li>Shipping within Japan is free.</li>
+      <li>Method: card only = Letter Pack / with the lighted frame display = Yamato Transport (TA-Q-BIN), size 80.</li>
+      <li>Shipping outside Japan depends on the destination country. Please message us by DM before you buy and we will quote it. Any customs duties or import taxes in your country are paid by you.</li>
+      <li>We will message you when your order ships. If anything happens in transit or the item arrives damaged, contact us by DM and we will take care of it.</li>
+      <li>If a parcel cannot be delivered because of an incorrect address or long absence, the cost of re-sending may be charged to you.</li>
+    </ul>
+
+    <h2>10. Payment</h2>
+    <ul>
+      <li>Payment method: <span data-paymethods-en>credit card</span> (processed by Stripe).</li>
+      <li>Payment timing: when you complete checkout.</li>
+      <li>All prices include Japanese consumption tax. Card details are handled by Stripe; we never receive or store your card number.</li>
+    </ul>
+
+    <h2>11. Showing your card</h2>
+    <p>We may show the finished card as an example of our work in our Instagram posts or videos. Number plates and similar details are removed first. If you prefer that we do not show it, just tell us by DM.</p>
+
+    <h2>12. Personal information</h2>
+    <p>We handle your personal information according to our <a href="privacy.html">Privacy Policy</a> (Japanese).</p>
+
+    <h2>13. Governing law and other terms</h2>
+    <ul>
+      <li>This policy is governed by the laws of Japan.</li>
+      <li>We may change this policy without prior notice. Changes apply from the time they are posted on this page.</li>
+      <li>Seller details are listed in our <a href="law.html">Legal notice (Specified Commercial Transactions Act)</a> (Japanese).</li>
+      <li>If you have any questions, please ask us before buying by Instagram DM (<a href="https://ig.me/m/drivers_collection_">@drivers_collection_</a>).</li>
+    </ul>
+    <p class="upd">Effective: November 19, 2026. If the Japanese and English versions differ, the Japanese version prevails.</p>
+  </article>
+
+  <a class="back" href="./" data-l="ja">← トップへ戻る</a>
+  <a class="back" href="./" data-l="en">← Back to top</a>
+</main>
+<footer><a href="law.html">特定商取引法に基づく表記</a><a href="privacy.html">プライバシーポリシー</a><a href="policy.html">購入ポリシー</a></footer>
+<script src="shop-config.js"></script>
+<script>
+(function () {
+  var l = document.documentElement.getAttribute('data-lang');
+  document.querySelectorAll('[data-set]').forEach(function (a) {
+    a.classList.toggle('on', a.dataset.set === l);
+    a.addEventListener('click', function () { try { localStorage.setItem('dc_lang', a.dataset.set); } catch (e) {} });
+  });
+  var P = (window.DC_SHOP && DC_SHOP.payMethods) || [];
+  if (P.length) {
+    document.querySelectorAll('[data-paymethods]').forEach(function (e) { e.textContent = P.map(function (m) { return m.ja; }).join('・'); });
+    document.querySelectorAll('[data-paymethods-en]').forEach(function (e) { e.textContent = P.map(function (m) { return m.en; }).join(', '); });
+  }
+})();
+</script>
+</body>
+</html>
