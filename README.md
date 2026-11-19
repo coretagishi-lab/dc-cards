@@ -1,6 +1,12 @@
 # dc-cards
 
-Driver's Collection のLPギャラリー（3Dトレカ）用の素材置き場。GitHub Pagesで公開。
+Driver's Collection の販売サイトと、LPギャラリー（3Dトレカ）用の素材置き場。GitHub Pagesで公開。
+
+## 販売サイト（2026-11-19〜、BASEの代わり）
+- `index.html` … 販売サイトのトップ（https://coretagishi-lab.github.io/dc-cards/）。作品ギャラリー・料金と購入ボタン・ご注文の流れ・お支払い・送料
+- `law.html` … 特定商取引法に基づく表記 ／ `privacy.html` … プライバシーポリシー ／ `shop.css` … 3ページ共通の見た目
+- `shop-config.js` … Stripe の決済リンクと Instagram DM の URL。リンクを差し替えるときはここだけ書き換える
+- 以下の `site.js` `item.js` `item.css` `line-cta.js` `lp-copy.js` `base/` は旧BASEショップ用（BASEを閉じたら不要）
 
 - `cards.json` … 表示するカードと並び順（上から順に表示）
 - `cards/<slug>/front.webp` … 表面（幅760）
