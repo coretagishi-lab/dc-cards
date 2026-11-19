@@ -40,7 +40,10 @@
     </li>
   </ul>
   <section class="dcShip">
-    <h3>送料・配送方法</h3>
+    <h3>お支払い方法</h3>
+    <p><span data-paymethods>クレジットカード</span>（決済は Stripe）。商品ページの「カードで購入する」からお支払いいただけます。</p>
+    <p class="dcShip-note">オーダーメイド品のため、ご購入後の返品・キャンセルはお受けできません。詳しくは<a href="policy.html">購入ポリシー</a>をご覧ください。</p>
+    <h3 style="margin-top:16px">送料・配送方法</h3>
     <p>日本国内は全国一律 <b>送料無料</b>です。</p>
     <ul>
       <li>カードのみ：レターパック</li>
@@ -58,6 +61,7 @@
   <ul>
     <li><a href="law.html">特定商取引法に基づく表記</a></li>
     <li><a href="privacy.html">プライバシーポリシー</a></li>
+    <li><a href="policy.html">購入ポリシー</a></li>
     <li><a href="https://www.instagram.com/drivers_collection_/">Instagram</a></li>
   </ul>
   <p class="copy">© Driver's Collection</p>
@@ -66,6 +70,8 @@
 <script src="shop-config.js"></script>
 <script>
 document.querySelectorAll('[data-dm]').forEach(function (a) { if (window.DC_SHOP) a.href = DC_SHOP.igDm; });
+var P = (window.DC_SHOP && DC_SHOP.payMethods) || [];
+if (P.length) document.querySelectorAll('[data-paymethods]').forEach(function (e) { e.textContent = P.map(function (m) { return m.ja; }).join('・'); });
 </script>
 <script src="dc3d.js" defer></script>
 </body>

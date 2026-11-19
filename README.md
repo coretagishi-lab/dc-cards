@@ -6,8 +6,9 @@ Driver's Collection の販売サイトと、LPギャラリー（3Dトレカ）�
 - スマホ向けサイトとして作る。見た目の調整・確認はスマホ表示が最優先（パソコン表示は後回し）
 - 配送：カードのみ＝レターパック、光る額縁ディスプレイ付き＝ヤマト宅急便80サイズ（国内送料無料）。商品ページはディスプレイの選択で価格・決済リンク・配送方法が切り替わる。海外送料は固定額を載せず、DMで見積もり
 - `index.html` / `item.html` … 販売サイトのトップと商品ページ（https://coretagishi-lab.github.io/dc-cards/）。BASEのページと同じ作り（body#shopTopPage / #shopDetailPage）にしてあり、下の旧BASE用スクリプト（dc3d・site・line-cta・lp-copy・item）がBASE上と同じ見た目に整える。LPの写真は今はBASEに登録した画像を表示している（BASEを閉じる前にリポジトリへ移す）
+- `policy.html` … 購入ポリシー（日本語・英語。言語はサイト共通の決まり、`?lang=en` で英語）。商品ページは同意のチェックを入れるまで購入ボタンが押せない
 - `law.html` … 特定商取引法に基づく表記 ／ `privacy.html` … プライバシーポリシー ／ `shop.css` … 3ページ共通の見た目
-- `shop-config.js` … Stripe の決済リンクと Instagram DM の URL。リンクを差し替えるときはここだけ書き換える
+- `shop-config.js` … Stripe の決済リンク・使える支払い方法（payMethods）・Instagram DM の URL。リンクの差し替えや支払い方法の追加はここだけ書き換える
 - `base/lp-script.html` は旧BASEショップ用（BASEを閉じたら不要）
 
 - `cards.json` … 表示するカードと並び順（上から順に表示）
