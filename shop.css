@@ -1,0 +1,33 @@
+/* Driver's Collection 販売サイト共通 */
+:root{color-scheme:dark;--ink:#060607;--panel:#0f0e0c;--line:#2b261d;--gold:#c9a24a;--gold-hi:#ebd28f;--text:#ede6d6;--muted:#9a917f;
+ --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;--sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+html,body{margin:0;background:var(--ink);color:var(--text)}
+body{font-family:var(--sans);line-height:1.8;-webkit-text-size-adjust:100%}
+img{max-width:100%;display:block}
+a{color:var(--gold-hi)}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+.bar{position:sticky;top:0;z-index:20;background:rgba(6,6,7,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;height:52px;gap:12px}
+.logo{font-family:var(--serif);font-weight:700;letter-spacing:.14em;color:var(--gold-hi);text-decoration:none;font-size:15px;white-space:nowrap}
+.bar nav{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none}
+.bar nav::-webkit-scrollbar{display:none}
+.bar nav a{color:var(--muted);text-decoration:none;font-size:12px;white-space:nowrap}
+h1,h2,h3{font-family:var(--serif);font-weight:700}
+.sec{padding:56px 0 8px}
+.sec>h2{margin:0;text-align:center;font-size:clamp(24px,6.4vw,32px);letter-spacing:.1em;background:linear-gradient(180deg,#fff6dc,#ebd28f 55%,#b8923f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--gold-hi)}
+.en{display:block;margin:4px 0 0;text-align:center;font-family:"Cormorant Garamond","Times New Roman",serif;font-style:italic;font-size:13px;letter-spacing:.4em;color:var(--gold)}
+.rule{width:min(70%,320px);height:1px;margin:16px auto 22px;background:linear-gradient(90deg,transparent,var(--gold) 22%,var(--gold-hi) 50%,var(--gold) 78%,transparent)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;padding:12px 18px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;border:0;cursor:pointer;font-family:var(--sans)}
+.btn.gold{background:linear-gradient(180deg,#f3dc9a,#c9a24a);color:#17130a;box-shadow:0 6px 24px rgba(201,162,74,.25)}
+.btn.line{background:transparent;color:var(--gold-hi);border:1px solid var(--gold)}
+.small{font-size:12.5px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:10px 6px;text-align:left;vertical-align:top}
+table.t th{width:34%;color:var(--gold-hi);font-weight:600}
+footer{margin-top:64px;padding:28px 0 96px;border-top:1px solid var(--line);text-align:center;font-size:12px;color:var(--muted)}
+footer a{color:var(--muted);margin:0 8px}
+.doc h1{font-size:22px;margin:28px 0 8px;color:var(--gold-hi)}
+.doc .back{display:inline-block;margin-top:20px;font-size:13px}

@@ -3,36 +3,203 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex">
-<title>3D Gallery Demo</title>
+<title>Driver's Collection｜愛車を世界に一枚のトレカアートに</title>
+<meta name="description" content="あなたの愛車を、世界に一枚だけのトレーディングカードに。日本の職人が一枚一枚手作業で仕上げる、オーダーメイドカードブランドです。">
+<meta property="og:title" content="Driver's Collection｜愛車を世界に一枚のトレカアートに">
+<meta property="og:description" content="日本の職人が一枚一枚手作業で仕上げる、オーダーメイドのトレカアート。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://coretagishi-lab.github.io/dc-cards/cards/f8-tributo/mid.webp">
+<meta name="theme-color" content="#060607">
+<link rel="stylesheet" href="shop.css">
 <style>
-  :root { color-scheme: dark; --ink: #08080a; --gold: #c9a24a; --gold-hi: #ebd28f; --text: #ede6d6; --muted: #8e8676; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--ink); color: var(--text); }
-  body { font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.7; }
-  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
-  .top { padding: 28px 0 8px; text-align: center; }
-  .brand { margin: 0; font-size: 15px; letter-spacing: .18em; color: var(--gold-hi); }
-  .tag { display: inline-block; margin-top: 6px; font-size: 11px; letter-spacing: .12em; color: var(--muted); border: 1px solid #2b261d; border-radius: 999px; padding: 2px 10px; }
-  .filler { color: var(--muted); font-size: 13px; text-align: center; padding: 40px 0; }
-  h2 { margin: 36px 0 6px; text-align: center; font-size: 13px; letter-spacing: .32em; color: var(--gold); font-weight: 500; }
-  .lead { margin: 0 0 8px; text-align: center; font-size: 13px; color: var(--muted); }
+  .hero{position:relative;padding:36px 0 8px;text-align:center;background:radial-gradient(ellipse at 50% 30%,rgba(201,162,74,.16),transparent 62%)}
+  .hero h1{margin:0;font-size:clamp(23px,6.5vw,40px);line-height:1.45;letter-spacing:.06em;background:linear-gradient(180deg,#fffaf0,#f3e9d3 55%,#d8c190);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f3e9d3}
+  .hero p{margin:12px 0 0;color:#d8cfbd;font-size:14px}
+  .fan{position:relative;overflow-x:clip;height:min(92vw,430px);margin:22px auto 6px;max-width:460px}
+  .fan img{position:absolute;top:6%;left:50%;width:44%;height:auto;aspect-ratio:760/1062;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.6);transform-origin:50% 120%}
+  .fan img:nth-child(1){transform:translateX(-50%) rotate(-16deg) translateX(-34%)}
+  .fan img:nth-child(3){transform:translateX(-50%) rotate(16deg) translateX(34%)}
+  .fan img:nth-child(2){transform:translateX(-50%) translateY(-4%);z-index:2;width:50%}
+  .cta2{display:grid;gap:10px;max-width:440px;margin:8px auto 0}
+  .concept{padding:46px 16px 40px;margin-top:40px;text-align:center;background:#040405 url("lp/concept-bg.webp") center/cover no-repeat;border-radius:16px}
+  .concept h2{margin:0;font-size:clamp(28px,8vw,42px);line-height:1.42;letter-spacing:.08em;background:linear-gradient(180deg,#fffaf0,#f3e9d3 55%,#d8c190);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#f3e9d3}
+  .concept p{margin:0;font-family:var(--serif);font-size:clamp(14px,3.8vw,17px);line-height:2;letter-spacing:.05em;color:#e9e3d6}
+  .gal-note{text-align:center;margin:0 0 8px}
+  .item{display:grid;gap:14px;margin-bottom:18px}
+  .item .pic{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3;display:grid;place-items:center}
+  .item .pic img{height:88%;width:auto;max-width:none;border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.6)}
+  .item .pic.frame{background:radial-gradient(circle at 50% 45%,#2a2212,#000 70%)}
+  .item .pic.frame img{outline:10px solid #1b1710;box-shadow:0 0 0 12px #3a2f17,0 0 46px 14px rgba(255,214,120,.45)}
+  .item h3{margin:0;font-size:20px;line-height:1.5}
+  .item .kind{font-size:12px;color:var(--gold);letter-spacing:.12em}
+  .price{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--gold-hi)}
+  .price small{font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+  .after{margin:2px 0 0;padding:10px 12px;border-radius:10px;background:rgba(201,162,74,.08);border:1px dashed rgba(201,162,74,.5);font-size:13px;color:#e9dfc6}
+  ul.spec{margin:6px 0 0;padding-left:1.2em;font-size:14px}
+  ul.spec li{margin:3px 0}
+  .flow{list-style:none;margin:0;padding:0}
+  .flow li{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:0 0 18px}
+  .flow b{display:block;font-family:var(--serif);font-size:17px;color:var(--gold-hi)}
+  .flow .no{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:1px solid rgba(201,162,74,.75);font-family:"Cormorant Garamond","Times New Roman",serif;font-size:19px;color:var(--gold-hi)}
+  .pay{display:grid;gap:10px}
+  .pay div{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .pay b{color:var(--gold-hi)}
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(6,6,7,.95) 30%);display:flex;gap:8px;justify-content:center;transform:translateY(110%);transition:transform .3s}
+  .dock.on{transform:none}
+  .dock .btn{max-width:300px;min-height:48px;font-size:14px}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header class="top">
-      <p class="brand">Driver's Collection</p>
-      <span class="tag">3D Gallery Demo</span>
-    </header>
-    <p class="filler">（ここにLPの上の部分が入ります）<br>下にスクロールしてギャラリーへ</p>
+<header class="bar"><div class="wrap">
+  <a class="logo" href="./">Driver's Collection</a>
+  <nav><a href="#gallery">ギャラリー</a><a href="#buy">料金・ご購入</a><a href="#flow">ご注文の流れ</a><a href="#pay">お支払い</a></nav>
+</div></header>
 
-    <h2>GALLERY</h2>
-    <p class="lead">一点物のハンドメイドトレカ</p>
-    <div data-dc3d data-order-url="#"></div>
+<main class="wrap">
+  <section class="hero">
+    <h1>あなたの愛車を、<br>世界に一枚だけの<br>トレーディングカードに。</h1>
+    <p>日本の職人が一枚一枚手作業で仕上げる、<br>オーダーメイドカードブランドです。</p>
+    <div class="fan" aria-hidden="true">
+      <img src="cards/aventador/mid.webp" alt="" width="420" height="587">
+      <img src="cards/f8-tributo/front.webp" alt="" width="760" height="1062" fetchpriority="high">
+      <img src="cards/lexus-lfa/mid.webp" alt="" width="420" height="587">
+    </div>
+    <div class="cta2">
+      <a class="btn gold" href="#buy">料金を見て購入する</a>
+      <a class="btn line" data-dm="hero" href="https://ig.me/m/drivers_collection_">まずは無料ラフを相談する（DM）</a>
+    </div>
+  </section>
 
-    <p class="filler">（ここにLPの下の部分が入ります）</p>
-  </div>
-  <script src="dc3d.js" defer></script>
+  <section class="concept">
+    <h2>このトレカアート<br>全てハンドメイド</h2>
+    <div class="rule"></div>
+    <p>あなたの愛車専用のトレカは<br>1枚1枚職人が手作業で作ります。<br>これをできるのは世界でここだけ。<br>“世界に一個だけ”をあなたに届けます。</p>
+  </section>
+
+  <section class="sec" id="gallery">
+    <h2>GALLERY</h2><span class="en">WORKS</span>
+    <div class="rule"></div>
+    <p class="gal-note small">これまでの作品です。気に入ったデザインをもとに作ることもできます。</p>
+    <div data-dc3d data-order-url="#buy"></div>
+  </section>
+
+  <section class="sec" id="buy">
+    <h2>料金・ご購入</h2><span class="en">ORDER</span>
+    <div class="rule"></div>
+
+    <div class="panel item">
+      <div class="pic"><img src="cards/f8-tributo/front.webp" alt="世界に一枚のトレカアートの作例" width="760" height="1062" loading="lazy"></div>
+      <div>
+        <div class="kind">フルオーダー</div>
+        <h3>世界に一枚のトレカアート</h3>
+        <div class="price">¥50,000<small>税込・国内送料無料</small></div>
+        <div class="small">実物カード＋ハードケース（グレーディングカード用）＋専用化粧箱</div>
+      </div>
+      <a class="btn gold" data-buy="full" href="https://buy.stripe.com/5kQ28s4BH2II9pb1br1VK00">カードで購入する</a>
+      <p class="after">デザインはご購入後に一緒に決めていきます。決済後は Instagram の DM（@drivers_collection_）へご連絡ください。</p>
+    </div>
+
+    <div class="panel item">
+      <div class="pic frame"><img src="cards/lexus-lfa/front.webp" alt="光る額縁ディスプレイに入れたイメージ" width="744" height="1039" loading="lazy"></div>
+      <div>
+        <div class="kind">フルオーダー＋光る額縁ディスプレイ</div>
+        <h3>世界に一枚のトレカアート<br>＋光る額縁ディスプレイ</h3>
+        <div class="price">¥60,000<small>税込・国内送料無料</small></div>
+        <div class="small">上の内容に、ライトアップ機能付きの壁掛けディスプレイが付きます。</div>
+      </div>
+      <a class="btn gold" data-buy="frame" href="https://buy.stripe.com/4gMbJ2b05bfe58VbQ51VK01">カードで購入する</a>
+      <p class="after">デザインはご購入後に一緒に決めていきます。決済後は Instagram の DM（@drivers_collection_）へご連絡ください。</p>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin:0 0 4px;font-size:17px;color:var(--gold-hi)">オーダーメイドの内容</h3>
+      <ul class="spec">
+        <li>既存のデザインから選ぶのではなく、あなたの愛車のために一枚をゼロからデザインします。過去のデザイン（ギャラリーの No.01〜）をもとに作ることもできます。</li>
+        <li>イメージがあればできる限り寄せて制作します。特になければお任せでも大丈夫です。</li>
+        <li>すべて職人の手作業で仕上げます。</li>
+        <li>ご購入後、Instagram の DM で愛車の写真とご要望をお聞きします。</li>
+        <li>フレーム（金のデザイン）はブランド共通の仕様のため変更できません。書体はご相談いただけます。</li>
+        <li>ナンバープレートの消去・映り込みの消去・画質の補正はこちらで対応します。人物が写っていても制作できます。</li>
+        <li>第三者の商標や著作権に関わるデザイン（既存の作品・アニメのキャラクターなど）はお受けできません。使用の許諾を得た素材（痛車のデザインなど）は対応できます。</li>
+        <li>カード上部の証明タグはゴールド仕様です。</li>
+        <li>グレーディングカード用の専用ケースに封入してお届けします（カードは取り出せます）。</li>
+        <li>Driver's Collection 専用の化粧箱でお届けします。</li>
+      </ul>
+    </div>
+    <p class="small" style="text-align:center;margin-top:14px">購入前に、あなたの愛車で作った無料ラフを見ることもできます。<br><a data-dm="buy" href="https://ig.me/m/drivers_collection_">DMで無料ラフを相談する →</a></p>
+  </section>
+
+  <section class="sec" id="flow">
+    <h2>ご注文の流れ</h2><span class="en">FLOW</span>
+    <div class="rule"></div>
+    <ol class="flow">
+      <li><span class="no">1</span><div><b>写真を送る</b>愛車の写真を1枚、Instagram の DM で送るだけ。</div></li>
+      <li><span class="no">2</span><div><b>無料ラフでイメージ確認</b>掲載デザインで、あなたの愛車のラフを無料でお作りします。</div></li>
+      <li><span class="no">3</span><div><b>ご購入</b>気に入ったらご購入ください。過去のデザインをもとにすることも、ゼロから作ることもできます。</div></li>
+      <li><span class="no">4</span><div><b>打ち合わせでデザイン確定</b>ご購入後の打ち合わせで色や雰囲気を決め、完成デザインをご確認いただいたうえで、職人が一枚ずつ手作業で仕上げます。</div></li>
+      <li><span class="no">5</span><div><b>お届け</b>専用の化粧箱に入れて発送。発送時に DM でお知らせします。</div></li>
+    </ol>
+    <p class="small">納期の目安はご購入から約1ヶ月です（デザイン確定まで約10日、制作に約2週間、発送準備に1〜3日）。デザインの完成時に確認・修正ができます。お急ぎの場合は DM でご相談ください。</p>
+  </section>
+
+  <section class="sec" id="pay">
+    <h2>お支払い方法</h2><span class="en">PAYMENT</span>
+    <div class="rule"></div>
+    <div class="pay">
+      <div><b>クレジットカード</b><br>このページの「カードで購入する」から、そのままお支払いいただけます（決済は Stripe）。</div>
+      <div><b>銀行振込・PayPay</b><br>Instagram の DM でお申し付けください。お支払い方法をご案内します。</div>
+    </div>
+    <p class="small">どのお支払い方法でも価格は同じです。</p>
+    <h3 style="font-size:17px;color:var(--gold-hi);margin:26px 0 6px">送料</h3>
+    <table class="t">
+      <tr><th>日本国内</th><td>全国一律 無料（追跡番号付き）</td></tr>
+      <tr><th>海外（EMS）</th><td>アジア ¥2,500 ／ オセアニア・ヨーロッパ・南米 ¥3,500 ／ 中近東・アフリカ ¥4,000<br><span class="small">海外へのお届けは DM でご相談ください（このページのカード決済は日本国内のお届け先のみです）。</span></td></tr>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <div><a href="law.html">特定商取引法に基づく表記</a><a href="privacy.html">プライバシーポリシー</a><a href="https://www.instagram.com/drivers_collection_/">Instagram</a></div>
+  <div style="margin-top:10px">© 2026 Driver's Collection</div>
+</footer>
+
+<div class="dock" id="dock"><a class="btn gold" href="#buy">料金・ご購入</a><a class="btn line" data-dm="dock" href="https://ig.me/m/drivers_collection_">無料ラフ（DM）</a></div>
+
+<script src="shop-config.js"></script>
+<script>
+(function () {
+  var C = window.DC_SHOP || {};
+  // 決済リンクと DM のリンクは shop-config.js から入れる
+  document.querySelectorAll('[data-buy]').forEach(function (a) { var u = C.stripe && C.stripe[a.dataset.buy]; if (u) a.href = u; });
+  document.querySelectorAll('[data-dm]').forEach(function (a) { if (C.igDm) a.href = C.igDm; });
+  // ギャラリーはこのページでは日本語で表示する（言語を選んだことがある人はその言語のまま）
+  try { if (!localStorage.getItem('dc_lang')) localStorage.setItem('dc_lang', 'ja'); } catch (_) {}
+  // BASE 用の言語切り替え（site.js）はこのページでは使わない
+  window.__dcSite = true;
+  // ギャラリーの「無料ラフ」ボタン：文面をコピーして Instagram の DM を開く
+  window.DCRough = {
+    url: function () { return C.igDm; },
+    open: function (msg) {
+      try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (_) {}
+      location.href = C.igDm; return true;
+    }
+  };
+  // ギャラリーの「このデザインでオーダーする」は、ページ内の料金・ご購入へ
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('[data-dc3d] a[href*="design="]');
+    if (!a) return;
+    e.preventDefault();
+    document.getElementById('buy').scrollIntoView({ behavior: 'smooth' });
+  }, true);
+  // 下の固定ボタン：最初の画面を過ぎたら出す
+  var dock = document.getElementById('dock'), buy = document.getElementById('buy');
+  function onScroll() {
+    var y = window.scrollY, b = buy.getBoundingClientRect();
+    dock.classList.toggle('on', y > 500 && !(b.top < innerHeight && b.bottom > 0));
+  }
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+})();
+</script>
+<script src="dc3d.js" defer></script>
 </body>
 </html>
