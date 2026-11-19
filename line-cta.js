@@ -150,7 +150,7 @@
     fullBtn: 'Talk to us by DM (free)',
     stickyMain: 'Get a free rough of your car', stickyFull: 'Talk to us by DM (free)', stickySub: 'Questions? DM us on Instagram',
     alt: '',
-    ship: 'Outside Japan, we ship by EMS \u2014 shipping is shown at checkout. In the US? DM us first for a total including import duties.'
+    ship: 'Shipping outside Japan depends on the country \u2014 DM us before ordering and we\'ll quote it.'
   } : {
     galleryH: 'あなたの愛車だと、<br>どんな一枚になる？',
     galleryP: 'ギャラリーのデザインで、あなたの愛車のラフを<br>無料でお作りします。写真を1枚送るだけ。',
